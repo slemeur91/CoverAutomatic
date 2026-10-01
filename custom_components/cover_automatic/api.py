@@ -1,7 +1,6 @@
 """WebSocket API for CoverAutomatic config panel."""
 from __future__ import annotations
 
-import copy
 import logging
 import re
 import unicodedata
@@ -671,51 +670,6 @@ async def ws_rule_delete(
 
     await storage.async_remove_rule(rule_id)
     coordinator.refresh_state_tracking()
-    await coordinator.async_request_refresh()
-    connection.send_result(msg["id"], _build_config_response(storage, hass, coordinator))
-
-
-async def ws_rule_duplicate(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-    storage: CoverAutomaticStorage,
-    coordinator: CoverAutomaticCoordinator,
-) -> None:
-    """Handle cover_automatic/rule/duplicate.
-
-    The copy starts disabled so it cannot move covers while it is being edited,
-    and it inherits the source rule's scenario links (rules_disabled).
-    """
-    rule_id = msg["rule_id"]
-    existing = storage.rules.get(rule_id)
-    if existing is None:
-        connection.send_error(msg["id"], "not_found", f"Rule '{rule_id}' not found")
-        return
-
-    name = (msg.get("name") or "").strip() or f"{existing.name} (copy)"
-    data = copy.deepcopy(existing.to_dict())
-    data.update(
-        id=_unique_id(_sanitize_id(name), storage.rules),
-        name=name,
-        enabled=False,
-    )
-    duplicate = Rule.from_dict(data)
-    await storage.async_add_rule(duplicate, save=False)
-
-    for scenario in storage.scenarios.values():
-        if rule_id in scenario.rules_disabled:
-            await storage.async_add_scenario(
-                Scenario(
-                    id=scenario.id,
-                    name=scenario.name,
-                    icon=scenario.icon,
-                    rules_disabled=[*scenario.rules_disabled, duplicate.id],
-                ),
-                save=False,
-            )
-
-    await storage.async_save()
     await coordinator.async_request_refresh()
     connection.send_result(msg["id"], _build_config_response(storage, hass, coordinator))
 

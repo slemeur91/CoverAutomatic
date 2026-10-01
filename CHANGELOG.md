@@ -5,29 +5,9 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-<<<<<<< Updated upstream
-## [1.62.1] - 2026-10-01
-
-### Fixed
-
-- Facade sun entry and exit sensors now follow the real sun path at your location. They used a fixed summer approximation before, which left some of them unknown and was off by up to 1.5 hours in spring, autumn and winter. Shading decisions were not affected, they always used the real sun position.
-
-## [1.62.0] - 2026-10-01
-
-### Added
-
-- Duplicate rules from the rules list. The copy keeps all conditions, assignments and scenario links, starts disabled so it cannot move covers while you adapt it, and opens in the editor right away ([#1](https://github.com/crandler/CoverAutomatic/issues/1)).
-- The cover status sensor now shows which rule is in control: attributes `rule_name`, `rule_id` and `target_position`, usable in automations, templates and dashboards ([#1](https://github.com/crandler/CoverAutomatic/issues/1)).
-
-## [1.61.2] - 2026-10-01
-
-### Fixed
-
-- Reloading the integration failed with "RuntimeError: Added route will never be executed" followed by "has already been setup!" errors for the switch, sensor and select platforms, leaving the entities unavailable until a Home Assistant restart. The panel's static path is now registered once per Home Assistant runtime instead of on every entry setup ([#3](https://github.com/crandler/CoverAutomatic/issues/3)).
-=======
 ## [2.0.0] - 2026-10-01
 
-Major release consolidating all changes since 1.61.1.
+Major release consolidating all changes since 1.61.1. It includes the upstream releases 1.61.2, 1.62.0 and 1.62.1 (entries below), merged with these changes.
 
 ### Added
 
@@ -41,7 +21,7 @@ Major release consolidating all changes since 1.61.1.
 - **Dawn and dusk** conditions with an offset in minutes; sunrise/sunset and dawn/dusk pairs are complementary.
 - **Outdoor air compared to the room** and **Room occupied** conditions, with an occupancy sensor per cover.
 - **Safety rule**: acts even when the cover is paused, in manual mode, wind protected or with automation off. Never overrides the window lock; between rules, priority decides.
-- **Duplicate a rule**; ▲▼ buttons to order conditions, groups and priorities.
+- **Duplicate a rule**: the copy is placed right below the original and created active (with the same conditions it never wins over the original until edited); ▲▼ buttons to order conditions, groups and priorities.
 
 **Covers**
 - **Keep current position when the window opens**.
@@ -57,7 +37,7 @@ Major release consolidating all changes since 1.61.1.
 
 **Entities and dashboard**
 - **Dashboard card** `custom:cover-automatic-card`: one line per cover; header with scenario, master switch, wind, counters and a "Resume all" button.
-- **Sensors per cover**: active rule, target, position, comfort mode, pause end.
+- **Sensors per cover**: active rule, target, position, comfort mode, pause end. The status sensor keeps the upstream attributes `rule_name`, `rule_id`, `target_position` (translated) and adds cover, position, pause and safety-rule details.
 - **Global entities**: wind protection and number of covers paused / manual / locked.
 
 **Log**
@@ -77,9 +57,29 @@ Major release consolidating all changes since 1.61.1.
 - **Window and wind**: the lock (window open) keeps priority over the wind during the whole storm; lock / wind state survives a restart; an unknown window sensor never lowers the cover; a removed sensor no longer blocks the cover forever.
 - **False manual pauses removed**: slow covers, rule change during a move, window closed while the cover moves to the lock position.
 - **Backups**: complete export; validated import (out-of-range values, unknown references, migrations); runtime state no longer restored from the file.
+- Facade sun entry/exit times: upstream's real-sun-path scan refined to 15 s, sharing the exact test of the "sun on facade" condition (full-circle facades and negative minimum elevation handled as in the rules).
+- "Before dawn / sunrise" with an invalid offset is no longer met in the evening.
 - Reloading the integration no longer fails; HA deprecation warning fixed; calculation cycles can no longer interleave; an unreadable rule is disabled instead of applying everywhere.
 - Three full code audits; 1325 automated tests.
->>>>>>> Stashed changes
+
+## [1.62.1] - 2026-10-01
+
+### Fixed
+
+- Facade sun entry and exit sensors now follow the real sun path at your location. They used a fixed summer approximation before, which left some of them unknown and was off by up to 1.5 hours in spring, autumn and winter. Shading decisions were not affected, they always used the real sun position.
+
+## [1.62.0] - 2026-10-01
+
+### Added
+
+- Duplicate rules from the rules list. The copy keeps all conditions, assignments and scenario links, starts disabled so it cannot move covers while you adapt it, and opens in the editor right away ([#1](https://github.com/crandler/CoverAutomatic/issues/1)).
+- The cover status sensor now shows which rule is in control: attributes `rule_name`, `rule_id` and `target_position`, usable in automations, templates and dashboards ([#1](https://github.com/crandler/CoverAutomatic/issues/1)).
+
+## [1.61.2] - 2026-10-01
+
+### Fixed
+
+- Reloading the integration failed with "RuntimeError: Added route will never be executed" followed by "has already been setup!" errors for the switch, sensor and select platforms, leaving the entities unavailable until a Home Assistant restart. The panel's static path is now registered once per Home Assistant runtime instead of on every entry setup ([#3](https://github.com/crandler/CoverAutomatic/issues/3)).
 
 ## [1.61.1] - 2026-08-18
 

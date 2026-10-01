@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from datetime import datetime
 from typing import Any
@@ -197,6 +197,8 @@ class CoverAutomaticStatusSensor(_CoverSensorBase):
             "position": self.coordinator.get_logical_position(self._cover_entity_id),
             "target_position": live.get("target_position"),
             "rule": live.get("rule_name"),
+            # Same attribute names as upstream 1.62.0 (rule in control)
+            "rule_name": live.get("rule_name"),
             "rule_id": live.get("rule_id"),
             "safety_rule": live.get("safety", False),
             "comfort_mode": live.get("comfort_mode"),
@@ -209,16 +211,6 @@ class CoverAutomaticStatusSensor(_CoverSensorBase):
         """Return icon based on status."""
         status = self.coordinator.get_cover_status(self._cover_entity_id)
         return _STATUS_ICONS.get(status, "mdi:help-circle")
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the winning rule and its target position (None when no rule applies)."""
-        live = self.coordinator.get_live_cover(self._cover_entity_id) or {}
-        return {
-            "rule_id": live.get("rule_id"),
-            "rule_name": live.get("rule_name"),
-            "target_position": live.get("target_position"),
-        }
 
 
 class CoverRuleSensor(_CoverSensorBase):

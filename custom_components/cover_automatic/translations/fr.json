@@ -37,6 +37,17 @@
           "locked": "Verrouillé",
           "venting": "Aération",
           "wind_protected": "Protection vent"
+        },
+        "state_attributes": {
+          "rule_id": {
+            "name": "ID de la règle"
+          },
+          "rule_name": {
+            "name": "Règle"
+          },
+          "target_position": {
+            "name": "Position cible"
+          }
         }
       },
       "sun_on_facade": {

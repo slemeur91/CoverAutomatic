@@ -107,15 +107,7 @@ def _cleanup_removed_entities(hass: HomeAssistant) -> None:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the panel's static path (YAML setup is not supported).
-
-    Runs once per Home Assistant runtime. aiohttp routes cannot be removed, so
-    registering in async_setup_entry would fail on every entry reload.
-    """
-    panel_path = pathlib.Path(__file__).parent / "panel" / "cover-automatic-panel.js"
-    await hass.http.async_register_static_paths(
-        [StaticPathConfig("/cover_automatic/panel.js", str(panel_path), False)]
-    )
+    """Set up CoverAutomatic from YAML (not supported)."""
     return True
 
 

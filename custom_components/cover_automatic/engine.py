@@ -1233,6 +1233,10 @@ class RuleEngine:
         event (sunset / dusk) until the next morning event + offset, not only
         between midnight and the morning event.
         """
+        try:
+            int(condition.params.get("offset", 0))
+        except (ValueError, TypeError):
+            return False  # misconfigured offset: never met, also in the evening
         if self._eval_time_before_sun_event(condition, morning_fn):
             return True
         evening = evening_fn(self.hass)
