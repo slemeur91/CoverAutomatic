@@ -21,9 +21,5 @@
   "issue_tracker": "https://github.com/crandler/CoverAutomatic/issues",
   "requirements": [],
   "single_config_entry": true,
-<<<<<<< Updated upstream
-  "version": "1.62.1"
-=======
   "version": "2.0.0"
->>>>>>> Stashed changes
 }
