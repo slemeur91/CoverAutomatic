@@ -188,10 +188,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoverAutomaticConfigEntr
     # Setup WebSocket API for config panel
     async_setup_api(hass, storage, coordinator, version=panel_version)
 
-<<<<<<< Updated upstream
-    # Register custom panel (version query for cache busting); the static path
-    # behind js_url is registered once in async_setup
-=======
     # Register custom panel (version query for cache busting). aiohttp routes
     # cannot be removed, and registering the same GET route twice raises
     # RuntimeError -- so the static path is registered once per HA run and
@@ -212,7 +208,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoverAutomaticConfigEntr
         if not await _async_register_card_resource(hass, card_url):
             # YAML resources / no Lovelace: load the card with every page.
             add_extra_js_url(hass, card_url)
->>>>>>> Stashed changes
     async_register_built_in_panel(
         hass,
         component_name="custom",
