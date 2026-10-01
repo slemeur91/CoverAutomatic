@@ -1310,11 +1310,7 @@ def async_setup_api(
             ws_rule_duplicate,
             {
                 vol.Required("rule_id"): str,
-<<<<<<< Updated upstream
-                vol.Optional("name"): str,
-=======
                 vol.Optional("name"): vol.All(str, vol.Length(max=200)),  # truncated below
->>>>>>> Stashed changes
             },
         ),
         (
