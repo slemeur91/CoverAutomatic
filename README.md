@@ -10,7 +10,7 @@
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?logo=homeassistant&logoColor=white" alt="HACS Custom"></a>
   <a href="https://github.com/slemeur91/CoverAutomatic/releases/latest"><img src="https://img.shields.io/github/v/release/slemeur91/CoverAutomatic?label=Version" alt="Dernière version"></a>
   <a href="https://github.com/slemeur91/CoverAutomatic/actions/workflows/ci.yml"><img src="https://github.com/slemeur91/CoverAutomatic/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/slemeur91/CoverAutomatic" alt="Licence"></a>
+  <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/LICENSE"><img src="https://img.shields.io/github/license/slemeur91/CoverAutomatic" alt="Licence"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2026.3%2B-03a9f4?logo=homeassistant&logoColor=white" alt="Home Assistant 2026.3+">
 </p>
 
@@ -157,29 +157,29 @@ Cliquez sur une vignette pour l'agrandir. *(Les captures proviennent de la versi
 <table>
   <tr>
     <td width="33%">
-      <a href=".github/screenshots/covers-desktop.png"><img src=".github/screenshots/covers-desktop.png" alt="Liste des volets" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/covers-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/covers-desktop.png" alt="Liste des volets" /></a>
       <p align="center"><sub><b>Volets</b> – en-tête, colonne de position, badges de statut</sub></p>
     </td>
     <td width="33%">
-      <a href=".github/screenshots/rules-desktop.png"><img src=".github/screenshots/rules-desktop.png" alt="Règles" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/rules-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/rules-desktop.png" alt="Règles" /></a>
       <p align="center"><sub><b>Règles</b> – ordre de priorité, indicateurs actifs, conditions</sub></p>
     </td>
     <td width="33%">
-      <a href=".github/screenshots/scenarios-desktop.png"><img src=".github/screenshots/scenarios-desktop.png" alt="Scénarios" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/scenarios-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/scenarios-desktop.png" alt="Scénarios" /></a>
       <p align="center"><sub><b>Scénarios</b> – règles par scénario, activation règle par règle</sub></p>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href=".github/screenshots/cover-editor.png"><img src=".github/screenshots/cover-editor.png" alt="Fiche volet" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/cover-editor.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/cover-editor.png" alt="Fiche volet" /></a>
       <p align="center"><sub><b>Fiche volet</b> – panneau latéral par sections</sub></p>
     </td>
     <td width="33%">
-      <a href=".github/screenshots/settings-house.png"><img src=".github/screenshots/settings-house.png" alt="Paramètres – Maison" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/settings-house.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/settings-house.png" alt="Paramètres – Maison" /></a>
       <p align="center"><sub><b>Paramètres – Maison</b> – orientation avec boussole</sub></p>
     </td>
     <td width="33%">
-      <a href=".github/screenshots/settings-automation.png"><img src=".github/screenshots/settings-automation.png" alt="Paramètres – Automatisation" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/settings-automation.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/settings-automation.png" alt="Paramètres – Automatisation" /></a>
       <p align="center"><sub><b>Paramètres – Automatisation</b> – valeurs par défaut globales</sub></p>
     </td>
   </tr>
@@ -188,11 +188,11 @@ Cliquez sur une vignette pour l'agrandir. *(Les captures proviennent de la versi
 <table>
   <tr>
     <td width="50%" align="center">
-      <a href=".github/screenshots/mobile-covers.png"><img src=".github/screenshots/mobile-covers.png" alt="Mobile – Volets" width="320" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/mobile-covers.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/mobile-covers.png" alt="Mobile – Volets" width="320" /></a>
       <p><sub><b>Mobile – Volets</b></sub></p>
     </td>
     <td width="50%" align="center">
-      <a href=".github/screenshots/mobile-settings.png"><img src=".github/screenshots/mobile-settings.png" alt="Mobile – Paramètres" width="320" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/mobile-settings.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/mobile-settings.png" alt="Mobile – Paramètres" width="320" /></a>
       <p><sub><b>Mobile – Paramètres</b> – sections en barre horizontale</sub></p>
     </td>
   </tr>
@@ -524,23 +524,24 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.0.1
+2.0.2
 
 ## Historique des versions
 
-L'historique complet est tenu dans le [CHANGELOG.md](CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
+L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.0.1 (2026-10-02), basée sur la version d'origine
+Dernière version : v2.0.2 (2026-10-02), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
 
 ## Licence
 
-Licence MIT — voir le fichier [LICENSE](LICENSE). Le texte de la licence fait foi dans sa version anglaise ci-dessous.
+Licence MIT — voir le fichier [LICENSE](https://github.com/slemeur91/CoverAutomatic/blob/main/LICENSE). Le texte de la licence fait foi dans sa version anglaise ci-dessous.
 
 ```
 MIT License
 
-Copyright (c) 2026
+Copyright (c) 2026 Sven Eulberg
+Copyright (c) 2026 slemeur91 (fork CoverAutomatic V2)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

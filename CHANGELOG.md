@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.2] - 2026-10-02
+
+### Changed
+
+- README: screenshots and links (changelog, licence) use full GitHub addresses, so the images also show in the HACS integration page inside Home Assistant.
+- Licence: fork copyright line added below the original author's.
+- Issue templates: "Documentation" and "Troubleshooting" links point to this fork, texts in French.
+
 ## [2.0.1] - 2026-10-02
 
 Includes the applicable changes of upstream 1.62.2 – 1.63.0.
