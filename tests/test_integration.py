@@ -1163,7 +1163,9 @@ class TestSetupEntryReload:
     def _make_hass(app):
         from types import SimpleNamespace
 
-        from homeassistant.components.http.server import HomeAssistantHTTP
+        # Module introduced after the minimum supported HA version (2026.3)
+        server_mod = pytest.importorskip("homeassistant.components.http.server")
+        HomeAssistantHTTP = server_mod.HomeAssistantHTTP  # noqa: N806
 
         server = SimpleNamespace(app=app)
 
@@ -1215,7 +1217,10 @@ class TestSetupEntryReload:
             patch(f"{mod}.async_setup_api"),
             patch(f"{mod}.async_register_built_in_panel"),
             patch(f"{mod}.async_remove_panel"),
+            patch(f"{mod}.add_extra_js_url"),
+            patch(f"{mod}._async_register_card_resource", AsyncMock(return_value=True)),
             patch(f"{mod}.er.async_get", MagicMock()),
+            patch(f"{mod}.async_cleanup_orphan_entities"),
         ):
             storage_cls.return_value.async_load = AsyncMock()
             storage_cls.return_value.covers = {}

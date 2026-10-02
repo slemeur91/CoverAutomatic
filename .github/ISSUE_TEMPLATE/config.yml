@@ -1,9 +1,9 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation
-    url: https://github.com/crandler/CoverAutomatic#readme
-    about: Check the README for setup instructions and feature documentation
-  - name: Troubleshooting
-    url: https://github.com/crandler/CoverAutomatic#troubleshooting
-    about: Common questions (startup delay, PAUSED status, rules not firing) explained
+    url: https://github.com/slemeur91/CoverAutomatic#readme
+    about: Consultez le README pour l'installation et la description des fonctionnalités
+  - name: Dépannage
+    url: https://github.com/slemeur91/CoverAutomatic#dépannage
+    about: Questions fréquentes expliquées (délai au démarrage, statut EN PAUSE, règle qui ne s'applique pas)
 

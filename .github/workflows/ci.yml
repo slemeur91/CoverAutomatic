@@ -38,8 +38,11 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.14"]
+        # Minimum version declared in hacs.json + current pin
+        homeassistant-version: ["2026.3.0", "2026.9.1"]
 
     steps:
       - uses: actions/checkout@v7
@@ -56,9 +59,11 @@ jobs:
         run: uv python install "$PYTHON_VERSION"
 
       - name: Install dependencies
+        env:
+          HA_VERSION: ${{ matrix.homeassistant-version }}
         run: |
           uv venv
-          uv pip install pytest==9.1.1 pytest-asyncio==1.4.0 homeassistant==2026.9.1
+          uv pip install pytest==9.1.1 pytest-asyncio==1.4.0 "homeassistant==$HA_VERSION"
 
       - name: Syntax check
         run: |

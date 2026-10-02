@@ -4282,7 +4282,7 @@ class CoverAutomaticPanel extends HTMLElement {
     if (!this._config || !this._config.version) return;
     if (this._config.settings && this._config.settings.update_check_enabled === false) return;
     try {
-      const resp = await fetch("https://api.github.com/repos/crandler/CoverAutomatic/releases/latest", { headers: { Accept: "application/vnd.github.v3+json" } });
+      const resp = await fetch("https://api.github.com/repos/slemeur91/CoverAutomatic/releases/latest", { headers: { Accept: "application/vnd.github.v3+json" } });
       if (!resp.ok) return;
       const data = await resp.json();
       const latest = (data.tag_name || "").replace(/^v/, "");
@@ -4773,10 +4773,10 @@ class CoverAutomaticPanel extends HTMLElement {
     if (this._latestVersion) {
       const v = this._esc(version);
       const latest = this._esc(this._latestVersion);
-      html += ' <a class="update-badge" href="https://github.com/crandler/CoverAutomatic/releases/tag/v' + latest + '" target="_blank" rel="noopener noreferrer" title="' + this._t("update_badge_title") + '">v' + v + ' → v' + latest + '</a>';
+      html += ' <a class="update-badge" href="https://github.com/slemeur91/CoverAutomatic/releases/tag/v' + latest + '" target="_blank" rel="noopener noreferrer" title="' + this._t("update_badge_title") + '">v' + v + ' → v' + latest + '</a>';
     } else if (version) {
       const v = this._esc(version);
-      html += ' <a class="version-info" href="https://github.com/crandler/CoverAutomatic/releases/tag/v' + v + '" target="_blank" rel="noopener noreferrer" title="' + this._t("version_link_title") + '">v' + v + '</a>';
+      html += ' <a class="version-info" href="https://github.com/slemeur91/CoverAutomatic/releases/tag/v' + v + '" target="_blank" rel="noopener noreferrer" title="' + this._t("version_link_title") + '">v' + v + '</a>';
     }
     html += '</div><div class="header-right">';
     html += '<span class="info-bar-slot">' + this._renderInfoBarInline() + '</span>';
@@ -7267,6 +7267,18 @@ class CoverAutomaticPanel extends HTMLElement {
   /* ============================================================
    * TAB: Settings
    * ============================================================ */
+  // Phones: the settings sections are a horizontal pill strip. A re-render
+  // brings it back to the start, which hides a pill chosen near the end:
+  // scroll the strip so the active pill sits in the middle.
+  _centerActiveSettingsPill() {
+    const nav = this.shadowRoot && this.shadowRoot.querySelector(".settings-nav");
+    const active = nav && nav.querySelector(".settings-nav-btn.active");
+    if (!active || nav.scrollWidth <= nav.clientWidth) return;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = active.getBoundingClientRect();
+    nav.scrollLeft += btnRect.left - navRect.left - (navRect.width - btnRect.width) / 2;
+  }
+
   _renderEntitySelect(field, currentValue, domain, deviceClass) {
     if (!this._hass || !this._hass.states) return `<input type="text" value="${this._esc(currentValue || "")}" data-settings-field="${field}">`;
     const entities = Object.values(this._hass.states)
@@ -8541,6 +8553,7 @@ class CoverAutomaticPanel extends HTMLElement {
         this._captureSettingsDraft();
         this._activeSettingsSection = actionEl.dataset.section;
         this._render();
+        this._centerActiveSettingsPill();
         break;
       case "rotate-by": {
         const input = this.shadowRoot.querySelector("#house-rotation-input");

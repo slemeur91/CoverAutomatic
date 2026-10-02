@@ -5,6 +5,25 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.1] - 2026-10-02
+
+Includes the applicable changes of upstream 1.62.2 – 1.63.0.
+
+### Added
+
+- Device page: a CoverAutomatic device whose cover or facade is no longer configured can be deleted with Home Assistant's "Delete" button. Devices of configured covers and facades and the integration's own device stay protected (upstream 1.62.2).
+
+### Changed
+
+- Links point to this fork (github.com/slemeur91/CoverAutomatic): documentation and issue tracker in Home Assistant, dashboard card documentation, panel version link. The panel's update check now looks for new releases of this fork instead of the original project.
+- README translated to French, with a fork notice and a section on the V2 changes.
+
+### Fixed
+
+- Turning a cover's automation on or off in the panel now updates its automation switch and status sensor in Home Assistant right away instead of up to a minute later; turning it back on applies the active rule immediately (upstream 1.62.4).
+- Startup cleanup: when the configuration holds no cover and no facade (lost or reset storage file), existing devices and entities are no longer removed, so customised entity ids and names are kept. A warning is logged instead.
+- On phones, choosing a settings section near the end of the section bar keeps it in view: the bar scrolls to the selected section (upstream 1.63.0).
+
 ## [2.0.0] - 2026-10-01
 
 Major release consolidating all changes since 1.61.1. It includes the upstream releases 1.61.2, 1.62.0 and 1.62.1 (entries below), merged with these changes.

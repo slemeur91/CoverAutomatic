@@ -650,7 +650,7 @@
       name: "CoverAutomatic",
       description: I18N[(navigator.language || "en").slice(0, 2)]?.desc || I18N.en.desc,
       preview: true,
-      documentationURL: "https://github.com/crandler/CoverAutomatic",
+      documentationURL: "https://github.com/slemeur91/CoverAutomatic",
     });
   }
 })();

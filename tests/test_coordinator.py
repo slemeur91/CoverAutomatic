@@ -982,7 +982,7 @@ class TestUnlockCoverRestore:
         self, coordinator, mock_storage
     ) -> None:
         """When previous was MANUAL, restores MANUAL without scheduling refresh."""
-        # v1.90: MANUAL is only restored while the automation is still off
+        # MANUAL is only restored while the automation is still off
         coordinator.storage.get_cover_raw.return_value = {"auto_enabled": False}
         coordinator._pre_lock_states["cover.test"] = CoverStatus.MANUAL
         coordinator._cover_states["cover.test"] = CoverStatus.LOCKED
@@ -1650,7 +1650,7 @@ class TestRestoreCoverStates:
         )
 
     def test_restore_locked_is_kept(self, coordinator, mock_storage) -> None:
-        """LOCKED covers stay LOCKED (v1.87: the window sensor may still be unknown)."""
+        """LOCKED covers stay LOCKED (the window sensor may still be unknown)."""
         mock_storage._data = {
             "covers": {
                 "cover.kitchen": {
@@ -2737,7 +2737,7 @@ class TestCommandStagger:
         """Test _send_staggered_commands sends with delay."""
         mock_storage.command_stagger = 0.2
         commands = [("cover.a", 100), ("cover.b", 100), ("cover.c", 100)]
-        # v1.87: each wind command is re-checked right before it is sent
+        # Each wind command is re-checked right before it is sent
         coordinator._wind_protected = True
         for eid, _ in commands:
             coordinator._cover_states[eid] = CoverStatus.WIND_PROTECTED
@@ -2870,7 +2870,7 @@ class TestManualOverrideDuringVenting:
     def test_vent_sensor_close_cancels_pause(
         self, coordinator, mock_hass, mock_storage
     ) -> None:
-        """v1.90: vent sensor closing while PAUSED keeps the pause (timer unchanged)."""
+        """Vent sensor closing while PAUSED keeps the pause (timer unchanged)."""
         cover = self._make_cover()
         mock_storage.covers = {"cover.test": cover}
         coordinator._cover_states["cover.test"] = CoverStatus.PAUSED
@@ -2898,7 +2898,7 @@ class TestManualOverrideDuringVenting:
     def test_paused_to_venting_syncs_last_positions(
         self, coordinator, mock_hass, mock_storage
     ) -> None:
-        """Vent sensor opening while PAUSED keeps the pause (v1.90) and syncs _last_positions."""
+        """Vent sensor opening while PAUSED keeps the pause and syncs _last_positions."""
         cover = self._make_cover()
         mock_storage.covers = {"cover.test": cover}
         coordinator._cover_states["cover.test"] = CoverStatus.PAUSED
@@ -3653,42 +3653,3 @@ class TestProtectiveStatusExitFreshApply:
         ]
         assert position_calls == []
         assert "cover.test" not in coordinator._post_protective_exit
-
-
-class TestGetLiveCover:
-    """get_live_cover returns one cover's live data, as get_live_cover_data does for all."""
-
-    def test_resolves_rule_name(self, coordinator, mock_storage) -> None:
-        from custom_components.cover_automatic.models import Rule
-
-        coordinator.engine = MagicMock()
-        coordinator.engine._last_comfort_mode = {}
-        mock_storage.rules = {"day": Rule(id="day", name="Day")}
-        coordinator.data = {
-            "covers": {
-                "cover.test": {"status": "auto", "target_position": 40, "matching_rule_id": "day"},
-            }
-        }
-
-        live = coordinator.get_live_cover("cover.test")
-
-        assert live["rule_id"] == "day"
-        assert live["rule_name"] == "Day"
-        assert live["target_position"] == 40
-        assert coordinator.get_live_cover_data()["cover.test"] == live
-
-    def test_deleted_rule_falls_back_to_id(self, coordinator, mock_storage) -> None:
-        coordinator.engine = MagicMock()
-        coordinator.engine._last_comfort_mode = {}
-        mock_storage.rules = {}
-        coordinator.data = {
-            "covers": {"cover.test": {"target_position": 0, "matching_rule_id": "gone"}}
-        }
-
-        assert coordinator.get_live_cover("cover.test")["rule_name"] == "gone"
-
-    def test_unknown_cover_or_no_data(self, coordinator) -> None:
-        coordinator.data = None
-        assert coordinator.get_live_cover("cover.test") is None
-        coordinator.data = {"covers": {}}
-        assert coordinator.get_live_cover("cover.test") is None

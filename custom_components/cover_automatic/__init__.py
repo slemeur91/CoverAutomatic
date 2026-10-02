@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
@@ -22,7 +23,7 @@ from homeassistant.loader import async_get_integration
 from .api import async_setup_api
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import CoverAutomaticCoordinator
-from .entities import async_cleanup_orphan_entities
+from .entities import async_cleanup_orphan_entities, expected_device_identifiers
 from .services import async_setup_services, async_unload_services
 from .storage import ActivityLogStorage, CoverAutomaticStorage
 
@@ -126,8 +127,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoverAutomaticConfigEntr
 
     _cleanup_removed_entities(hass)
     # Entities of covers/facades deleted while HA was running an older
-    # version (or deleted before a restart) are dropped here.
-    async_cleanup_orphan_entities(hass, entry, storage)
+    # version (or deleted before a restart) are dropped here. Skipped when
+    # the configuration holds no cover and no facade: a lost or reset
+    # storage file must not wipe every device and entity (and with them
+    # the entity ids and names customised by the user).
+    if storage._data.get("covers") or storage._data.get("facades"):
+        async_cleanup_orphan_entities(hass, entry, storage)
+    else:
+        _LOGGER.warning(
+            "No cover or facade configured: existing CoverAutomatic devices "
+            "are kept (they can be deleted on their device page)"
+        )
 
     async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Handle options update by reloading entry to recreate entities."""
@@ -265,3 +275,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: CoverAutomaticConfigEnt
             async_remove_panel(hass, "cover-automatic")
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: CoverAutomaticConfigEntry, device: dr.DeviceEntry
+) -> bool:
+    """Allow deleting a device on its page only when nothing configured uses it.
+
+    Devices of configured covers and facades and the integration's own device
+    stay protected; a device left behind (cover or facade no longer in the
+    configuration) can be deleted by the user.
+    """
+    runtime_data = getattr(entry, "runtime_data", None)
+    if runtime_data is None:
+        return False
+    active = expected_device_identifiers(entry.entry_id, runtime_data.storage)
+    return not any(
+        domain == DOMAIN and identifier in active
+        for domain, identifier in device.identifiers
+    )

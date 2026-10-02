@@ -2764,7 +2764,19 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.async_update_listeners()
 
     def set_cover_manual(self, entity_id: str) -> None:
-        """Set a cover's status to MANUAL (public API for platforms)."""
+        """Set a cover's status to MANUAL (public API for platforms).
+
+        The entities (automation switch, status sensor) are notified right
+        away, also when a protection keeps the status: the switch state
+        changed either way. Without it a toggle from the panel only showed
+        in Home Assistant at the next update cycle (up to a minute later).
+        """
+        self._set_cover_manual_status(entity_id)
+        if self.data is not None:
+            self.async_set_updated_data(self.data)
+
+    def _set_cover_manual_status(self, entity_id: str) -> None:
+        """Status part of set_cover_manual (no entity notification)."""
         prev = self._cover_states.get(entity_id, CoverStatus.AUTO)
         if prev in (CoverStatus.LOCKED, CoverStatus.VENTING) or (
             self._wind_protected and prev == CoverStatus.WIND_PROTECTED

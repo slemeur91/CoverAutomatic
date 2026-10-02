@@ -373,7 +373,8 @@ async def ws_cover_update(
     # transitions (same path as the HA switch entity). Without this the
     # persisted cover status stays "auto" and the panel keeps showing AUTO
     # after disabling automation; on re-enable the cover would stay MANUAL.
-    if "auto_enabled" in msg and msg["auto_enabled"] != old_auto_enabled:
+    auto_toggled = "auto_enabled" in msg and msg["auto_enabled"] != old_auto_enabled
+    if auto_toggled:
         if msg["auto_enabled"]:
             coordinator.resume_cover(entity_id)
         else:
@@ -382,6 +383,10 @@ async def ws_cover_update(
     storage._invalidate_cache()
     await storage.async_save()
     coordinator.refresh_state_tracking()
+    if auto_toggled:
+        # Evaluate now (like cover/resume): the switch, the status sensor and
+        # the rule attributes show the new state without waiting for a cycle
+        await coordinator.async_request_refresh()
     connection.send_result(msg["id"], _build_config_response(storage, hass, coordinator))
 
 
