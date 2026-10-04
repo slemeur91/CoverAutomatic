@@ -2039,6 +2039,9 @@ const FACADE_PRESETS = {
   west: { start: 225, end: 315 }
 };
 
+// Compass bearing of each facade direction (before house rotation).
+const FACADE_BEARINGS = { north: 0, east: 90, south: 180, west: 270 };
+
 const DIRECTION_ARROWS = {
   north: "\u2191",
   east: "\u2192",
@@ -2267,6 +2270,9 @@ const PANEL_STYLES = `
     box-shadow: var(--ca-shadow);
     border: 1px solid var(--ca-border);
     overflow: hidden;
+    /* clip (where supported) keeps the rounded corners without becoming a
+       scroll container, so the rule editor's sticky save bar can stick. */
+    overflow: clip;
     transition: box-shadow var(--ca-transition);
   }
   .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
@@ -3327,7 +3333,9 @@ const PANEL_STYLES = `
     padding: 0 16px;
   }
   .rule-editor.expanded {
-    max-height: 2000px;
+    /* No height cap: a long rule must never clip its save button. */
+    max-height: none;
+    overflow: visible;
     padding: 16px;
     border-top: 1px solid var(--ca-border);
   }
@@ -3762,6 +3770,13 @@ const PANEL_STYLES = `
     display: flex;
     justify-content: flex-end;
     margin-top: 16px;
+    /* Stays in view while scrolling a long rule */
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 10px 0;
+    background: var(--ca-card-bg);
+    border-top: 1px solid var(--ca-border);
   }
 
   /* Scenario card extras */
@@ -5958,9 +5973,18 @@ class CoverAutomaticPanel extends HTMLElement {
     return html;
   }
 
+  // Widest sun window of a facade: 90° on each side of its bearing, with the
+  // house rotation applied (real compass bearings, normalized to [0, 360)).
+  _facadeMaxSpan(direction) {
+    const bearing = FACADE_BEARINGS[direction] ?? FACADE_BEARINGS.south;
+    const rot = this._num(this._config?.settings?.house_rotation, 0);
+    return { start: this._facadeAz(bearing - 90 + rot, 90), end: this._facadeAz(bearing + 90 + rot, 270) };
+  }
+
   _renderFacadeAddForm() {
     const covers = this._config.covers || {};
-    let html = `<div class="inline-form">
+    const span = this._facadeMaxSpan("south");
+    let html = `<div class="inline-form" data-facade-form="add">
       <div class="form-group">
         <label>${this._t("name")}</label>
         <input type="text" value="" data-facade-field="name" placeholder="${this._t("name")}">
@@ -5975,11 +5999,11 @@ class CoverAutomaticPanel extends HTMLElement {
       <div class="form-row">
         <div class="form-group">
           <label>${this._t("facade_azimuth_start")}</label>
-          <input type="number" step="any" value="135" data-facade-field="azimuth_start">
+          <input type="number" step="any" value="${span.start}" data-facade-field="azimuth_start">
         </div>
         <div class="form-group">
           <label>${this._t("facade_azimuth_end")}</label>
-          <input type="number" step="any" value="225" data-facade-field="azimuth_end">
+          <input type="number" step="any" value="${span.end}" data-facade-field="azimuth_end">
         </div>
       </div>
       ${this._hint("facade_azimuth_hint")}
@@ -8850,8 +8874,10 @@ class CoverAutomaticPanel extends HTMLElement {
         if (form) {
           const startInput = form.querySelector('[data-facade-field="azimuth_start"]');
           const endInput = form.querySelector('[data-facade-field="azimuth_end"]');
-          if (startInput) startInput.value = ((presets.start + rot) % 360 + 360) % 360;
-          if (endInput) endInput.value = ((presets.end + rot) % 360 + 360) % 360;
+          // A new facade starts with its widest sun window; an existing one keeps the 90° preset.
+          const span = form.dataset.facadeForm === "add" ? this._facadeMaxSpan(el.value) : null;
+          if (startInput) startInput.value = span ? span.start : ((presets.start + rot) % 360 + 360) % 360;
+          if (endInput) endInput.value = span ? span.end : ((presets.end + rot) % 360 + 360) % 360;
         }
       }
       return;
@@ -9125,8 +9151,9 @@ class CoverAutomaticPanel extends HTMLElement {
     const name = form.querySelector('[data-facade-field="name"]')?.value || "";
     if (!name.trim()) return;
     const direction = form.querySelector('[data-facade-field="direction"]')?.value || "south";
-    const azStart = this._facadeAz(form.querySelector('[data-facade-field="azimuth_start"]')?.value, 135);
-    const azEnd = this._facadeAz(form.querySelector('[data-facade-field="azimuth_end"]')?.value, 225);
+    const span = this._facadeMaxSpan(direction);
+    const azStart = this._facadeAz(form.querySelector('[data-facade-field="azimuth_start"]')?.value, span.start);
+    const azEnd = this._facadeAz(form.querySelector('[data-facade-field="azimuth_end"]')?.value, span.end);
     const minElev = (() => { const v = parseFloat(form.querySelector('[data-facade-field="min_elevation"]')?.value); return Number.isFinite(v) ? Math.max(0, v) : 0; })();
     const coverIds = [];
     form.querySelectorAll('[data-action="facade-cover-toggle"].selected').forEach(b => coverIds.push(b.dataset.cover));

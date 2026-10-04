@@ -5,6 +5,20 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.3] - 2026-10-04
+
+### Added
+
+- English documentation: `README_EN.md`, linked from the top of the French README.
+
+### Changed
+
+- New facade: the azimuth start / end fields are prefilled with the widest sun window of the chosen direction (90° on each side of the facade bearing, house rotation applied), e.g. south with a 20° rotation gives 110° / 290° instead of 135° / 225°. The values follow the direction selector and stay editable. Changing the direction of an existing facade keeps the previous 90° preset.
+
+### Fixed
+
+- Rule editor: the Save button could be cut off on long rules (many conditions, YAML conditions), mostly on phones, because the editor height was capped. The cap is removed and the Save button now stays in view at the bottom while scrolling a long rule.
+
 ## [2.0.2] - 2026-10-02
 
 ### Changed

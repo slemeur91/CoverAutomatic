@@ -14,6 +14,8 @@
   <img src="https://img.shields.io/badge/Home%20Assistant-2026.3%2B-03a9f4?logo=homeassistant&logoColor=white" alt="Home Assistant 2026.3+">
 </p>
 
+<p align="center">🇬🇧 <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/README_EN.md">English version</a></p>
+
 ---
 
 > **ℹ️ Ceci est un fork**
@@ -265,7 +267,9 @@ Après une mise à jour, rechargez la page du navigateur (Ctrl/Cmd+Maj+R) pour c
 Après l'installation, tout se configure dans le panneau **CoverAutomatic** de la barre latérale :
 
 1. **Volets** – ajoutez les entités `cover` à piloter ; chaque volet a sa fiche (fenêtre, pièce, exposition, automatisation)
-2. **Façades** – définissez les façades du bâtiment par orientation (avec visualisation sur une boussole)
+2. **Façades** – définissez les façades du bâtiment par orientation (avec visualisation sur une boussole). Pour une
+   nouvelle façade, les azimuts de début et de fin sont préremplis avec l'ouverture maximale de l'orientation choisie
+   (90° de chaque côté, rotation de la maison appliquée) et restent modifiables
 3. **Règles** – créez les règles d'automatisation à partir de conditions (soleil, température, heure, météo, entités…).
    Les conditions peuvent être inversées (NON) et organisées en groupes, par exemple (A OU B) ET (C OU D) ;
    une règle existante peut être dupliquée comme point de départ
@@ -524,13 +528,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.0.2
+2.0.3
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.0.2 (2026-10-02), basée sur la version d'origine
+Dernière version : v2.0.3 (2026-10-04), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
 
 ## Licence
