@@ -7,6 +7,7 @@
  *     - cover.volet_du_salon
  *   show_rule: true          # optional
  *   show_auto: true          # optional (automation switch + resume button)
+ *   show_temp: true          # optional (room temperature after the cover name)
  *
  * Everything comes from the per-cover "Status" sensors of the integration
  * (their attributes carry the rule, target, pause end and the automation
@@ -25,6 +26,7 @@
       resume: "Resume automation",
       auto: "Automation",
       safety: "Safety rule",
+      room_temp: "Room temperature",
       target: "Target",
       remaining: "{m} min left",
       inverted: "Inverted cover: HA reports {raw}%",
@@ -32,6 +34,7 @@
       ed_covers: "Covers (empty = all)",
       ed_show_rule: "Show the active rule",
       ed_show_auto: "Show the automation switch and the resume button",
+      ed_show_temp: "Show the room temperature",
       desc: "Covers managed by CoverAutomatic: position, active rule and status.",
       scenario: "Scenario",
       master: "Automation",
@@ -52,6 +55,7 @@
       resume: "Automatik fortsetzen",
       auto: "Automatik",
       safety: "Sicherheitsregel",
+      room_temp: "Raumtemperatur",
       target: "Ziel",
       remaining: "noch {m} Min.",
       inverted: "Invertierter Rollladen: HA meldet {raw} %",
@@ -59,6 +63,7 @@
       ed_covers: "Rollläden (leer = alle)",
       ed_show_rule: "Aktive Regel anzeigen",
       ed_show_auto: "Automatik-Schalter und Fortsetzen-Knopf anzeigen",
+      ed_show_temp: "Raumtemperatur anzeigen",
       desc: "Von CoverAutomatic gesteuerte Rollläden: Position, aktive Regel und Status.",
       scenario: "Szenario",
       master: "Automatik",
@@ -79,6 +84,7 @@
       resume: "Reprendre l'automatisation",
       auto: "Automatisation",
       safety: "Règle de sécurité",
+      room_temp: "Température de la pièce",
       target: "Cible",
       remaining: "encore {m} min",
       inverted: "Volet inversé : HA indique {raw} %",
@@ -86,6 +92,7 @@
       ed_covers: "Volets (vide = tous)",
       ed_show_rule: "Afficher la règle active",
       ed_show_auto: "Afficher l'interrupteur d'automatisation et le bouton de reprise",
+      ed_show_temp: "Afficher la température de la pièce",
       desc: "Volets gérés par CoverAutomatic : position, règle active et statut.",
       scenario: "Scénario",
       master: "Automatisation",
@@ -190,7 +197,7 @@
     }
 
     static getStubConfig() {
-      return { show_header: true, show_rule: true, show_auto: true };
+      return { show_header: true, show_rule: true, show_auto: true, show_temp: true };
     }
 
     // Never throws on a questionable option (a thrown error shows a red
@@ -198,7 +205,7 @@
     setConfig(config) {
       const c = config && typeof config === "object" ? { ...config } : {};
       if (c.covers != null && !Array.isArray(c.covers)) c.covers = typeof c.covers === "string" ? [c.covers] : undefined;
-      this._config = { show_header: true, show_rule: true, show_auto: true, ...c };
+      this._config = { show_header: true, show_rule: true, show_auto: true, show_temp: true, ...c };
       this._skeleton = "";
       this._render();
     }
@@ -457,8 +464,9 @@
       }
       const invTip = a.inverted && raw != null ? ` title="${esc(t(hass, "inverted").replace("{raw}", raw))}"` : "";
       const rule = this._config.show_rule
-        ? `<div class="rule${a.rule ? "" : " none"}">${a.safety_rule ? `<ha-icon icon="mdi:shield-alert" title="${esc(t(hass, "safety"))}"></ha-icon>` : ""}${esc(a.rule || t(hass, "no_rule"))}</div>`
+        ? `<div class="rule${a.rule ? "" : " none"}"><span class="rule-text">${esc(a.rule || t(hass, "no_rule"))}</span>${a.safety_rule ? `<ha-icon icon="mdi:shield-alert" title="${esc(t(hass, "safety"))}"></ha-icon>` : ""}</div>`
         : "";
+      const temp = this._config.show_temp ? this._temp(a) : "";
       let controls = "";
       if (this._config.show_auto) {
         const sw = a.auto_switch ? hass.states[a.auto_switch] : null;
@@ -473,13 +481,27 @@
       }
       return `<div class="row${unavailable ? " unavailable" : ""}${this._config.show_auto ? "" : " no-auto"}">
         <div class="main">
-          <button class="name" data-more="${esc(r.id)}">${esc(this._name(r.id, r.status))}</button>
+          <div class="name-line"><button class="name" data-more="${esc(r.id)}">${esc(this._name(r.id, r.status))}</button>${temp}</div>
           ${rule}
         </div>
         <div class="pos"${invTip}>${unavailable ? '<span class="dash">–</span>' : this._bar(pos, a.target_position)}${a.inverted ? '<span class="inv">⇅</span>' : ""}</div>
         <div class="status"><span class="pill" style="--pill:${color}">${esc(stateLabel)}</span>${pause}</div>
         ${controls}
       </div>`;
+    }
+
+    // Room temperature of a cover, read from its indoor sensor; same colours
+    // and icons as the panel's cover list (cold / hot room, chosen convention).
+    _temp(a) {
+      const st = a.room_temp_sensor ? this._hass.states[a.room_temp_sensor] : null;
+      if (!st || num(st.state) == null) return "";
+      const cold = a.comfort_mode === "heating", hot = a.comfort_mode === "cooling";
+      const thermo = a.temp_color_thermometer === true;
+      const red = "var(--error-color, #db4437)", blue = "var(--info-color, #039be5)";
+      const color = cold ? (thermo ? blue : red) : hot ? (thermo ? red : blue) : "";
+      const icon = cold || hot ? `<ha-icon icon="mdi:${cold ? "snowflake-thermometer" : "sun-thermometer"}"></ha-icon>` : "";
+      const text = this._hass.formatEntityState ? this._hass.formatEntityState(st) : `${Number(st.state).toFixed(1)} °C`;
+      return `<span class="temp"${color ? ` style="color:${color}"` : ""} title="${esc(t(this._hass, "room_temp"))}">${icon}${esc(text)}</span>`;
     }
 
     _onClick(e) {
@@ -561,10 +583,15 @@
     .row.unavailable { opacity: .5; }
     .main { min-width: 0; }
     .name { all: unset; cursor: pointer; font-weight: 500; color: var(--primary-text-color); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .name-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .name-line .name { flex: 0 1 auto; min-width: 0; }
+    .temp { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 12px; white-space: nowrap; color: var(--secondary-text-color); font-variant-numeric: tabular-nums; }
+    .temp ha-icon { --mdc-icon-size: 14px; }
     .name:focus-visible { outline: 2px solid var(--primary-color); border-radius: 4px; }
     .rule { font-size: 12px; color: var(--primary-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 3px; }
     .rule.none { color: var(--secondary-text-color); }
-    .rule ha-icon { --mdc-icon-size: 14px; color: var(--error-color, #db4437); }
+    .rule-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .rule ha-icon { --mdc-icon-size: 14px; color: var(--error-color, #db4437); flex: none; }
     .pos { display: flex; align-items: center; gap: 4px; min-width: 0; }
     .bar { display: flex; align-items: center; gap: 6px; min-width: 0; width: 100%; }
     .track { position: relative; flex: 1 1 auto; min-width: 30px; height: 6px; border-radius: 3px; background: var(--divider-color, rgba(0,0,0,.12)); }
@@ -618,6 +645,7 @@
         { name: "show_header", selector: { boolean: {} } },
         { name: "show_rule", selector: { boolean: {} } },
         { name: "show_auto", selector: { boolean: {} } },
+        { name: "show_temp", selector: { boolean: {} } },
       ];
       if (!this._form) {
         this._form = document.createElement("ha-form");
@@ -632,10 +660,10 @@
         });
         this.appendChild(this._form);
       }
-      const labels = { title: "ed_title", covers: "ed_covers", show_header: "ed_show_header", show_rule: "ed_show_rule", show_auto: "ed_show_auto" };
+      const labels = { title: "ed_title", covers: "ed_covers", show_header: "ed_show_header", show_rule: "ed_show_rule", show_auto: "ed_show_auto", show_temp: "ed_show_temp" };
       this._form.hass = this._hass;
       this._form.schema = schema;
-      this._form.data = { show_header: true, show_rule: true, show_auto: true, ...this._config };
+      this._form.data = { show_header: true, show_rule: true, show_auto: true, show_temp: true, ...this._config };
       this._form.computeLabel = (s) => t(this._hass, labels[s.name] || s.name);
     }
   }

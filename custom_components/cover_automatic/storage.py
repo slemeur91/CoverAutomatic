@@ -78,6 +78,7 @@ GLOBAL_SETTING_KEYS = (
         "preemptive_shading",
         "temp_color_thermometer",
         "pause_resume_on_match",
+        "rotate_facades_with_house",
 )
 # Value types of the global settings, checked on import (a hand-edited
 # file may hold "false" or "15" as text).
@@ -85,6 +86,7 @@ _BOOL_SETTINGS = frozenset({
     "enabled", "logbook_enabled", "update_check_enabled",
     "sun_heating_ignore", "sun_neutral_ignore", "preemptive_shading",
     "temp_color_thermometer", "pause_resume_on_match",
+    "rotate_facades_with_house",
 })
 _INT_SETTINGS = frozenset({
     "pause_duration", "lock_position", "vent_position", "lock_tilt_position",
@@ -137,6 +139,7 @@ SETTING_VALIDATORS: dict[str, Any] = {
     "preemptive_shading": bool,
     "temp_color_thermometer": bool,
     "pause_resume_on_match": bool,
+    "rotate_facades_with_house": bool,
 }
 _SETTING_SCHEMAS = {key: vol.Schema(validator) for key, validator in SETTING_VALIDATORS.items()}
 
@@ -807,6 +810,16 @@ class CoverAutomaticStorage:
     def temp_color_thermometer(self, value: bool) -> None:
         """Set the temperature colour convention."""
         self._data["temp_color_thermometer"] = bool(value)
+
+    @property
+    def rotate_facades_with_house(self) -> bool:
+        """Whether changing the house rotation also rotates the existing facades."""
+        return bool(self._setting("rotate_facades_with_house", True))
+
+    @rotate_facades_with_house.setter
+    def rotate_facades_with_house(self, value: bool) -> None:
+        """Set whether existing facades follow a house rotation change."""
+        self._data["rotate_facades_with_house"] = bool(value)
 
     @property
     def pause_resume_on_match(self) -> bool:

@@ -420,6 +420,14 @@ const I18N = {
     rule_covers: "Covers",
     rule_assignment_hint: "Limit this rule to specific facades/covers. Empty = applies to all covers.",
     rule_add: "Add rule",
+    rule_filter_all_facades: "All facades",
+    rule_filter_all_scenarios: "All scenarios",
+    rule_filter_all_states: "Enabled and disabled",
+    rule_filter_enabled: "Enabled",
+    rule_filter_disabled: "Disabled",
+    rule_filter_clear: "Clear",
+    rule_filter_none: "No rule matches the filter.",
+    rule_filter_reorder_hint: "Clear the filter to change the order of the rules.",
     rule_add_condition: "Add condition",
     rule_no_conditions: "No conditions",
     rule_reorder_hint: "Drag or use ▲▼ to reorder. Top rule wins when multiple rules match.",
@@ -501,8 +509,10 @@ const I18N = {
     settings_threshold_hysteresis: "Hysteresis – on outdoor temperature in rules (°C)",
     settings_threshold_hysteresis_hint: "Prevents an “outdoor temperature above/below” or “Outdoor air compared to the room” condition from flipping with every reading while the temperature stays close to the threshold. 0 = no hysteresis.",
     settings_house_rotation: "House rotation (degrees)",
-    settings_house_rotation_hint: "Offset from true north (-180 to 180, positive = clockwise). Applied when selecting a facade direction; changing it rotates existing facades too. Drag the house in the compass, hold Shift to snap to 45°.",
+    settings_house_rotation_hint: "Offset from true north (-180 to 180, positive = clockwise). Applied when selecting a facade direction. Drag the house in the compass, hold Shift to snap to 45°.",
     settings_house_rotation_reset: "Reset",
+    settings_rotate_facades: "Rotate existing facades with the house",
+    settings_rotate_facades_hint: "Checked: changing the rotation shifts the azimuths of the facades already created by the same angle. Unchecked: their azimuths do not change. Either way, a new facade is prefilled with the rotation applied.",
     settings_section_house: "House",
     settings_section_sensors: "Sensors",
     settings_outdoor_box_title: "Outdoor temperature",
@@ -1061,6 +1071,14 @@ const I18N = {
     rule_covers: "Behänge",
     rule_assignment_hint: "Regel auf bestimmte Fassaden/Behänge beschränken. Leer = gilt für alle.",
     rule_add: "Regel hinzufügen",
+    rule_filter_all_facades: "Alle Fassaden",
+    rule_filter_all_scenarios: "Alle Szenarien",
+    rule_filter_all_states: "Aktiviert und deaktiviert",
+    rule_filter_enabled: "Aktiviert",
+    rule_filter_disabled: "Deaktiviert",
+    rule_filter_clear: "Zurücksetzen",
+    rule_filter_none: "Keine Regel entspricht dem Filter.",
+    rule_filter_reorder_hint: "Filter zurücksetzen, um die Reihenfolge der Regeln zu ändern.",
     rule_add_condition: "Bedingung hinzufügen",
     rule_no_conditions: "Keine Bedingungen",
     rule_reorder_hint: "Ziehen oder ▲▼ zum Sortieren. Obere Regel gewinnt bei Überschneidung.",
@@ -1138,8 +1156,10 @@ const I18N = {
     settings_threshold_hysteresis: "Hysterese – Außentemperatur in Regeln (°C)",
     settings_threshold_hysteresis_hint: "Verhindert, dass eine Bedingung „Außentemperatur über/unter“ oder „Außenluft im Vergleich zum Raum“ bei jedem Messwert kippt, solange die Temperatur nahe der Schwelle bleibt. 0 = keine Hysterese.",
     settings_house_rotation: "Hausrotation (Grad)",
-    settings_house_rotation_hint: "Abweichung von exakt Nord (-180 bis 180, positiv = im Uhrzeigersinn). Wird bei der Fassaden-Richtungswahl angewendet; eine Änderung dreht bestehende Fassaden mit. Haus im Kompass ziehen, mit Shift auf 45° einrasten.",
+    settings_house_rotation_hint: "Abweichung von exakt Nord (-180 bis 180, positiv = im Uhrzeigersinn). Wird bei der Fassaden-Richtungswahl angewendet. Haus im Kompass ziehen, mit Shift auf 45° einrasten.",
     settings_house_rotation_reset: "Zurücksetzen",
+    settings_rotate_facades: "Bestehende Fassaden mit dem Haus drehen",
+    settings_rotate_facades_hint: "Aktiviert: Eine Änderung der Rotation verschiebt die Azimute der bereits angelegten Fassaden um denselben Winkel. Deaktiviert: Ihre Azimute bleiben unverändert. In beiden Fällen wird eine neue Fassade mit der Rotation vorbelegt.",
     settings_section_house: "Haus",
     settings_section_sensors: "Sensoren",
     settings_outdoor_box_title: "Außentemperatur",
@@ -1701,6 +1721,14 @@ const I18N = {
     rule_covers: "Volets",
     rule_assignment_hint: "Limite cette règle à certaines façades/volets. Vide = s'applique à tous les volets.",
     rule_add: "Ajouter une règle",
+    rule_filter_all_facades: "Toutes les façades",
+    rule_filter_all_scenarios: "Tous les scénarios",
+    rule_filter_all_states: "Activées et désactivées",
+    rule_filter_enabled: "Activées",
+    rule_filter_disabled: "Désactivées",
+    rule_filter_clear: "Effacer",
+    rule_filter_none: "Aucune règle ne correspond au filtre.",
+    rule_filter_reorder_hint: "Effacez le filtre pour modifier l'ordre des règles.",
     rule_add_condition: "Ajouter une condition",
     rule_no_conditions: "Aucune condition",
     rule_reorder_hint: "Glisser ou utiliser ▲▼ pour réordonner. La règle la plus haute l'emporte si plusieurs règles s'appliquent.",
@@ -1782,8 +1810,10 @@ const I18N = {
     settings_threshold_hysteresis: "Hystérésis – sur température extérieure dans les règles (°C)",
     settings_threshold_hysteresis_hint: "Évite qu'une condition « température extérieure supérieure/inférieure à » ou « Air extérieur comparé à la pièce » bascule à chaque mesure quand la température reste proche du seuil. 0 = pas d'hystérésis.",
     settings_house_rotation: "Rotation de la maison (degrés)",
-    settings_house_rotation_hint: "Décalage par rapport au nord géographique (-180 à 180, positif = sens horaire). Appliqué lors du choix d'une orientation de façade ; une modification fait aussi pivoter les façades existantes. Faites glisser la maison sur la boussole, maintenez Maj pour aligner par pas de 45°.",
+    settings_house_rotation_hint: "Décalage par rapport au nord géographique (-180 à 180, positif = sens horaire). Appliqué lors du choix d'une orientation de façade. Faites glisser la maison sur la boussole, maintenez Maj pour aligner par pas de 45°.",
     settings_house_rotation_reset: "Réinitialiser",
+    settings_rotate_facades: "Faire pivoter les façades existantes avec la maison",
+    settings_rotate_facades_hint: "Cochée : modifier la rotation décale d'autant les azimuts des façades déjà créées. Décochée : leurs azimuts ne changent pas. Dans les deux cas, une nouvelle façade est préremplie en tenant compte de la rotation.",
     settings_section_house: "Maison",
     settings_section_sensors: "Capteurs",
     settings_outdoor_box_title: "Température extérieure",
@@ -3893,6 +3923,9 @@ const PANEL_STYLES = `
     font-size: 14px;
     font-family: inherit;
   }
+  .rule-filter-bar select { min-width: 150px; flex: 1 1 150px; max-width: 260px; }
+  .rule-filter-count { font-size: 13px; color: var(--ca-secondary-text); white-space: nowrap; }
+  .drag-handle.drag-handle-off { opacity: 0.25; cursor: default; }
   .log-cover-filter select:focus { border-color: var(--ca-primary); outline: none; }
   .log-cover-note { font-size: 12px; color: var(--ca-secondary-text); }
   .slide-log-link { margin: 16px 0 4px; }
@@ -4064,6 +4097,7 @@ class CoverAutomaticPanel extends HTMLElement {
     this._logEntries = null;
     this._logFilter = null;
     this._logCover = null;
+    this._ruleFilter = { facade: "", cover: "", scenario: "", enabled: "" };
     this._coverSort = { key: "name", dir: "asc" };
     this._liveRefreshTimer = null;
     this._condPreviewTimer = null;
@@ -5974,11 +6008,46 @@ class CoverAutomaticPanel extends HTMLElement {
   }
 
   // Widest sun window of a facade: 90° on each side of its bearing, with the
-  // house rotation applied (real compass bearings, normalized to [0, 360)).
+  // house rotation applied (real compass bearings, normalized to [0, 360)),
+  // trimmed on its sides to the bearings the sun can actually reach.
   _facadeMaxSpan(direction) {
     const bearing = FACADE_BEARINGS[direction] ?? FACADE_BEARINGS.south;
     const rot = this._num(this._config?.settings?.house_rotation, 0);
-    return { start: this._facadeAz(bearing - 90 + rot, 90), end: this._facadeAz(bearing + 90 + rot, 270) };
+    const start = this._facadeAz(bearing - 90 + rot, 90);
+    const end = this._facadeAz(bearing + 90 + rot, 270);
+    return this._trimToSunSector(start, end) || { start, end };
+  }
+
+  // The sun never stands in a sector centred on north (northern hemisphere)
+  // or south (southern): it is bounded by the sunrise and sunset bearings of
+  // the summer solstice at the Home Assistant latitude. Returns the part of
+  // [start, end] (clockwise) outside that sector, in whole degrees, or null
+  // when nothing is trimmed, when the trim would split the window in two
+  // (facade facing the dark sector) or when the sun can come from anywhere
+  // (tropics, polar regions, unknown latitude).
+  _trimToSunSector(start, end) {
+    const lat = Number(this._hass?.config?.latitude);
+    const TILT = 23.44;
+    if (!Number.isFinite(lat) || Math.abs(lat) <= TILT || Math.abs(lat) >= 90 - TILT) return null;
+    const toRad = Math.PI / 180;
+    // Half-width of the dark sector = sunrise bearing at the summer solstice
+    const half = Math.acos(Math.sin(TILT * toRad) / Math.cos(lat * toRad)) / toRad;
+    const dark = lat >= 0 ? 0 : 180;
+    // Bearings relative to the centre of the dark sector: lit = [half, 360 - half]
+    const s = (((start - dark) % 360) + 360) % 360;
+    let e = (((end - dark) % 360) + 360) % 360;
+    if (e <= s) e += 360;
+    const parts = [0, 360]
+      .map(k => [Math.max(s, k + half), Math.min(e, k + 360 - half)])
+      .filter(([a, b]) => b - a > 0.001);
+    if (parts.length !== 1) return null;
+    const [a, b] = parts[0];
+    if (a - s < 0.001 && e - b < 0.001) return null;
+    // Whole degrees, rounded towards the inside of the lit sector
+    const lo = a - s < 0.001 ? a : Math.ceil(a - 0.001);
+    const hi = e - b < 0.001 ? b : Math.floor(b + 0.001);
+    if (hi - lo <= 0) return null;
+    return { start: this._facadeAz(lo + dark, start), end: this._facadeAz(hi + dark, end) };
   }
 
   _renderFacadeAddForm() {
@@ -6032,14 +6101,68 @@ class CoverAutomaticPanel extends HTMLElement {
   /* ============================================================
    * TAB: Rules
    * ============================================================ */
+  // Rules tab filter: a rule without facade and cover applies to every cover,
+  // a rule without scenario list belongs to every scenario.
+  _ruleMatchesFilter(r) {
+    const f = this._ruleFilter;
+    const covers = this._config.covers || {};
+    const coverIds = r.cover_ids || [], facadeIds = r.facade_ids || [];
+    const everywhere = !coverIds.length && !facadeIds.length;
+    if (f.facade && !everywhere && !facadeIds.includes(f.facade)
+      && !coverIds.some(id => covers[id] && covers[id].facade_id === f.facade)) return false;
+    if (f.cover && !everywhere && !coverIds.includes(f.cover)
+      && !(covers[f.cover] && facadeIds.includes(covers[f.cover].facade_id))) return false;
+    if (f.scenario && Array.isArray(r.scenario_ids) && !r.scenario_ids.includes(f.scenario)) return false;
+    if (f.enabled === "on" && !r.enabled) return false;
+    if (f.enabled === "off" && r.enabled) return false;
+    return true;
+  }
+
+  _renderRuleFilterBar(shown, total) {
+    const f = this._ruleFilter;
+    const select = (key, allKey, options) => `<select data-action="rule-filter" data-filter-key="${key}" aria-label="${this._esc(this._t(allKey))}">
+        <option value="">${this._esc(this._t(allKey))}</option>
+        ${options.map(([value, label]) => `<option value="${this._esc(value)}"${f[key] === value ? " selected" : ""}>${this._esc(label)}</option>`).join("")}
+      </select>`;
+    const byName = (a, b) => String(a[1]).localeCompare(String(b[1]));
+    const facades = Object.values(this._config.facades || {}).map(x => [x.id, x.name]).sort(byName);
+    const covers = Object.values(this._config.covers || {}).map(c => [c.entity_id, c.name]).sort(byName);
+    const scenarios = Object.values(this._config.scenarios || {}).map(sc => [sc.id, sc.name]);
+    const filtering = this._ruleFilterActive();
+    return `<div class="log-cover-filter rule-filter-bar">
+      ${select("facade", "rule_filter_all_facades", facades)}
+      ${select("cover", "log_filter_all_covers", covers)}
+      ${select("scenario", "rule_filter_all_scenarios", scenarios)}
+      ${select("enabled", "rule_filter_all_states", [["on", this._t("rule_filter_enabled")], ["off", this._t("rule_filter_disabled")]])}
+      ${filtering ? `<button class="btn btn-sm" data-action="rule-filter-clear">${this._esc(this._t("rule_filter_clear"))}</button>
+      <span class="rule-filter-count">${shown} / ${total}</span>` : ""}
+    </div>`;
+  }
+
+  _ruleFilterActive() {
+    return Object.values(this._ruleFilter).some(Boolean);
+  }
+
   _renderRules() {
     const rules = this._config.rules || {};
-    const sorted = this._rulesByPriority(rules);
+    const all = this._rulesByPriority(rules);
+    // A filter that no longer points at an existing item is dropped
+    const f = this._ruleFilter;
+    if (f.facade && !(this._config.facades || {})[f.facade]) f.facade = "";
+    if (f.cover && !(this._config.covers || {})[f.cover]) f.cover = "";
+    if (f.scenario && !(this._config.scenarios || {})[f.scenario]) f.scenario = "";
+    const filtering = this._ruleFilterActive();
+    // The rule being edited stays visible so its draft is never hidden
+    const sorted = filtering ? all.filter(r => r.id === this._expandedRule || this._ruleMatchesFilter(r)) : all;
 
-    let html = `<div class="rule-reorder-hint">${this._t("rule_reorder_hint")}</div>`;
+    let html = all.length ? this._renderRuleFilterBar(sorted.length, all.length) : "";
+    // Reordering a partial list would be ambiguous: only without filter
+    html += filtering
+      ? `<div class="rule-reorder-hint">${this._t("rule_filter_reorder_hint")}</div>`
+      : `<div class="rule-reorder-hint">${this._t("rule_reorder_hint")}</div>`;
 
     if (sorted.length === 0 && !this._addingRule) {
-      html += `<div class="empty-state">${this._t("none")}</div>`;
+      html += `<div class="empty-state">${this._t(filtering ? "rule_filter_none" : "none")}</div>`;
     }
 
     const activeRules = this._config.active_rules || {};
@@ -6053,10 +6176,12 @@ class CoverAutomaticPanel extends HTMLElement {
       const isActive = matchedCovers.length > 0;
 
       const activeClass = isActive ? " rule-active" : "";
-      html += `<div class="rule-row${activeClass}${dragging}${dragOver}" draggable="true" data-rule-id="${this._esc(r.id)}" data-action="rule-drag">`;
-      html += `<span class="drag-handle" title="${this._esc(this._t("drag_handle"))}">&#9783;</span>`;
+      html += filtering
+        ? `<div class="rule-row${activeClass}" data-rule-id="${this._esc(r.id)}">`
+        : `<div class="rule-row${activeClass}${dragging}${dragOver}" draggable="true" data-rule-id="${this._esc(r.id)}" data-action="rule-drag">`;
+      html += `<span class="drag-handle${filtering ? " drag-handle-off" : ""}"${filtering ? "" : ` title="${this._esc(this._t("drag_handle"))}"`}>&#9783;</span>`;
       // Keyboard/touch alternative to drag & drop
-      html += this._moveBtns(`data-id="${this._esc(r.id)}"`, "rule-prio-up", "rule-prio-down", "rule_priority_up", "rule_priority_down", idx === 0, idx === sorted.length - 1)
+      html += this._moveBtns(`data-id="${this._esc(r.id)}"`, "rule-prio-up", "rule-prio-down", "rule_priority_up", "rule_priority_down", filtering || idx === 0, filtering || idx === sorted.length - 1)
         .replace('class="move-btns"', 'class="move-btns move-btns-v"');
       html += `<div class="rule-info" data-action="rule-expand" data-id="${this._esc(r.id)}" tabindex="0" role="button" aria-expanded="${isExpanded ? "true" : "false"}">`;
       html += `<div class="rule-name">`;
@@ -7447,6 +7572,9 @@ class CoverAutomaticPanel extends HTMLElement {
 
   _renderCompassSVG(rotation) {
     const cx = 140, cy = 140, r = 88, hr = 28;
+    // South at the top (the sun side in the northern hemisphere): north is
+    // down, east left, west right. Screen angle of a compass bearing:
+    const rad = (az) => (az + 90) * Math.PI / 180;
     const sunState = this._hass ? this._hass.states["sun.sun"] : null;
     const sunAz = sunState ? parseFloat(sunState.attributes.azimuth) : null;
     const sunEl = sunState ? parseFloat(sunState.attributes.elevation) : null;
@@ -7459,15 +7587,15 @@ class CoverAutomaticPanel extends HTMLElement {
     const facadeColors = ["#7da7c8", "#7fb89e", "#c4a979", "#c98969", "#b878a1", "#8a7eb5"];
     facades.forEach((f, i) => {
       const azS = this._facadeAz(f.azimuth_start, 0), azE = this._facadeAz(f.azimuth_end, 0);
-      const startDeg = (azS - 90) * Math.PI / 180;
-      const endDeg = (azE - 90) * Math.PI / 180;
+      const startDeg = rad(azS);
+      const endDeg = rad(azE);
       const arcR = r - 8;
       const col = facadeColors[i % facadeColors.length];
       if (azS === azE) {
         // start == end: full-circle facade (sun-exposed from every direction)
         facadeArcs += `<circle cx="${cx}" cy="${cy}" r="${arcR}" fill="none" stroke="${col}" stroke-width="9" opacity="0.18"/>`;
         facadeArcs += `<circle cx="${cx}" cy="${cy}" r="${arcR}" fill="none" stroke="${col}" stroke-width="3.5" opacity="0.9"/>`;
-        const lRad = (azS - 90) * Math.PI / 180;
+        const lRad = rad(azS);
         const lx = cx + (arcR - 15) * Math.cos(lRad), ly = cy + (arcR - 15) * Math.sin(lRad);
         facadeArcs += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-size="9" letter-spacing="0.3" fill="${col}" font-weight="600">${this._esc(String(f.name || "").substring(0, 8))}</text>`;
         return;
@@ -7481,7 +7609,7 @@ class CoverAutomaticPanel extends HTMLElement {
       facadeArcs += `<path d="${d}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" opacity="0.18"/>`;
       facadeArcs += `<path d="${d}" fill="none" stroke="${col}" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/>`;
       // Label
-      const midDeg = (azS + sweep / 2 - 90) * Math.PI / 180;
+      const midDeg = rad(azS + sweep / 2);
       const lx = cx + (arcR - 15) * Math.cos(midDeg), ly = cy + (arcR - 15) * Math.sin(midDeg);
       facadeArcs += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-size="9" letter-spacing="0.3" fill="${col}" font-weight="600">${this._esc(f.name.substring(0, 8))}</text>`;
     });
@@ -7492,7 +7620,7 @@ class CoverAutomaticPanel extends HTMLElement {
     let sunBeams = "";
     let beamGradient = "";
     if (sunAz != null && !isNaN(sunAz) && !belowHorizon) {
-      const sunRad = (sunAz - 90) * Math.PI / 180;
+      const sunRad = rad(sunAz);
       const sr = r + 28;
       const sx = cx + sr * Math.cos(sunRad), sy = cy + sr * Math.sin(sunRad);
       // Sun symbol rays (radiating outward)
@@ -7554,22 +7682,22 @@ class CoverAutomaticPanel extends HTMLElement {
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--divider-color)" stroke-width="1"/>
       <circle cx="${cx}" cy="${cy}" r="${r - 20}" fill="none" stroke="var(--divider-color)" stroke-width="1" stroke-dasharray="0.5 6" stroke-linecap="round" opacity="0.8"/>
       <!-- Cardinal directions (fixed); N carries the accent as rotation reference -->
-      <text x="${cx}" y="${cy - r - 8}" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1" fill="var(--ca-primary)">${this._esc(this._t("compass_n"))}</text>
-      <text x="${cx}" y="${cy + r + 18}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_s"))}</text>
-      <text x="${cx + r + 11}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_e"))}</text>
-      <text x="${cx - r - 11}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_w"))}</text>
-      <!-- North marker: filled triangle pointing inward from the ring -->
-      <polygon points="${cx - 3.5},${cy - r} ${cx + 3.5},${cy - r} ${cx},${cy - r + 8}" fill="var(--ca-primary)"/>
+      <text x="${cx}" y="${cy + r + 18}" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1" fill="var(--ca-primary)">${this._esc(this._t("compass_n"))}</text>
+      <text x="${cx}" y="${cy - r - 8}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_s"))}</text>
+      <text x="${cx - r - 11}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_e"))}</text>
+      <text x="${cx + r + 11}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_w"))}</text>
+      <!-- North marker (bottom): filled triangle pointing inward from the ring -->
+      <polygon points="${cx - 3.5},${cy + r} ${cx + 3.5},${cy + r} ${cx},${cy + r - 8}" fill="var(--ca-primary)"/>
       <!-- Tick marks (north replaced by the triangle marker) -->
-      ${[45,90,135,180,225,270,315].map(d => { const rad=(d-90)*Math.PI/180; const i=d%90===0?9:5; return `<line x1="${cx+(r-i)*Math.cos(rad)}" y1="${cy+(r-i)*Math.sin(rad)}" x2="${cx+r*Math.cos(rad)}" y2="${cy+r*Math.sin(rad)}" stroke="var(--primary-text-color)" stroke-width="${d%90===0?1.5:1}" opacity="${d%90===0?0.5:0.25}"/>`; }).join("")}
+      ${[45,90,135,180,225,270,315].map(d => { const rad=(d+90)*Math.PI/180; const i=d%90===0?9:5; return `<line x1="${cx+(r-i)*Math.cos(rad)}" y1="${cy+(r-i)*Math.sin(rad)}" x2="${cx+r*Math.cos(rad)}" y2="${cy+r*Math.sin(rad)}" stroke="var(--primary-text-color)" stroke-width="${d%90===0?1.5:1}" opacity="${d%90===0?0.5:0.25}"/>`; }).join("")}
       <!-- Sun beams (behind house) -->
       ${sunBeams}
       <!-- House (rotated, on top of beams) -->
       <g id="compass-house" transform="rotate(${rotation}, ${cx}, ${cy})" data-action="house-drag-start" filter="url(#ca-house-shadow)">
         <rect x="${cx - hr}" y="${cy - hr}" width="${hr * 2}" height="${hr * 2}" rx="4" fill="var(--primary-background-color, #1c1c1c)" stroke="var(--primary-color)" stroke-width="1.5"/>
         <rect x="${cx - hr + 1.5}" y="${cy - hr + 1.5}" width="${hr * 2 - 3}" height="${hr * 2 - 3}" rx="3" fill="url(#ca-house-sheen)" stroke="none" pointer-events="none"/>
-        <!-- Roof indicator (front = south of house before rotation) -->
-        <line x1="${cx - hr + 7}" y1="${cy + hr}" x2="${cx + hr - 7}" y2="${cy + hr}" stroke="var(--primary-color)" stroke-width="2.5" stroke-linecap="round" pointer-events="none"/>
+        <!-- Roof indicator (front = south of house before rotation, at the top) -->
+        <line x1="${cx - hr + 7}" y1="${cy - hr}" x2="${cx + hr - 7}" y2="${cy - hr}" stroke="var(--primary-color)" stroke-width="2.5" stroke-linecap="round" pointer-events="none"/>
         <text id="compass-degree-label" x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--primary-text-color)" opacity="0.75" pointer-events="none">${rotation}°</text>
       </g>
       <!-- Facade arcs -->
@@ -7632,6 +7760,11 @@ class CoverAutomaticPanel extends HTMLElement {
               <button type="button" class="rotation-quick-btn" data-action="rotate-by" data-delta="45">+45°</button>
             </div>
             ${hint(this._t("settings_house_rotation_hint"))}
+            <label class="checkbox-row" style="margin-top:12px">
+              <input type="checkbox" data-settings-field="rotate_facades_with_house" ${s.rotate_facades_with_house !== false ? "checked" : ""}>
+              <span>${this._esc(this._t("settings_rotate_facades"))}</span>
+            </label>
+            ${hint(this._esc(this._t("settings_rotate_facades_hint")))}
           </div>
           <div class="settings-house-compass">${this._renderCompassSVG(rot)}</div>
         </div>
@@ -8676,6 +8809,10 @@ class CoverAutomaticPanel extends HTMLElement {
         this._syncRuleDraftFromDom();
         break;
       case "rule-add-start": this._addingRule = true; this._render(); break;
+      case "rule-filter-clear":
+        this._ruleFilter = { facade: "", cover: "", scenario: "", enabled: "" };
+        this._render();
+        break;
       case "rule-add-cancel": this._addingRule = false; this._render(); break;
       case "rule-add-save": this._onRuleAddSave(actionEl); break;
       case "scenario-add-start": this._addingScenario = true; this._render(); break;
@@ -8760,6 +8897,14 @@ class CoverAutomaticPanel extends HTMLElement {
 
     // Activity log: one cover or all (reloaded from the backend so the
     // entry limit applies to that cover only)
+    // Rules tab filter
+    if (el.matches('[data-action="rule-filter"]')) {
+      const key = el.dataset.filterKey;
+      if (key in this._ruleFilter) this._ruleFilter[key] = el.value || "";
+      this._render();
+      return;
+    }
+
     if (el.matches('[data-action="log-cover"]')) {
       this._logCover = el.value || null;
       this._logEntries = null;
@@ -9065,8 +9210,9 @@ class CoverAutomaticPanel extends HTMLElement {
     const { cxPx, cyPx } = this._houseDragState;
     const dx = e.clientX - cxPx;
     const dy = e.clientY - cyPx;
-    // SVG rotate(0) keeps the house upright (north-pointing). atan2(dy, dx)
-    // returns 0 for the +x axis (east), so add 90° to align with north.
+    // SVG rotate(0) keeps the house upright (front at the top = south).
+    // atan2(dy, dx) returns 0 for the +x screen axis, so add 90° to make the
+    // top of the compass the zero; clockwise on screen stays clockwise.
     let angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
     while (angle > 180) angle -= 360;
     while (angle < -180) angle += 360;

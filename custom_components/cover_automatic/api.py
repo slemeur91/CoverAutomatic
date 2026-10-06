@@ -76,6 +76,7 @@ _SETTINGS_FIELDS = (
     "comfort_temp_min_entity", "comfort_temp_max_entity", "solar_threshold_entity",
     "sun_heating_ignore", "sun_neutral_ignore", "preemptive_shading",
     "temp_color_thermometer", "pause_resume_on_match",
+    "rotate_facades_with_house",
 )
 
 # Umlaut replacement map
@@ -206,6 +207,7 @@ def _build_config_response(
             "preemptive_shading": storage.preemptive_shading,
             "temp_color_thermometer": storage.temp_color_thermometer,
             "pause_resume_on_match": storage.pause_resume_on_match,
+            "rotate_facades_with_house": storage.rotate_facades_with_house,
         },
     }
     if hass:
@@ -971,9 +973,10 @@ async def ws_settings_update(
 
     # Facade azimuths are stored as real compass bearings with the house
     # rotation already applied. Rotating the house must therefore rotate the
-    # existing facades too, or they keep pointing at the old orientation.
+    # existing facades too, or they keep pointing at the old orientation
+    # (unless the user chose to keep the existing facades as they are).
     rotation_delta = storage.house_rotation - old_rotation
-    if rotation_delta:
+    if rotation_delta and storage.rotate_facades_with_house:
         for facade_raw in storage._data.get("facades", {}).values():
             for az_key in ("azimuth_start", "azimuth_end"):
                 facade_raw[az_key] = round(

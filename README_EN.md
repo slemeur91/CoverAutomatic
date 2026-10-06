@@ -269,8 +269,9 @@ After installation, everything is configured in the **CoverAutomatic** panel of 
 1. **Covers** – add the `cover` entities to control; each cover has its own sheet (window, room, exposure, automation)
 2. **Facades** – define the facades of the building by direction (shown on a compass). For a new facade, the azimuth
    start / end are prefilled with the widest sun window of the chosen direction (90° on each side, house rotation
-   applied) and stay editable
+   applied, without the sector the sun never reaches at your latitude) and stay editable
 3. **Rules** – create the automation rules from conditions (sun, temperature, time, weather, entities…).
+   The list can be filtered by facade, cover, scenario and enabled / disabled rules.
    Conditions can be negated (NOT) and organised in groups, for example (A OR B) AND (C OR D);
    an existing rule can be duplicated as a starting point
 4. **Scenarios** – define modes such as "Everyday", "Summer", "Holiday". Each rule selects its scenarios
@@ -297,7 +298,7 @@ The "Show this cover's log" button opens the log filtered on this cover.
 
 | Tab | Content |
 |-----|---------|
-| **House** | House rotation, with compass (position of the sun and of the facades) |
+| **House** | House rotation, with compass (south at the top; position of the sun and of the facades); choice to rotate the existing facades or not when the rotation changes |
 | **Sensors** | Global indoor temperature sensor and cold / warm setpoints with their hysteresis; outdoor temperature sensor and hysteresis used by the rules; weather; workday |
 | **Sun exposure** | Behaviour of "Sun on the facade" depending on the room temperature; sunshine sensor, strong-sunshine threshold and hysteresis |
 | **Wind protection** | Wind sensor, threshold, hysteresis and **protection position** |
@@ -414,7 +415,8 @@ Note: the integration controls your original `cover` entities directly; it does 
 ### Dashboard card
 
 The `custom:cover-automatic-card` card is loaded automatically and offered in the card picker, with a visual editor.
-Options: `title`, `covers` (all by default), `show_rule`, `show_auto`, `show_header`.
+Options: `title`, `covers` (all by default), `show_rule`, `show_auto`, `show_temp` (room temperature,
+with the colours chosen in the Settings), `show_header`.
 
 ```yaml
 type: custom:cover-automatic-card
@@ -528,13 +530,13 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.0.3
+2.0.4
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.0.3 (2026-10-04), based on the original version
+Latest version: v2.0.4 (2026-10-06), based on the original version
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler.
 
 ## License

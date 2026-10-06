@@ -202,6 +202,13 @@ class CoverAutomaticStatusSensor(_CoverSensorBase):
             "rule_id": live.get("rule_id"),
             "safety_rule": live.get("safety", False),
             "comfort_mode": live.get("comfort_mode"),
+            # For the dashboard card: it reads the temperature from the sensor
+            # itself, so a temperature change writes no new status row.
+            "room_temp_sensor": (
+                (cover.indoor_temp_sensor if cover else None)
+                or self.coordinator.storage.indoor_temp_sensor
+            ),
+            "temp_color_thermometer": self.coordinator.storage.temp_color_thermometer,
             "pause_until": pause_end.isoformat() if pause_end else None,
             "last_change": last_change.isoformat() if last_change else None,
         }

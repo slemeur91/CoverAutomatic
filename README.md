@@ -269,8 +269,10 @@ Après l'installation, tout se configure dans le panneau **CoverAutomatic** de l
 1. **Volets** – ajoutez les entités `cover` à piloter ; chaque volet a sa fiche (fenêtre, pièce, exposition, automatisation)
 2. **Façades** – définissez les façades du bâtiment par orientation (avec visualisation sur une boussole). Pour une
    nouvelle façade, les azimuts de début et de fin sont préremplis avec l'ouverture maximale de l'orientation choisie
-   (90° de chaque côté, rotation de la maison appliquée) et restent modifiables
+   (90° de chaque côté, rotation de la maison appliquée, sans le secteur où le soleil ne passe jamais à votre
+   latitude) et restent modifiables
 3. **Règles** – créez les règles d'automatisation à partir de conditions (soleil, température, heure, météo, entités…).
+   La liste se filtre par façade, volet, scénario et règles activées / désactivées.
    Les conditions peuvent être inversées (NON) et organisées en groupes, par exemple (A OU B) ET (C OU D) ;
    une règle existante peut être dupliquée comme point de départ
 4. **Scénarios** – définissez des modes comme « Quotidien », « Été », « Vacances ». Chaque règle choisit ses scénarios
@@ -297,7 +299,7 @@ Le bouton « Voir le journal de ce volet » ouvre le journal filtré sur ce vole
 
 | Onglet | Contenu |
 |--------|---------|
-| **Maison** | Rotation de la maison, avec boussole (position du soleil et des façades) |
+| **Maison** | Rotation de la maison, avec boussole (Sud en haut ; position du soleil et des façades) ; choix de faire pivoter ou non les façades existantes quand la rotation change |
 | **Capteurs** | Capteur de température intérieure global et consignes froide / chaude avec leur hystérésis ; capteur de température extérieure et hystérésis utilisée par les règles ; météo ; jour ouvré |
 | **Exposition au soleil** | Comportement de « Soleil sur la façade » selon la température de la pièce ; capteur d'ensoleillement, seuil de fort ensoleillement et hystérésis |
 | **Protection contre le vent** | Capteur de vent, seuil, hystérésis et **position de protection** |
@@ -414,7 +416,8 @@ Remarque : l'intégration pilote directement vos entités `cover` d'origine ; el
 ### Carte de tableau de bord
 
 La carte `custom:cover-automatic-card` est chargée automatiquement et proposée dans le sélecteur de cartes, avec un éditeur visuel.
-Options : `title`, `covers` (tous par défaut), `show_rule`, `show_auto`, `show_header`.
+Options : `title`, `covers` (tous par défaut), `show_rule`, `show_auto`, `show_temp` (température de la pièce,
+avec les couleurs choisies dans les Paramètres), `show_header`.
 
 ```yaml
 type: custom:cover-automatic-card
@@ -528,13 +531,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.0.3
+2.0.4
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.0.3 (2026-10-04), basée sur la version d'origine
+Dernière version : v2.0.4 (2026-10-06), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
 
 ## Licence
