@@ -9,13 +9,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
-- Settings > House: option "Rotate existing facades with the house" (on by default). When off, changing the house rotation no longer shifts the azimuths of the facades already created; a new facade is still prefilled with the rotation applied.
+- Settings > House: option "Update the azimuths of existing facades" (on by default). When off, changing the house rotation no longer shifts the azimuths of the facades already created; a new facade is still prefilled with the rotation applied.
 - Rules tab: filter by facade, cover (directly or through its facade), scenario and enabled / disabled rules, with a "Clear" button and a counter. Reordering is disabled while a filter is active; the rule being edited always stays visible.
 - Dashboard card: room temperature after the cover name, with the same colours and icons as the panel's cover list; new option `show_temp` (on by default). The status sensor exposes `room_temp_sensor` and `temp_color_thermometer` for this.
 
 ### Changed
 
 - Settings > House: the compass is drawn with south at the top (north at the bottom, east left, west right). The stored rotation and azimuths are unchanged.
+- Settings > House: each facade has its own ring on the compass and its name moves to a legend below it (name, colour, azimuths); names written on overlapping arcs were unreadable.
+- Cover list: a red shield follows the rule name when the rule in control is a safety rule.
 - New facade: the prefilled azimuths are trimmed on their sides to the bearings the sun can reach at the Home Assistant latitude (e.g. east at 48.8° N: 53° / 180° instead of 0° / 180°). Nothing is trimmed when it would split the window in two (facade facing north), between the tropics or in polar regions.
 - Dashboard card: the safety rule icon is shown after the rule name instead of before it.
 

@@ -511,7 +511,7 @@ const I18N = {
     settings_house_rotation: "House rotation (degrees)",
     settings_house_rotation_hint: "Offset from true north (-180 to 180, positive = clockwise). Applied when selecting a facade direction. Drag the house in the compass, hold Shift to snap to 45°.",
     settings_house_rotation_reset: "Reset",
-    settings_rotate_facades: "Rotate existing facades with the house",
+    settings_rotate_facades: "Update the azimuths of existing facades",
     settings_rotate_facades_hint: "Checked: changing the rotation shifts the azimuths of the facades already created by the same angle. Unchecked: their azimuths do not change. Either way, a new facade is prefilled with the rotation applied.",
     settings_section_house: "House",
     settings_section_sensors: "Sensors",
@@ -1158,7 +1158,7 @@ const I18N = {
     settings_house_rotation: "Hausrotation (Grad)",
     settings_house_rotation_hint: "Abweichung von exakt Nord (-180 bis 180, positiv = im Uhrzeigersinn). Wird bei der Fassaden-Richtungswahl angewendet. Haus im Kompass ziehen, mit Shift auf 45° einrasten.",
     settings_house_rotation_reset: "Zurücksetzen",
-    settings_rotate_facades: "Bestehende Fassaden mit dem Haus drehen",
+    settings_rotate_facades: "Azimute der bestehenden Fassaden anpassen",
     settings_rotate_facades_hint: "Aktiviert: Eine Änderung der Rotation verschiebt die Azimute der bereits angelegten Fassaden um denselben Winkel. Deaktiviert: Ihre Azimute bleiben unverändert. In beiden Fällen wird eine neue Fassade mit der Rotation vorbelegt.",
     settings_section_house: "Haus",
     settings_section_sensors: "Sensoren",
@@ -1812,7 +1812,7 @@ const I18N = {
     settings_house_rotation: "Rotation de la maison (degrés)",
     settings_house_rotation_hint: "Décalage par rapport au nord géographique (-180 à 180, positif = sens horaire). Appliqué lors du choix d'une orientation de façade. Faites glisser la maison sur la boussole, maintenez Maj pour aligner par pas de 45°.",
     settings_house_rotation_reset: "Réinitialiser",
-    settings_rotate_facades: "Faire pivoter les façades existantes avec la maison",
+    settings_rotate_facades: "Mettre à jour les azimuts des façades existantes",
     settings_rotate_facades_hint: "Cochée : modifier la rotation décale d'autant les azimuts des façades déjà créées. Décochée : leurs azimuts ne changent pas. Dans les deux cas, une nouvelle façade est préremplie en tenant compte de la rotation.",
     settings_section_house: "Maison",
     settings_section_sensors: "Capteurs",
@@ -2856,7 +2856,12 @@ const PANEL_STYLES = `
   }
   .settings-house-compass {
     flex: 0 0 auto;
+    max-width: 300px;
   }
+  .compass-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; margin-top: 8px; font-size: 12px; color: var(--primary-text-color); }
+  .compass-legend-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .compass-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .compass-legend-az { color: var(--ca-secondary-text); font-variant-numeric: tabular-nums; }
   /* Quick rotate buttons next to the rotation input */
   .rotation-quick {
     display: flex;
@@ -3341,6 +3346,7 @@ const PANEL_STYLES = `
     white-space: nowrap;
   }
   .rule-safety-badge svg { flex-shrink: 0; }
+  .rule-safety-icon { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--ca-danger); }
   .rule-safety-group .toggle-row { margin-bottom: 0; }
   .priority-badge {
     display: inline-flex;
@@ -4960,9 +4966,15 @@ class CoverAutomaticPanel extends HTMLElement {
     const ruleId = live && live.rule_id;
     const ruleName = (live && live.rule_name) || this._t("cover_no_rule");
     if (ruleId && this._config && this._config.rules && this._config.rules[ruleId]) {
-      return '<a class="rule-link" data-action="goto-rule" data-rule-id="' + this._esc(ruleId) + '" title="' + this._esc(this._t("cover_goto_rule")) + '">' + this._esc(ruleName) + '</a>';
+      return '<a class="rule-link" data-action="goto-rule" data-rule-id="' + this._esc(ruleId) + '" title="' + this._esc(this._t("cover_goto_rule")) + '">' + this._esc(ruleName) + '</a>'
+        + (this._config.rules[ruleId].safety ? this._ruleSafetyIcon() : "");
     }
     return this._esc(ruleName);
+  }
+
+  // Red shield shown after the name of a safety rule (cover list).
+  _ruleSafetyIcon() {
+    return '<span class="rule-safety-icon" title="' + this._esc(this._t("rule_safety")) + '">' + this._lucideIcon("shield", 13) + '</span>';
   }
 
   _sunIconSvg(size = 14) {
@@ -7585,19 +7597,20 @@ class CoverAutomaticPanel extends HTMLElement {
     const facades = this._config ? Object.values(this._config.facades || {}) : [];
     let facadeArcs = "";
     const facadeColors = ["#7da7c8", "#7fb89e", "#c4a979", "#c98969", "#b878a1", "#8a7eb5"];
+    // One ring per facade (overlapping facades stay visible) and a legend
+    // below the compass: names written on the arcs piled up unreadably.
+    const ringStep = facades.length > 1 ? Math.min(6, 34 / (facades.length - 1)) : 0;
+    let legend = "";
     facades.forEach((f, i) => {
       const azS = this._facadeAz(f.azimuth_start, 0), azE = this._facadeAz(f.azimuth_end, 0);
       const startDeg = rad(azS);
       const endDeg = rad(azE);
-      const arcR = r - 8;
+      const arcR = r - 6 - i * ringStep;
       const col = facadeColors[i % facadeColors.length];
+      legend += `<span class="compass-legend-item"><span class="compass-legend-dot" style="background:${col}"></span>${this._esc(String(f.name || ""))} <span class="compass-legend-az">${azS}°–${azE}°</span></span>`;
       if (azS === azE) {
         // start == end: full-circle facade (sun-exposed from every direction)
-        facadeArcs += `<circle cx="${cx}" cy="${cy}" r="${arcR}" fill="none" stroke="${col}" stroke-width="9" opacity="0.18"/>`;
         facadeArcs += `<circle cx="${cx}" cy="${cy}" r="${arcR}" fill="none" stroke="${col}" stroke-width="3.5" opacity="0.9"/>`;
-        const lRad = rad(azS);
-        const lx = cx + (arcR - 15) * Math.cos(lRad), ly = cy + (arcR - 15) * Math.sin(lRad);
-        facadeArcs += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-size="9" letter-spacing="0.3" fill="${col}" font-weight="600">${this._esc(String(f.name || "").substring(0, 8))}</text>`;
         return;
       }
       const x1 = cx + arcR * Math.cos(startDeg), y1 = cy + arcR * Math.sin(startDeg);
@@ -7606,12 +7619,7 @@ class CoverAutomaticPanel extends HTMLElement {
       if (sweep < 0) sweep += 360;
       const large = sweep > 180 ? 1 : 0;
       const d = `M${x1},${y1} A${arcR},${arcR} 0 ${large},1 ${x2},${y2}`;
-      facadeArcs += `<path d="${d}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" opacity="0.18"/>`;
       facadeArcs += `<path d="${d}" fill="none" stroke="${col}" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/>`;
-      // Label
-      const midDeg = rad(azS + sweep / 2);
-      const lx = cx + (arcR - 15) * Math.cos(midDeg), ly = cy + (arcR - 15) * Math.sin(midDeg);
-      facadeArcs += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" font-size="9" letter-spacing="0.3" fill="${col}" font-weight="600">${this._esc(f.name.substring(0, 8))}</text>`;
     });
 
     // Sun position -- soft radial glow behind the disc, fine rays, and a
@@ -7706,7 +7714,7 @@ class CoverAutomaticPanel extends HTMLElement {
       ${sunMarker}
       <!-- Info -->
       ${infoSvg}
-    </svg>`;
+    </svg>${legend ? `<div class="compass-legend">${legend}</div>` : ""}`;
   }
 
   _renderSettings() {
@@ -7760,7 +7768,7 @@ class CoverAutomaticPanel extends HTMLElement {
               <button type="button" class="rotation-quick-btn" data-action="rotate-by" data-delta="45">+45°</button>
             </div>
             ${hint(this._t("settings_house_rotation_hint"))}
-            <label class="checkbox-row" style="margin-top:12px">
+            <label class="checkbox-row" style="margin-top:28px">
               <input type="checkbox" data-settings-field="rotate_facades_with_house" ${s.rotate_facades_with_house !== false ? "checked" : ""}>
               <span>${this._esc(this._t("settings_rotate_facades"))}</span>
             </label>
@@ -8308,6 +8316,10 @@ class CoverAutomaticPanel extends HTMLElement {
           a.title = this._t("cover_goto_rule");
           a.textContent = ruleName;
           rCell.appendChild(a);
+          if (this._config.rules[ruleId].safety) {
+            // Markup from internal _ruleSafetyIcon() - no user input besides the escaped label
+            rCell.insertAdjacentHTML("beforeend", this._ruleSafetyIcon());
+          }
         } else {
           rCell.textContent = ruleName;
         }
