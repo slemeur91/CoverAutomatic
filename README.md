@@ -272,7 +272,7 @@ Après l'installation, tout se configure dans le panneau **CoverAutomatic** de l
    (90° de chaque côté, rotation de la maison appliquée, sans le secteur où le soleil ne passe jamais à votre
    latitude) et restent modifiables
 3. **Règles** – créez les règles d'automatisation à partir de conditions (soleil, température, heure, météo, entités…).
-   La liste se filtre par façade, volet, scénario et règles activées / désactivées.
+   La liste se filtre par façade, volet et scénario.
    Les conditions peuvent être inversées (NON) et organisées en groupes, par exemple (A OU B) ET (C OU D) ;
    une règle existante peut être dupliquée comme point de départ
 4. **Scénarios** – définissez des modes comme « Quotidien », « Été », « Vacances ». Chaque règle choisit ses scénarios

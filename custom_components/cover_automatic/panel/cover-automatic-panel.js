@@ -423,9 +423,6 @@ const I18N = {
     rule_add: "Add rule",
     rule_filter_all_facades: "All facades",
     rule_filter_all_scenarios: "All scenarios",
-    rule_filter_all_states: "Enabled and disabled",
-    rule_filter_enabled: "Enabled",
-    rule_filter_disabled: "Disabled",
     rule_filter_clear: "Clear",
     rule_filter_none: "No rule matches the filter.",
     rule_filter_reorder_hint: "Clear the filter to change the order of the rules.",
@@ -1075,9 +1072,6 @@ const I18N = {
     rule_add: "Regel hinzufügen",
     rule_filter_all_facades: "Alle Fassaden",
     rule_filter_all_scenarios: "Alle Szenarien",
-    rule_filter_all_states: "Aktiviert und deaktiviert",
-    rule_filter_enabled: "Aktiviert",
-    rule_filter_disabled: "Deaktiviert",
     rule_filter_clear: "Zurücksetzen",
     rule_filter_none: "Keine Regel entspricht dem Filter.",
     rule_filter_reorder_hint: "Filter zurücksetzen, um die Reihenfolge der Regeln zu ändern.",
@@ -1726,9 +1720,6 @@ const I18N = {
     rule_add: "Ajouter une règle",
     rule_filter_all_facades: "Toutes les façades",
     rule_filter_all_scenarios: "Tous les scénarios",
-    rule_filter_all_states: "Activées et désactivées",
-    rule_filter_enabled: "Activées",
-    rule_filter_disabled: "Désactivées",
     rule_filter_clear: "Effacer",
     rule_filter_none: "Aucune règle ne correspond au filtre.",
     rule_filter_reorder_hint: "Effacez le filtre pour modifier l'ordre des règles.",
@@ -4108,7 +4099,7 @@ class CoverAutomaticPanel extends HTMLElement {
     this._logEntries = null;
     this._logFilter = null;
     this._logCover = null;
-    this._ruleFilter = { facade: "", cover: "", scenario: "", enabled: "" };
+    this._ruleFilter = { facade: "", cover: "", scenario: "" };
     this._coverSort = { key: "name", dir: "asc" };
     this._liveRefreshTimer = null;
     this._condPreviewTimer = null;
@@ -6155,8 +6146,6 @@ class CoverAutomaticPanel extends HTMLElement {
     if (f.cover && !everywhere && !coverIds.includes(f.cover)
       && !(covers[f.cover] && facadeIds.includes(covers[f.cover].facade_id))) return false;
     if (f.scenario && Array.isArray(r.scenario_ids) && !r.scenario_ids.includes(f.scenario)) return false;
-    if (f.enabled === "on" && !r.enabled) return false;
-    if (f.enabled === "off" && r.enabled) return false;
     return true;
   }
 
@@ -6175,7 +6164,6 @@ class CoverAutomaticPanel extends HTMLElement {
       ${select("facade", "rule_filter_all_facades", facades)}
       ${select("cover", "log_filter_all_covers", covers)}
       ${select("scenario", "rule_filter_all_scenarios", scenarios)}
-      ${select("enabled", "rule_filter_all_states", [["on", this._t("rule_filter_enabled")], ["off", this._t("rule_filter_disabled")]])}
       ${filtering ? `<button class="btn btn-sm" data-action="rule-filter-clear">${this._esc(this._t("rule_filter_clear"))}</button>
       <span class="rule-filter-count">${shown} / ${total}</span>` : ""}
     </div>`;
@@ -8859,7 +8847,7 @@ class CoverAutomaticPanel extends HTMLElement {
         break;
       case "rule-add-start": this._addingRule = true; this._render(); break;
       case "rule-filter-clear":
-        this._ruleFilter = { facade: "", cover: "", scenario: "", enabled: "" };
+        this._ruleFilter = { facade: "", cover: "", scenario: "" };
         this._render();
         break;
       case "rule-add-cancel": this._addingRule = false; this._render(); break;

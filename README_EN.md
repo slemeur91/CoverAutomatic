@@ -271,7 +271,7 @@ After installation, everything is configured in the **CoverAutomatic** panel of 
    start / end are prefilled with the widest sun window of the chosen direction (90° on each side, house rotation
    applied, without the sector the sun never reaches at your latitude) and stay editable
 3. **Rules** – create the automation rules from conditions (sun, temperature, time, weather, entities…).
-   The list can be filtered by facade, cover, scenario and enabled / disabled rules.
+   The list can be filtered by facade, cover and scenario.
    Conditions can be negated (NOT) and organised in groups, for example (A OR B) AND (C OR D);
    an existing rule can be duplicated as a starting point
 4. **Scenarios** – define modes such as "Everyday", "Summer", "Holiday". Each rule selects its scenarios

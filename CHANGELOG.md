@@ -10,7 +10,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Added
 
 - Settings > House: option "Update the azimuths of existing facades" (on by default). When off, changing the house rotation no longer shifts the azimuths of the facades already created; a new facade is still prefilled with the rotation applied.
-- Rules tab: filter by facade, cover (directly or through its facade), scenario and enabled / disabled rules, with a "Clear" button and a counter. Reordering is disabled while a filter is active; the rule being edited always stays visible.
+- Rules tab: filter by facade, cover (directly or through its facade) and scenario, with a "Clear" button and a counter. Reordering is disabled while a filter is active; the rule being edited always stays visible.
 - Dashboard card: room temperature after the cover name, with the same colours and icons as the panel's cover list; new option `show_temp` (on by default). The status sensor exposes `room_temp_sensor` and `temp_color_thermometer` for this.
 
 ### Changed
