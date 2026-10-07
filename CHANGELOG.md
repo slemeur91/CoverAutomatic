@@ -16,6 +16,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Settings > House: the compass draws an arc over the bearings the sun can reach, then two rings for the house sides (north + south, east + west) showing the bearings from which the sun lights each side, instead of one labelled arc per facade (the names piled up unreadably). A legend below lists the sunshine bearings and, for each of the four house sides, the bearings from which the sun can light it.
 - Settings > House: the option added in 2.0.4 is renamed "Update the azimuths of existing facades", with more space above it.
 - Rules tab: the enabled / disabled filter is removed (facade, cover and scenario remain).
+- Dashboard card: the room temperature moves to the second line, after the active rule; next to the cover name it shortened the names too much on a narrow card.
+- Rules tab: a filtered list keeps the real priority number of each rule.
+- README and README_EN: new screenshots of the V2 (French and English), in `.github/screenshots/fr` and `.github/screenshots/en`.
 
 ## [2.0.4] - 2026-10-06
 

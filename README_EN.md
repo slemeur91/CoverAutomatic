@@ -154,35 +154,49 @@ V2 gathers all changes made since the original version 1.61.1.
 ## Screenshots
 
 The integration adds a panel to the Home Assistant sidebar. All configuration is done there, without YAML.
-Click a thumbnail to enlarge it. *(The screenshots come from the original version; the V2 interface has evolved.)*
+Click a thumbnail to enlarge it. *(The screenshots come from a French installation: the cover, room and rule names are in French.)*
 
 <table>
   <tr>
-    <td width="33%">
-      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/covers-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/covers-desktop.png" alt="Cover list" /></a>
-      <p align="center"><sub><b>Covers</b> – header, position column, status badges</sub></p>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/covers-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/covers-desktop.png" alt="Covers" /></a>
+      <p align="center"><sub><b>Covers</b> – list, status, temperature, position, active rule</sub></p>
     </td>
-    <td width="33%">
-      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/rules-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/rules-desktop.png" alt="Rules" /></a>
-      <p align="center"><sub><b>Rules</b> – priority order, active indicators, conditions</sub></p>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/facades-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/facades-desktop.png" alt="Facades" /></a>
+      <p align="center"><sub><b>Facades</b> – azimuths and assigned covers</sub></p>
     </td>
-    <td width="33%">
-      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/scenarios-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/scenarios-desktop.png" alt="Scenarios" /></a>
-      <p align="center"><sub><b>Scenarios</b> – rules per scenario, rule-by-rule activation</sub></p>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/scenarios-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/scenarios-desktop.png" alt="Scenarios" /></a>
+      <p align="center"><sub><b>Scenarios</b> – rules per scenario, Safety badge</sub></p>
     </td>
   </tr>
   <tr>
-    <td width="33%">
-      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/cover-editor.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/cover-editor.png" alt="Cover sheet" /></a>
-      <p align="center"><sub><b>Cover sheet</b> – side panel with sections</sub></p>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/rule-editor.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/rule-editor.png" alt="Rule editor" /></a>
+      <p align="center"><sub><b>Rule editor</b> – scenarios, covers, conditions</sub></p>
     </td>
-    <td width="33%">
-      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/settings-house.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/settings-house.png" alt="Settings – House" /></a>
-      <p align="center"><sub><b>Settings – House</b> – orientation with compass</sub></p>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/settings-house.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/settings-house.png" alt="Settings – House" /></a>
+      <p align="center"><sub><b>Settings – House</b> – rotation and sunshine sector</sub></p>
     </td>
-    <td width="33%">
-      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/settings-automation.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/settings-automation.png" alt="Settings – Automation" /></a>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/settings-automation.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/settings-automation.png" alt="Settings – Automation" /></a>
       <p align="center"><sub><b>Settings – Automation</b> – global defaults</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/settings-sensors.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/settings-sensors.png" alt="Settings – Sensors" /></a>
+      <p align="center"><sub><b>Settings – Sensors</b> – temperature setpoints</sub></p>
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/log-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/log-desktop.png" alt="Log" /></a>
+      <p align="center"><sub><b>Log</b> – moves and status changes</sub></p>
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/cover-editor.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/cover-editor.png" alt="Cover sheet" /></a>
+      <p align="center"><sub><b>Cover sheet</b> – side panel with sections</sub></p>
     </td>
   </tr>
 </table>
@@ -190,11 +204,11 @@ Click a thumbnail to enlarge it. *(The screenshots come from the original versio
 <table>
   <tr>
     <td width="50%" align="center">
-      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/mobile-covers.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/mobile-covers.png" alt="Mobile – Covers" width="320" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/mobile-covers.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/mobile-covers.png" alt="Mobile – Covers" width="320" /></a>
       <p><sub><b>Mobile – Covers</b></sub></p>
     </td>
     <td width="50%" align="center">
-      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/mobile-settings.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/mobile-settings.png" alt="Mobile – Settings" width="320" /></a>
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/mobile-settings.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/mobile-settings.png" alt="Mobile – Settings" width="320" /></a>
       <p><sub><b>Mobile – Settings</b> – sections in a horizontal bar</sub></p>
     </td>
   </tr>

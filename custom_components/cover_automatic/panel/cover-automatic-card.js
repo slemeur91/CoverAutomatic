@@ -7,7 +7,7 @@
  *     - cover.volet_du_salon
  *   show_rule: true          # optional
  *   show_auto: true          # optional (automation switch + resume button)
- *   show_temp: true          # optional (room temperature after the cover name)
+ *   show_temp: true          # optional (room temperature after the active rule)
  *
  * Everything comes from the per-cover "Status" sensors of the integration
  * (their attributes carry the rule, target, pause end and the automation
@@ -481,8 +481,8 @@
       }
       return `<div class="row${unavailable ? " unavailable" : ""}${this._config.show_auto ? "" : " no-auto"}">
         <div class="main">
-          <div class="name-line"><button class="name" data-more="${esc(r.id)}">${esc(this._name(r.id, r.status))}</button>${temp}</div>
-          ${rule}
+          <button class="name" data-more="${esc(r.id)}">${esc(this._name(r.id, r.status))}</button>
+          ${rule || temp ? `<div class="sub-line">${rule}${temp}</div>` : ""}
         </div>
         <div class="pos"${invTip}>${unavailable ? '<span class="dash">–</span>' : this._bar(pos, a.target_position)}${a.inverted ? '<span class="inv">⇅</span>' : ""}</div>
         <div class="status"><span class="pill" style="--pill:${color}">${esc(stateLabel)}</span>${pause}</div>
@@ -583,8 +583,9 @@
     .row.unavailable { opacity: .5; }
     .main { min-width: 0; }
     .name { all: unset; cursor: pointer; font-weight: 500; color: var(--primary-text-color); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-    .name-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
-    .name-line .name { flex: 0 1 auto; min-width: 0; }
+    /* Second line: active rule, then the room temperature (the name keeps the whole first line) */
+    .sub-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .sub-line .rule { flex: 0 1 auto; min-width: 0; }
     .temp { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 12px; white-space: nowrap; color: var(--secondary-text-color); font-variant-numeric: tabular-nums; }
     .temp ha-icon { --mdc-icon-size: 14px; }
     .name:focus-visible { outline: 2px solid var(--primary-color); border-radius: 4px; }

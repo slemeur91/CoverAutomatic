@@ -6222,7 +6222,8 @@ class CoverAutomaticPanel extends HTMLElement {
       }
       html += '</div>';
       html += '<div class="rule-meta">';
-      html += `<span class="priority-badge">#${idx + 1}</span>`;
+      // Real priority, also in a filtered list
+      html += `<span class="priority-badge">#${all.indexOf(r) + 1}</span>`;
       const rg = this._ruleGroups(r);
       html += rg.n > 1
         ? `<span>${this._t("rule_groups_count").replace("{n}", rg.n)}</span>`
