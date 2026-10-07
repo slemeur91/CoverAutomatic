@@ -7622,10 +7622,10 @@ class CoverAutomaticPanel extends HTMLElement {
     const sunEl = sunState ? parseFloat(sunState.attributes.elevation) : null;
     const belowHorizon = sunEl != null && sunEl < 0;
 
-    // Sunshine arc: only the bearings the sun can reach over the year, in the
-    // colour of the house side (north / east / south / west, house rotation
-    // applied) facing each part. The legend below lists that sector and the
-    // four house sides, cut to it: the part the sun never reaches is not shown.
+    // Sunshine arcs: only the bearings the sun can reach over the year, for
+    // the whole house and for each of its sides (north / east / south / west,
+    // house rotation applied). The legend below gives the same bearings: the
+    // part the sun never reaches is not shown.
     const sector = this._sunSector();
     const arc = (from, sweep, col, arcR, width) => {
       if (sweep >= 359.99) return `<circle cx="${cx}" cy="${cy}" r="${arcR}" fill="none" stroke="${col}" stroke-width="${width}" opacity="0.9"/>`;
@@ -7634,11 +7634,15 @@ class CoverAutomaticPanel extends HTMLElement {
       return `<path d="M${x1},${y1} A${arcR},${arcR} 0 ${sweep > 180 ? 1 : 0},1 ${x2},${y2}" fill="none" stroke="${col}" stroke-width="${width}" opacity="0.9"/>`;
     };
     const houseRot = Number.isFinite(Number(rotation)) ? Number(rotation) : 0;
-    // Outer arc: the sunshine sector, in the sun colour; inner arc: the house sides
+    // Outer arc: the sunshine sector, in the sun colour. Then two rings for
+    // the house sides, each over the bearings from which the sun can light it
+    // (90° on each side): north + south on one ring, east + west on the
+    // other, so that opposite sides never overlap.
+    const sideRing = { north: r - 12, south: r - 12, east: r - 20, west: r - 20 };
     let sunArc = arc(sector.from, sector.sweep, "var(--ca-sun)", r - 5, 3);
     for (const [dir, bearing] of Object.entries(FACADE_BEARINGS)) {
-      for (const [from, sweep] of this._clipToSector(bearing - 45 + houseRot, 90, sector)) {
-        sunArc += arc(from, sweep, FACADE_SIDE_COLORS[dir], r - 12, 5);
+      for (const [from, sweep] of this._clipToSector(bearing - 90 + houseRot, 180, sector)) {
+        sunArc += arc(from, sweep, FACADE_SIDE_COLORS[dir], sideRing[dir], 5);
       }
     }
     const deg = (v) => `${Math.round((((v % 360) + 360) % 360))}°`;
@@ -7721,7 +7725,7 @@ class CoverAutomaticPanel extends HTMLElement {
       </defs>
       <!-- Compass rings: quiet outer ring, fine dotted inner ring -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--divider-color)" stroke-width="1"/>
-      <circle cx="${cx}" cy="${cy}" r="${r - 20}" fill="none" stroke="var(--divider-color)" stroke-width="1" stroke-dasharray="0.5 6" stroke-linecap="round" opacity="0.8"/>
+      <circle cx="${cx}" cy="${cy}" r="${r - 28}" fill="none" stroke="var(--divider-color)" stroke-width="1" stroke-dasharray="0.5 6" stroke-linecap="round" opacity="0.8"/>
       <!-- Cardinal directions (fixed); N carries the accent as rotation reference -->
       <text x="${cx}" y="${cy + r + 18}" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1" fill="var(--ca-primary)">${this._esc(this._t("compass_n"))}</text>
       <text x="${cx}" y="${cy - r - 8}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_s"))}</text>
@@ -7741,7 +7745,7 @@ class CoverAutomaticPanel extends HTMLElement {
         <line x1="${cx - hr + 7}" y1="${cy - hr}" x2="${cx + hr - 7}" y2="${cy - hr}" stroke="var(--primary-color)" stroke-width="2.5" stroke-linecap="round" pointer-events="none"/>
         <text id="compass-degree-label" x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--primary-text-color)" opacity="0.75" pointer-events="none">${rotation}°</text>
       </g>
-      <!-- Sunshine sector: sun-coloured arc and the four house sides -->
+      <!-- Sunshine sector: sun-coloured arc, north-south ring, east-west ring -->
       ${sunArc}
       <!-- Sun -->
       ${sunMarker}

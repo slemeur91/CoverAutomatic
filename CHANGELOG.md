@@ -16,7 +16,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Changed
 
 - Settings > House: the compass is drawn with south at the top (north at the bottom, east left, west right). The stored rotation and azimuths are unchanged.
-- Settings > House: the compass draws a single arc over the bearings the sun can reach, in the colours of the four house sides, instead of one labelled arc per facade (the names piled up unreadably). A legend below lists the sunshine bearings and, for each of the four house sides, the bearings from which the sun can light it.
+- Settings > House: the compass draws an arc over the bearings the sun can reach, then two rings for the house sides (north + south, east + west) showing the bearings from which the sun lights each side, instead of one labelled arc per facade (the names piled up unreadably). A legend below lists the sunshine bearings and, for each of the four house sides, the bearings from which the sun can light it.
 - Cover list: a red shield follows the rule name when the rule in control is a safety rule.
 - New facade: the prefilled azimuths are trimmed on their sides to the bearings the sun can reach at the Home Assistant latitude (e.g. east at 48.8° N: 53° / 180° instead of 0° / 180°). Nothing is trimmed when it would split the window in two (facade facing north), between the tropics or in polar regions.
 - Dashboard card: the safety rule icon is shown after the rule name instead of before it.
