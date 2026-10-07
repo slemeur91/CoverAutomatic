@@ -147,6 +147,7 @@ const I18N = {
     ha_chip_other: "HA condition: {type}",
     rule_op_short_and: "AND", rule_op_short_or: "OR",
     compass_n: "N", compass_e: "E", compass_s: "S", compass_w: "W",
+    compass_sun_range: "Sunshine",
     error_generic: "Could not save the change",
     error_not_found: "Item not found (it may have been deleted meanwhile)",
     error_invalid_format: "Invalid value",
@@ -801,6 +802,7 @@ const I18N = {
     ha_chip_other: "HA-Bedingung: {type}",
     rule_op_short_and: "UND", rule_op_short_or: "ODER",
     compass_n: "N", compass_e: "O", compass_s: "S", compass_w: "W",
+    compass_sun_range: "Besonnung",
     error_generic: "Die Änderung konnte nicht gespeichert werden",
     error_not_found: "Element nicht gefunden (evtl. zwischenzeitlich gelöscht)",
     error_invalid_format: "Ungültiger Wert",
@@ -1448,6 +1450,7 @@ const I18N = {
     ha_chip_other: "Condition HA : {type}",
     rule_op_short_and: "ET", rule_op_short_or: "OU",
     compass_n: "N", compass_e: "E", compass_s: "S", compass_w: "O",
+    compass_sun_range: "Ensoleillement",
     error_generic: "Impossible d'enregistrer la modification",
     error_not_found: "Élément introuvable (il a peut-être été supprimé entre-temps)",
     error_invalid_format: "Valeur invalide",
@@ -2071,6 +2074,8 @@ const FACADE_PRESETS = {
 
 // Compass bearing of each facade direction (before house rotation).
 const FACADE_BEARINGS = { north: 0, east: 90, south: 180, west: 270 };
+// Colour of each house side on the compass and in its legend.
+const FACADE_SIDE_COLORS = { north: "#7da7c8", east: "#7fb89e", south: "#c4a979", west: "#c98969" };
 
 const DIRECTION_ARROWS = {
   north: "\u2191",
@@ -2856,12 +2861,12 @@ const PANEL_STYLES = `
   }
   .settings-house-compass {
     flex: 0 0 auto;
-    max-width: 300px;
   }
-  .compass-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; margin-top: 8px; font-size: 12px; color: var(--primary-text-color); }
-  .compass-legend-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .compass-legend { margin-top: 8px; font-size: 12px; color: var(--primary-text-color); display: grid; gap: 3px; }
+  .compass-legend-row { display: flex; align-items: center; gap: 6px; }
   .compass-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-  .compass-legend-az { color: var(--ca-secondary-text); font-variant-numeric: tabular-nums; }
+  .compass-legend-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .compass-legend-az { color: var(--ca-secondary-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
   /* Quick rotate buttons next to the rotation input */
   .rotation-quick {
     display: flex;
@@ -6030,6 +6035,33 @@ class CoverAutomaticPanel extends HTMLElement {
     return this._trimToSunSector(start, end) || { start, end };
   }
 
+  // Bearings the sun can reach over the year, as a clockwise sector
+  // { from, sweep }: bounded by the sunrise and sunset bearings of the summer
+  // solstice at the Home Assistant latitude. The whole circle between the
+  // tropics, in polar regions and when the latitude is unknown.
+  _sunSector() {
+    const lat = Number(this._hass?.config?.latitude);
+    const TILT = 23.44;
+    if (!Number.isFinite(lat) || Math.abs(lat) <= TILT || Math.abs(lat) >= 90 - TILT) return { from: 0, sweep: 360 };
+    const toRad = Math.PI / 180;
+    // Half-width of the dark sector = sunrise bearing at the summer solstice
+    const half = Math.acos(Math.sin(TILT * toRad) / Math.cos(lat * toRad)) / toRad;
+    const dark = lat >= 0 ? 0 : 180;
+    return { from: dark + half, sweep: 360 - 2 * half };
+  }
+
+  // Parts of the clockwise span (start, sweep) inside a sector, as
+  // [from, sweep] pairs: none, one, or two when the span covers both ends.
+  _clipToSector(start, sweep, sector) {
+    if (sector.sweep >= 360) return [[start, Math.min(sweep, 360)]];
+    const s = (((start - sector.from) % 360) + 360) % 360;
+    const e = s + Math.min(sweep, 360);
+    return [0, 360]
+      .map(k => [Math.max(s, k), Math.min(e, k + sector.sweep)])
+      .filter(([a, b]) => b - a > 0.01)
+      .map(([a, b]) => [a + sector.from, b - a]);
+  }
+
   // The sun never stands in a sector centred on north (northern hemisphere)
   // or south (southern): it is bounded by the sunrise and sunset bearings of
   // the summer solstice at the Home Assistant latitude. Returns the part of
@@ -6038,13 +6070,11 @@ class CoverAutomaticPanel extends HTMLElement {
   // (facade facing the dark sector) or when the sun can come from anywhere
   // (tropics, polar regions, unknown latitude).
   _trimToSunSector(start, end) {
-    const lat = Number(this._hass?.config?.latitude);
-    const TILT = 23.44;
-    if (!Number.isFinite(lat) || Math.abs(lat) <= TILT || Math.abs(lat) >= 90 - TILT) return null;
-    const toRad = Math.PI / 180;
-    // Half-width of the dark sector = sunrise bearing at the summer solstice
-    const half = Math.acos(Math.sin(TILT * toRad) / Math.cos(lat * toRad)) / toRad;
-    const dark = lat >= 0 ? 0 : 180;
+    const sector = this._sunSector();
+    if (sector.sweep >= 360) return null;
+    // Half-width and centre of the dark sector
+    const half = (360 - sector.sweep) / 2;
+    const dark = (sector.from - half + 360) % 360;
     // Bearings relative to the centre of the dark sector: lit = [half, 360 - half]
     const s = (((start - dark) % 360) + 360) % 360;
     let e = (((end - dark) % 360) + 360) % 360;
@@ -7592,35 +7622,38 @@ class CoverAutomaticPanel extends HTMLElement {
     const sunEl = sunState ? parseFloat(sunState.attributes.elevation) : null;
     const belowHorizon = sunEl != null && sunEl < 0;
 
-    // Facade arcs -- muted, harmonized palette (same saturation, varying hue).
-    // Two layers per arc: wide faint underlay + narrow crisp core, round caps.
-    const facades = this._config ? Object.values(this._config.facades || {}) : [];
-    let facadeArcs = "";
-    const facadeColors = ["#7da7c8", "#7fb89e", "#c4a979", "#c98969", "#b878a1", "#8a7eb5"];
-    // One ring per facade (overlapping facades stay visible) and a legend
-    // below the compass: names written on the arcs piled up unreadably.
-    const ringStep = facades.length > 1 ? Math.min(6, 34 / (facades.length - 1)) : 0;
-    let legend = "";
-    facades.forEach((f, i) => {
-      const azS = this._facadeAz(f.azimuth_start, 0), azE = this._facadeAz(f.azimuth_end, 0);
-      const startDeg = rad(azS);
-      const endDeg = rad(azE);
-      const arcR = r - 6 - i * ringStep;
-      const col = facadeColors[i % facadeColors.length];
-      legend += `<span class="compass-legend-item"><span class="compass-legend-dot" style="background:${col}"></span>${this._esc(String(f.name || ""))} <span class="compass-legend-az">${azS}°–${azE}°</span></span>`;
-      if (azS === azE) {
-        // start == end: full-circle facade (sun-exposed from every direction)
-        facadeArcs += `<circle cx="${cx}" cy="${cy}" r="${arcR}" fill="none" stroke="${col}" stroke-width="3.5" opacity="0.9"/>`;
-        return;
+    // Sunshine arc: only the bearings the sun can reach over the year, in the
+    // colour of the house side (north / east / south / west, house rotation
+    // applied) facing each part. The legend below lists that sector and the
+    // four house sides, cut to it: the part the sun never reaches is not shown.
+    const sector = this._sunSector();
+    const arc = (from, sweep, col, arcR, width) => {
+      if (sweep >= 359.99) return `<circle cx="${cx}" cy="${cy}" r="${arcR}" fill="none" stroke="${col}" stroke-width="${width}" opacity="0.9"/>`;
+      const point = (az) => [cx + arcR * Math.cos(rad(az)), cy + arcR * Math.sin(rad(az))];
+      const [x1, y1] = point(from), [x2, y2] = point(from + sweep);
+      return `<path d="M${x1},${y1} A${arcR},${arcR} 0 ${sweep > 180 ? 1 : 0},1 ${x2},${y2}" fill="none" stroke="${col}" stroke-width="${width}" opacity="0.9"/>`;
+    };
+    const houseRot = Number.isFinite(Number(rotation)) ? Number(rotation) : 0;
+    // Outer arc: the sunshine sector, in the sun colour; inner arc: the house sides
+    let sunArc = arc(sector.from, sector.sweep, "var(--ca-sun)", r - 5, 3);
+    for (const [dir, bearing] of Object.entries(FACADE_BEARINGS)) {
+      for (const [from, sweep] of this._clipToSector(bearing - 45 + houseRot, 90, sector)) {
+        sunArc += arc(from, sweep, FACADE_SIDE_COLORS[dir], r - 12, 5);
       }
-      const x1 = cx + arcR * Math.cos(startDeg), y1 = cy + arcR * Math.sin(startDeg);
-      const x2 = cx + arcR * Math.cos(endDeg), y2 = cy + arcR * Math.sin(endDeg);
-      let sweep = azE - azS;
-      if (sweep < 0) sweep += 360;
-      const large = sweep > 180 ? 1 : 0;
-      const d = `M${x1},${y1} A${arcR},${arcR} 0 ${large},1 ${x2},${y2}`;
-      facadeArcs += `<path d="${d}" fill="none" stroke="${col}" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/>`;
-    });
+    }
+    const deg = (v) => `${Math.round((((v % 360) + 360) % 360))}°`;
+    const range = (from, sweep) => sweep >= 359.99 ? "0°–360°" : `${deg(from)}–${deg(from + sweep)}`;
+    const legendRow = (dot, name, text) => `<div class="compass-legend-row"><span class="compass-legend-dot" style="background:${dot}"></span><span class="compass-legend-name">${name}</span><span class="compass-legend-az">${text}</span></div>`;
+    let legend = legendRow("var(--ca-sun)", this._esc(this._t("compass_sun_range")), range(sector.from, sector.sweep));
+    // One row per house side: the bearings from which the sun can light it
+    // (90° on each side of its bearing), cut to the sunshine sector.
+    for (const [dir, bearing] of Object.entries(FACADE_BEARINGS)) {
+      const parts = this._clipToSector(bearing - 90 + houseRot, 180, sector);
+      let text = parts.length ? parts.map(([from, sweep]) => range(from, sweep)).join(", ") : "\u2013";
+      // Cut in two by the dark sector: whole span first, then its two lit parts
+      if (parts.length === 2) text = `${deg(parts[0][0])}–${deg(parts[1][0] + parts[1][1])} (${text})`;
+      legend += legendRow(FACADE_SIDE_COLORS[dir], this._esc(this._t("facade_dir_" + dir)), text);
+    }
 
     // Sun position -- soft radial glow behind the disc, fine rays, and a
     // light cone rendered as a directional gradient fading toward the house
@@ -7708,13 +7741,13 @@ class CoverAutomaticPanel extends HTMLElement {
         <line x1="${cx - hr + 7}" y1="${cy - hr}" x2="${cx + hr - 7}" y2="${cy - hr}" stroke="var(--primary-color)" stroke-width="2.5" stroke-linecap="round" pointer-events="none"/>
         <text id="compass-degree-label" x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--primary-text-color)" opacity="0.75" pointer-events="none">${rotation}°</text>
       </g>
-      <!-- Facade arcs -->
-      ${facadeArcs}
+      <!-- Sunshine sector: sun-coloured arc and the four house sides -->
+      ${sunArc}
       <!-- Sun -->
       ${sunMarker}
       <!-- Info -->
       ${infoSvg}
-    </svg>${legend ? `<div class="compass-legend">${legend}</div>` : ""}`;
+    </svg><div class="compass-legend">${legend}</div>`;
   }
 
   _renderSettings() {

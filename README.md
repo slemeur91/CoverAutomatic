@@ -267,7 +267,7 @@ Après une mise à jour, rechargez la page du navigateur (Ctrl/Cmd+Maj+R) pour c
 Après l'installation, tout se configure dans le panneau **CoverAutomatic** de la barre latérale :
 
 1. **Volets** – ajoutez les entités `cover` à piloter ; chaque volet a sa fiche (fenêtre, pièce, exposition, automatisation)
-2. **Façades** – définissez les façades du bâtiment par orientation (avec visualisation sur une boussole). Pour une
+2. **Façades** – définissez les façades du bâtiment par orientation. Pour une
    nouvelle façade, les azimuts de début et de fin sont préremplis avec l'ouverture maximale de l'orientation choisie
    (90° de chaque côté, rotation de la maison appliquée, sans le secteur où le soleil ne passe jamais à votre
    latitude) et restent modifiables
@@ -299,7 +299,7 @@ Le bouton « Voir le journal de ce volet » ouvre le journal filtré sur ce vole
 
 | Onglet | Contenu |
 |--------|---------|
-| **Maison** | Rotation de la maison, avec boussole (Sud en haut ; position du soleil et des façades) ; choix de faire pivoter ou non les façades existantes quand la rotation change |
+| **Maison** | Rotation de la maison, avec boussole (Sud en haut ; position du soleil, secteur ensoleillé aux couleurs des quatre côtés de la maison, avec leurs azimuts en légende) ; choix de faire pivoter ou non les façades existantes quand la rotation change |
 | **Capteurs** | Capteur de température intérieure global et consignes froide / chaude avec leur hystérésis ; capteur de température extérieure et hystérésis utilisée par les règles ; météo ; jour ouvré |
 | **Exposition au soleil** | Comportement de « Soleil sur la façade » selon la température de la pièce ; capteur d'ensoleillement, seuil de fort ensoleillement et hystérésis |
 | **Protection contre le vent** | Capteur de vent, seuil, hystérésis et **position de protection** |

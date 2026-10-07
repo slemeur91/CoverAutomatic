@@ -267,7 +267,7 @@ After an update, reload the browser page (Ctrl/Cmd+Shift+R) to load the new pane
 After installation, everything is configured in the **CoverAutomatic** panel of the sidebar:
 
 1. **Covers** – add the `cover` entities to control; each cover has its own sheet (window, room, exposure, automation)
-2. **Facades** – define the facades of the building by direction (shown on a compass). For a new facade, the azimuth
+2. **Facades** – define the facades of the building by direction. For a new facade, the azimuth
    start / end are prefilled with the widest sun window of the chosen direction (90° on each side, house rotation
    applied, without the sector the sun never reaches at your latitude) and stay editable
 3. **Rules** – create the automation rules from conditions (sun, temperature, time, weather, entities…).
@@ -298,7 +298,7 @@ The "Show this cover's log" button opens the log filtered on this cover.
 
 | Tab | Content |
 |-----|---------|
-| **House** | House rotation, with compass (south at the top; position of the sun and of the facades); choice to rotate the existing facades or not when the rotation changes |
+| **House** | House rotation, with compass (south at the top; position of the sun, sunshine sector in the colours of the four house sides, with their azimuths in a legend); choice to rotate the existing facades or not when the rotation changes |
 | **Sensors** | Global indoor temperature sensor and cold / warm setpoints with their hysteresis; outdoor temperature sensor and hysteresis used by the rules; weather; workday |
 | **Sun exposure** | Behaviour of "Sun on the facade" depending on the room temperature; sunshine sensor, strong-sunshine threshold and hysteresis |
 | **Wind protection** | Wind sensor, threshold, hysteresis and **protection position** |
