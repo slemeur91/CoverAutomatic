@@ -5,19 +5,29 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.5] - 2026-10-07
+
+### Added
+
+- Cover list: a red shield follows the rule name when the rule in control is a safety rule.
+
+### Changed
+
+- Settings > House: the compass draws an arc over the bearings the sun can reach, then two rings for the house sides (north + south, east + west) showing the bearings from which the sun lights each side, instead of one labelled arc per facade (the names piled up unreadably). A legend below lists the sunshine bearings and, for each of the four house sides, the bearings from which the sun can light it.
+- Settings > House: the option added in 2.0.4 is renamed "Update the azimuths of existing facades", with more space above it.
+- Rules tab: the enabled / disabled filter is removed (facade, cover and scenario remain).
+
 ## [2.0.4] - 2026-10-06
 
 ### Added
 
-- Settings > House: option "Update the azimuths of existing facades" (on by default). When off, changing the house rotation no longer shifts the azimuths of the facades already created; a new facade is still prefilled with the rotation applied.
-- Rules tab: filter by facade, cover (directly or through its facade) and scenario, with a "Clear" button and a counter. Reordering is disabled while a filter is active; the rule being edited always stays visible.
+- Settings > House: option "Rotate existing facades with the house" (on by default). When off, changing the house rotation no longer shifts the azimuths of the facades already created; a new facade is still prefilled with the rotation applied.
+- Rules tab: filter by facade, cover (directly or through its facade), scenario and enabled / disabled rules, with a "Clear" button and a counter. Reordering is disabled while a filter is active; the rule being edited always stays visible.
 - Dashboard card: room temperature after the cover name, with the same colours and icons as the panel's cover list; new option `show_temp` (on by default). The status sensor exposes `room_temp_sensor` and `temp_color_thermometer` for this.
 
 ### Changed
 
 - Settings > House: the compass is drawn with south at the top (north at the bottom, east left, west right). The stored rotation and azimuths are unchanged.
-- Settings > House: the compass draws an arc over the bearings the sun can reach, then two rings for the house sides (north + south, east + west) showing the bearings from which the sun lights each side, instead of one labelled arc per facade (the names piled up unreadably). A legend below lists the sunshine bearings and, for each of the four house sides, the bearings from which the sun can light it.
-- Cover list: a red shield follows the rule name when the rule in control is a safety rule.
 - New facade: the prefilled azimuths are trimmed on their sides to the bearings the sun can reach at the Home Assistant latitude (e.g. east at 48.8° N: 53° / 180° instead of 0° / 180°). Nothing is trimmed when it would split the window in two (facade facing north), between the tropics or in polar regions.
 - Dashboard card: the safety rule icon is shown after the rule name instead of before it.
 
