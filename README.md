@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Home%20Assistant-2026.3%2B-03a9f4?logo=homeassistant&logoColor=white" alt="Home Assistant 2026.3+">
 </p>
 
-<p align="center">🇬🇧 <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/README_EN.md">English version</a></p>
+<p align="center">🇬🇧 <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/README_EN.md">English version</a> · 📖 <a href="https://github.com/slemeur91/CoverAutomatic/wiki">Wiki</a></p>
 
 ---
 
@@ -199,15 +199,33 @@ Cliquez sur une vignette pour l'agrandir.
       <p align="center"><sub><b>Fiche volet</b> – panneau latéral par sections</sub></p>
     </td>
   </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/rules-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/rules-desktop.png" alt="Règles" /></a>
+      <p align="center"><sub><b>Règles</b> – filtre, priorités, badge Sécurité, conditions</sub></p>
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/settings-sun.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/settings-sun.png" alt="Paramètres – Exposition au soleil" /></a>
+      <p align="center"><sub><b>Paramètres – Exposition au soleil</b> – comportement de « Soleil sur la façade »</sub></p>
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/settings-wind.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/settings-wind.png" alt="Paramètres – Protection contre le vent" /></a>
+      <p align="center"><sub><b>Paramètres – Protection contre le vent</b> – seuil, hystérésis, position</sub></p>
+    </td>
+  </tr>
 </table>
 
 <table>
   <tr>
-    <td width="50%" align="center">
+    <td width="33%" align="center">
+      <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/card.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/card.png" alt="Carte de tableau de bord" width="320" /></a>
+      <p><sub><b>Carte de tableau de bord</b> – position, règle active, température, statut</sub></p>
+    </td>
+    <td width="33%" align="center">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/mobile-covers.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/mobile-covers.png" alt="Mobile – Volets" width="320" /></a>
       <p><sub><b>Mobile – Volets</b></sub></p>
     </td>
-    <td width="50%" align="center">
+    <td width="33%" align="center">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/mobile-settings.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/mobile-settings.png" alt="Mobile – Paramètres" width="320" /></a>
       <p><sub><b>Mobile – Paramètres</b> – sections en barre horizontale</sub></p>
     </td>
@@ -278,7 +296,8 @@ Après une mise à jour, rechargez la page du navigateur (Ctrl/Cmd+Maj+R) pour c
 
 ## Configuration
 
-Après l'installation, tout se configure dans le panneau **CoverAutomatic** de la barre latérale :
+Après l'installation, tout se configure dans le panneau **CoverAutomatic** de la barre latérale.
+Le [wiki](https://github.com/slemeur91/CoverAutomatic/wiki) détaille chaque partie de l'intégration, avec des captures d'écran.
 
 1. **Volets** – ajoutez les entités `cover` à piloter ; chaque volet a sa fiche (fenêtre, pièce, exposition, automatisation)
 2. **Façades** – définissez les façades du bâtiment par orientation. Pour une
@@ -545,13 +564,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.0.5
+2.0.6
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.0.5 (2026-10-07), basée sur la version d'origine
+Dernière version : v2.0.6 (2026-10-08), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
 
 ## Licence
