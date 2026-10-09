@@ -101,6 +101,24 @@ class TestCardTemperatureAttributes:
         cover = CoverConfig(entity_id=EID, name="Salon")
         assert self._attrs(cover, "sensor.maison")["room_temp_sensor"] == "sensor.maison"
 
+    def test_sun_on_the_cover_facade(self) -> None:
+        cover = CoverConfig(entity_id=EID, name="Salon", facade_id="south")
+        coord = MagicMock()
+        coord.hass = MagicMock()
+        coord.storage.covers = {EID: cover}
+        coord.get_cover_live = MagicMock(return_value={})
+        coord.get_live_facade_data = MagicMock(return_value={"south": {"sun_on_facade": True}})
+        ent = CoverAutomaticStatusSensor(coord, EID, "Salon")
+        ent.hass = coord.hass
+        with patch("custom_components.cover_automatic.sensor.er.async_get", return_value=MagicMock()):
+            assert ent.extra_state_attributes["sun_on_facade"] is True
+            coord.get_live_facade_data.return_value = {"south": {"sun_on_facade": False}}
+            assert ent.extra_state_attributes["sun_on_facade"] is False
+
+    def test_no_facade_means_no_sun(self) -> None:
+        cover = CoverConfig(entity_id=EID, name="Salon")
+        assert self._attrs(cover, None)["sun_on_facade"] is False
+
     def test_no_sensor(self) -> None:
         cover = CoverConfig(entity_id=EID, name="Salon")
         assert self._attrs(cover, None)["room_temp_sensor"] is None

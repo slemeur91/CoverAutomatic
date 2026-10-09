@@ -77,6 +77,17 @@ class CoverAutomaticMasterSwitch(CoordinatorEntity[CoverAutomaticCoordinator], S
         """Return true if global automation is enabled."""
         return self.coordinator.storage.enabled
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Global sensors, for the information line of the dashboard card."""
+        storage = self.coordinator.storage
+        return {
+            "outdoor_temp_sensor": storage.outdoor_temp_sensor,
+            "weather_entity": storage.weather_entity,
+            "solar_sensor": storage.solar_sensor,
+            "solar_threshold": storage.solar_threshold,
+        }
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable global automation."""
         self.coordinator.storage.enabled = True

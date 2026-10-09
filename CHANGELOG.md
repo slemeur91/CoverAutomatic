@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.7] - 2026-10-09
+
+### Added
+
+- Dashboard card: a sun follows the cover name while the sun is on the facade of that cover (the status sensor exposes `sun_on_facade`).
+- Panel header: an "Up to date" badge next to the version number when the update check finds no newer release.
+- Dashboard card: new information line (sun position, outdoor temperature, weather, sunshine), like the panel header; the master switch exposes the chosen sensors for this.
+
+### Changed
+
+- Dashboard card header in three lines: scenario on the left and automation switch on the right, then the information line, then the cover statuses with the "Resume all" button, reduced to its icon. A long weather label is shortened so that the information line stays on one line.
+
 ## [2.0.6] - 2026-10-08
 
 ### Changed

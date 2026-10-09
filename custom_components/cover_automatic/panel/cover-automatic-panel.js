@@ -37,6 +37,7 @@ const I18N = {
     title: "CoverAutomatic",
     version_link_title: "Open release notes on GitHub",
     update_badge_title: "Update available - open release notes on GitHub",
+    update_uptodate: "Up to date",
     tabs: { covers: "Covers", facades: "Facades", rules: "Rules", scenarios: "Scenarios", settings: "Settings", log: "Log" },
     nav_label: "Sections",
     loading: "Loading configuration...",
@@ -689,6 +690,7 @@ const I18N = {
     title: "CoverAutomatic",
     version_link_title: "Release Notes auf GitHub öffnen",
     update_badge_title: "Update verfügbar – Release Notes auf GitHub öffnen",
+    update_uptodate: "Aktuell",
     tabs: { covers: "Behänge", facades: "Fassaden", rules: "Regeln", scenarios: "Szenarien", settings: "Einstellungen", log: "Protokoll" },
     nav_label: "Bereiche",
     loading: "Konfiguration wird geladen...",
@@ -1334,6 +1336,7 @@ const I18N = {
     title: "CoverAutomatic",
     version_link_title: "Ouvrir les notes de version sur GitHub",
     update_badge_title: "Mise à jour disponible - ouvrir les notes de version sur GitHub",
+    update_uptodate: "À jour",
     tabs: { covers: "Volets", facades: "Façades", rules: "Règles", scenarios: "Scénarios", settings: "Paramètres", log: "Journal" },
     nav_label: "Sections",
     loading: "Chargement de la configuration...",
@@ -2232,6 +2235,19 @@ const PANEL_STYLES = `
   a.version-info:hover {
     opacity: 1;
     text-decoration: underline;
+  }
+  .uptodate-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 8px;
+    padding: 2px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #2e7d32;
+    background: color-mix(in srgb, #4CAF50 14%, transparent);
+    border: 1px solid color-mix(in srgb, #4CAF50 40%, transparent);
   }
   .update-badge {
     display: inline-flex;
@@ -4096,6 +4112,7 @@ class CoverAutomaticPanel extends HTMLElement {
     this._dragOverId = null;
     this._error = null;
     this._latestVersion = null;
+    this._upToDate = false;
     this._logEntries = null;
     this._logFilter = null;
     this._logCover = null;
@@ -4337,10 +4354,11 @@ class CoverAutomaticPanel extends HTMLElement {
       if (!resp.ok) return;
       const data = await resp.json();
       const latest = (data.tag_name || "").replace(/^v/, "");
-      if (latest && this._compareVersions(latest, this._config.version) > 0) {
-        this._latestVersion = latest;
-        this._updateRegion(this.shadowRoot.querySelector(".panel-container"), "header", this._renderHeaderContent());
-      }
+      if (!latest) return;
+      if (this._compareVersions(latest, this._config.version) > 0) this._latestVersion = latest;
+      // Latest published release is not newer than the installed version
+      else this._upToDate = true;
+      this._updateRegion(this.shadowRoot.querySelector(".panel-container"), "header", this._renderHeaderContent());
     } catch (e) { /* silent */ }
   }
 
@@ -4828,6 +4846,7 @@ class CoverAutomaticPanel extends HTMLElement {
     } else if (version) {
       const v = this._esc(version);
       html += ' <a class="version-info" href="https://github.com/slemeur91/CoverAutomatic/releases/tag/v' + v + '" target="_blank" rel="noopener noreferrer" title="' + this._t("version_link_title") + '">v' + v + '</a>';
+      if (this._upToDate) html += ' <span class="uptodate-badge">\u2713 ' + this._esc(this._t("update_uptodate")) + '</span>';
     }
     html += '</div><div class="header-right">';
     html += '<span class="info-bar-slot">' + this._renderInfoBarInline() + '</span>';

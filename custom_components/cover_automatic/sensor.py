@@ -209,6 +209,12 @@ class CoverAutomaticStatusSensor(_CoverSensorBase):
                 or self.coordinator.storage.indoor_temp_sensor
             ),
             "temp_color_thermometer": self.coordinator.storage.temp_color_thermometer,
+            # Sun currently on the facade of this cover (card: sun after the name)
+            "sun_on_facade": bool(
+                cover and cover.facade_id
+                and self.coordinator.get_live_facade_data()
+                .get(cover.facade_id, {}).get("sun_on_facade")
+            ),
             "pause_until": pause_end.isoformat() if pause_end else None,
             "last_change": last_change.isoformat() if last_change else None,
         }

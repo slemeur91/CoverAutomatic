@@ -27,6 +27,10 @@
       auto: "Automation",
       safety: "Safety rule",
       room_temp: "Room temperature",
+      sun: "Sun on the facade",
+      info_sun: "Sun position (azimuth / elevation)",
+      info_outdoor: "Outdoor temperature",
+      info_solar: "Sunshine",
       target: "Target",
       remaining: "{m} min left",
       inverted: "Inverted cover: HA reports {raw}%",
@@ -56,6 +60,10 @@
       auto: "Automatik",
       safety: "Sicherheitsregel",
       room_temp: "Raumtemperatur",
+      sun: "Sonne auf der Fassade",
+      info_sun: "Sonnenstand (Azimut / Höhe)",
+      info_outdoor: "Außentemperatur",
+      info_solar: "Besonnung",
       target: "Ziel",
       remaining: "noch {m} Min.",
       inverted: "Invertierter Rollladen: HA meldet {raw} %",
@@ -85,6 +93,10 @@
       auto: "Automatisation",
       safety: "Règle de sécurité",
       room_temp: "Température de la pièce",
+      sun: "Soleil sur la façade",
+      info_sun: "Position du soleil (azimut / élévation)",
+      info_outdoor: "Température extérieure",
+      info_solar: "Ensoleillement",
       target: "Cible",
       remaining: "encore {m} min",
       inverted: "Volet inversé : HA indique {raw} %",
@@ -161,6 +173,15 @@
   const GLOBAL_KEYS = {
     scenario: "scenario", master_enabled: "master", wind_protection: "wind",
     covers_paused: "paused", covers_manual: "manual", covers_locked: "locked",
+  };
+  // Icon of each Home Assistant weather state (information line)
+  const WEATHER_ICONS = {
+    "clear-night": "mdi:weather-night", cloudy: "mdi:weather-cloudy", exceptional: "mdi:alert-circle-outline",
+    fog: "mdi:weather-fog", hail: "mdi:weather-hail", lightning: "mdi:weather-lightning",
+    "lightning-rainy": "mdi:weather-lightning-rainy", partlycloudy: "mdi:weather-partly-cloudy",
+    pouring: "mdi:weather-pouring", rainy: "mdi:weather-rainy", snowy: "mdi:weather-snowy",
+    "snowy-rainy": "mdi:weather-snowy-rainy", sunny: "mdi:weather-sunny", windy: "mdi:weather-windy",
+    "windy-variant": "mdi:weather-windy-variant",
   };
   function findGlobals(hass) {
     if (!hass || !hass.entities) return {};
@@ -314,12 +335,14 @@
           <ha-card${title ? ` header="${esc(title)}"` : ""}>
             <div class="globals${title ? "" : " no-title"}">
               <div class="g-line g-controls"></div>
+              <div class="g-line g-info"></div>
               <div class="g-line g-status"></div>
             </div>
             <div class="missing" role="status" hidden></div>
             <div class="rows"></div>
           </ha-card>`;
         this._ctrlSig = null;
+        this._infoSig = null;
         this._statusSig = null;
         this._missingSig = null;
       }
@@ -329,7 +352,7 @@
       if (globalsEl) {
         // Controls (scenario select, master switch) and status chips are
         // redrawn separately: a chip update must not close an open select.
-        const g = this._config.show_header ? this._renderGlobals() : { controls: "", status: "" };
+        const g = this._config.show_header ? this._renderGlobals() : { controls: "", info: "", status: "" };
         const patch = (sel, html, sigKey) => {
           const el = globalsEl.querySelector(sel);
           if (!el || html === this[sigKey]) return;
@@ -340,8 +363,9 @@
           if (focusKey) el.querySelector(focusKey)?.focus();
         };
         patch(".g-controls", g.controls, "_ctrlSig");
+        patch(".g-info", g.info, "_infoSig");
         patch(".g-status", g.status, "_statusSig");
-        const any = !!(g.controls || g.status);
+        const any = !!(g.controls || g.info || g.status);
         globalsEl.hidden = !any;
         container.classList.toggle("no-title", !any && !title);
       }
@@ -444,9 +468,46 @@
         chips.push(`<span class="chip${n ? " on" : " zero"}"${names ? ` title="${esc(names)}"` : ""}><ha-icon icon="${icon}"></ha-icon>${n} ${esc(t(hass, key))}</span>`);
       }
       const paused = parseInt((st(g.paused) || {}).state, 10) || 0;
-      const resume = `<button class="g-btn" data-resume-all ${paused ? "" : "disabled"} title="${esc(t(hass, "resume_all_title"))}"><ha-icon icon="mdi:play-circle-outline"></ha-icon>${esc(t(hass, "resume_all"))}</button>`;
-      if (!parts.length && !chips.length) return { controls: "", status: "" };
-      return { controls: parts.join(""), status: chips.join("") + resume };
+      const resume = `<button class="g-btn" data-resume-all ${paused ? "" : "disabled"} title="${esc(t(hass, "resume_all") + " – " + t(hass, "resume_all_title"))}" aria-label="${esc(t(hass, "resume_all"))}"><ha-icon icon="mdi:play-circle-outline"></ha-icon></button>`;
+      if (!parts.length && !chips.length) return { controls: "", info: "", status: "" };
+      return { controls: parts.join(""), info: this._renderInfo(master), status: chips.join("") + resume };
+    }
+
+    // Information line: sun position, outdoor temperature, weather and
+    // sunshine, read from the sensors chosen in the panel settings (their
+    // entity ids are attributes of the master switch).
+    _renderInfo(master) {
+      const hass = this._hass;
+      const a = (master && master.attributes) || {};
+      const usable = (id) => {
+        const s = id ? hass.states[id] : null;
+        return s && s.state !== "unavailable" && s.state !== "unknown" ? s : null;
+      };
+      const chip = (icon, text, title, cls = "") =>
+        `<span class="chip${cls}" title="${esc(title)}"><ha-icon icon="${icon}"></ha-icon><span class="chip-text">${esc(text)}</span></span>`;
+      const out = [];
+      const sun = usable("sun.sun");
+      const az = sun ? Number(sun.attributes.azimuth) : NaN, el = sun ? Number(sun.attributes.elevation) : NaN;
+      if (Number.isFinite(az) && Number.isFinite(el)) {
+        out.push(chip(el < 0 ? "mdi:weather-night" : "mdi:white-balance-sunny", `${az.toFixed(1)}° / ${el.toFixed(1)}°`, t(hass, "info_sun")));
+      }
+      const temp = usable(a.outdoor_temp_sensor);
+      if (temp && Number.isFinite(Number(temp.state))) {
+        out.push(chip("mdi:thermometer", `${Number(temp.state).toFixed(1)} ${temp.attributes.unit_of_measurement || "°C"}`, t(hass, "info_outdoor")));
+      }
+      const weather = usable(a.weather_entity);
+      if (weather) {
+        const label = hass.formatEntityState ? hass.formatEntityState(weather) : weather.state;
+        // The only chip allowed to shrink: a long weather label is cut with "…"
+        out.push(chip(WEATHER_ICONS[weather.state] || "mdi:weather-cloudy", label, label, " chip-shrink"));
+      }
+      const solar = usable(a.solar_sensor);
+      if (solar && Number.isFinite(Number(solar.state))) {
+        const value = Number(solar.state), threshold = Number(a.solar_threshold) || 0;
+        const unit = solar.attributes.unit_of_measurement ? ` ${solar.attributes.unit_of_measurement}` : "";
+        out.push(chip("mdi:pulse", `${value.toFixed(0)}${unit}`, t(hass, "info_solar"), threshold > 0 && value > threshold ? " on" : ""));
+      }
+      return out.join("");
     }
 
     _renderRow(r) {
@@ -481,7 +542,7 @@
       }
       return `<div class="row${unavailable ? " unavailable" : ""}${this._config.show_auto ? "" : " no-auto"}">
         <div class="main">
-          <button class="name" data-more="${esc(r.id)}">${esc(this._name(r.id, r.status))}</button>
+          <div class="name-line"><button class="name" data-more="${esc(r.id)}">${esc(this._name(r.id, r.status))}</button>${a.sun_on_facade ? `<ha-icon class="sun" icon="mdi:white-balance-sunny" title="${esc(t(hass, "sun"))}"></ha-icon>` : ""}</div>
           ${rule || temp ? `<div class="sub-line">${rule}${temp}</div>` : ""}
         </div>
         <div class="pos"${invTip}>${unavailable ? '<span class="dash">–</span>' : this._bar(pos, a.target_position)}${a.inverted ? '<span class="inv">⇅</span>' : ""}</div>
@@ -566,13 +627,22 @@
     .g-field { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--primary-text-color); }
     .g-field > span:first-child { color: var(--secondary-text-color); font-size: 13px; }
     .g-field select { font: inherit; font-size: 14px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--divider-color, #ccc); background: var(--card-background-color, #fff); color: var(--primary-text-color); max-width: 180px; }
-    .g-status { gap: 6px; }
+    /* Line 1: scenario on the left, master automation switch on the right */
+    .g-controls { justify-content: space-between; }
+    .g-controls .g-switch { margin-left: auto; }
+    .g-info, .g-status { gap: 6px; }
+    /* Information line on one line: the weather label gives way first */
+    .g-info { flex-wrap: nowrap; overflow: hidden; }
+    .g-info .chip { flex: none; }
+    .g-info .chip.chip-shrink { flex: 0 1 auto; min-width: 44px; }
+    .chip-shrink .chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .chip ha-icon { flex: none; }
     .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 3px 8px; border-radius: 12px; background: color-mix(in srgb, var(--primary-text-color) 7%, transparent); color: var(--primary-text-color); white-space: nowrap; }
     .chip ha-icon { --mdc-icon-size: 14px; }
     .chip.zero { color: var(--secondary-text-color); }
     .chip.on { background: color-mix(in srgb, var(--warning-color, #ff9800) 16%, transparent); }
     .chip.warn { background: color-mix(in srgb, var(--error-color, #db4437) 16%, transparent); color: var(--error-color, #db4437); }
-    .g-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--primary-color); background: transparent; color: var(--primary-color); cursor: pointer; }
+    .g-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 14px; border: 1px solid var(--primary-color); background: transparent; color: var(--primary-color); cursor: pointer; }
     .g-btn ha-icon { --mdc-icon-size: 16px; }
     .g-btn:disabled { opacity: .4; cursor: default; }
     .row.no-auto { grid-template-columns: minmax(0, 1.5fr) minmax(110px, 1.4fr) 100px; }
@@ -583,6 +653,10 @@
     .row.unavailable { opacity: .5; }
     .main { min-width: 0; }
     .name { all: unset; cursor: pointer; font-weight: 500; color: var(--primary-text-color); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    /* First line: cover name, then a sun while the sun is on its facade */
+    .name-line { display: flex; align-items: center; gap: 5px; min-width: 0; }
+    .name-line .name { flex: 0 1 auto; min-width: 0; max-width: none; }
+    .sun { flex: none; --mdc-icon-size: 16px; color: var(--warning-color, #ffa600); }
     /* Second line: active rule, then the room temperature (the name keeps the whole first line) */
     .sub-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
     .sub-line .rule { flex: 0 1 auto; min-width: 0; }
@@ -618,6 +692,7 @@
     .empty { padding: 8px 0; color: var(--secondary-text-color); }
     /* Narrow card (phone, sections column): two lines per cover */
     @container (max-width: 480px) {
+      .g-info { flex-wrap: wrap; }
       .row, .row.no-auto { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "main status" "pos controls"; row-gap: 6px; }
       .row.no-auto { grid-template-areas: "main status" "pos pos"; }
       .main { grid-area: main; } .status { grid-area: status; } .pos { grid-area: pos; } .controls { grid-area: controls; }
