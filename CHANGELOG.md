@@ -5,6 +5,24 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.8] - 2026-10-09
+
+Code review of the changes made since 2.0.2.
+
+### Changed
+
+- Facades: changing the direction of an existing facade prefills the same azimuths as for a new one (90° on each side, trimmed to the sunshine sector); the former 90° wide preset is gone.
+- Facades tab: the direction arrows follow the south-up compass (south up, north down).
+- Compass: tick marks moved outside the ring, clear of the arcs.
+- Dashboard card: redrawn only when an entity it shows has changed.
+- README and README_EN: the new attributes of the status sensor and of the master switch are described.
+
+### Fixed
+
+- "Up to date" badge: theme colour (readable in dark mode); hidden as soon as the update check is switched off.
+- Sunshine chip (panel and card): the threshold follows its entity when one is set.
+- Rules filter: the counter no longer includes the rule kept visible only because it is being edited; the keyboard focus stays on the filter just changed.
+
 ## [2.0.7] - 2026-10-09
 
 ### Added

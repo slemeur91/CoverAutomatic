@@ -231,9 +231,36 @@
       this._render();
     }
 
+    // Home Assistant sets hass on every state change of the whole system:
+    // redraw only when an entity shown on the card changed (the 30 s timer
+    // still refreshes the card in any case).
     set hass(hass) {
+      const old = this._hass;
       this._hass = hass;
+      if (old && hass && this._watched && old.entities === hass.entities && lang(old) === lang(hass)
+        && this._watched.every((id) => old.states[id] === hass.states[id])) return;
       this._render();
+    }
+
+    // Entities whose state the card displays.
+    _collectWatched() {
+      const hass = this._hass;
+      if (!hass || !hass.states || !this._config) return null;
+      const ids = new Set(["sun.sun"]);
+      for (const r of this._rows()) {
+        const a = r.status.attributes;
+        ids.add(r.id).add(r.status.entity_id);
+        if (a.auto_switch) ids.add(a.auto_switch);
+        if (a.room_temp_sensor) ids.add(a.room_temp_sensor);
+      }
+      for (const id of Object.values(findGlobals(hass))) {
+        ids.add(id);
+        const a = (hass.states[id] || {}).attributes || {};
+        for (const key of ["outdoor_temp_sensor", "weather_entity", "solar_sensor", "solar_threshold_entity", "wind_sensor"]) {
+          if (a[key]) ids.add(a[key]);
+        }
+      }
+      return [...ids];
     }
 
     // A failed render (unexpected state while HA reconnects...) must not
@@ -241,8 +268,10 @@
     _render() {
       try {
         this._renderInner();
+        this._watched = this._collectWatched();
       } catch (err) {
         console.error("cover-automatic-card:", err);
+        this._watched = null;
         this._skeleton = "";
         if (this.shadowRoot) {
           this.shadowRoot.innerHTML = `<style>${STYLE}</style><ha-card><div class="rows no-title"><div class="empty">${esc(t(this._hass, "render_error"))}</div></div></ha-card>`;
@@ -503,7 +532,10 @@
       }
       const solar = usable(a.solar_sensor);
       if (solar && Number.isFinite(Number(solar.state))) {
-        const value = Number(solar.state), threshold = Number(a.solar_threshold) || 0;
+        // The threshold may follow an entity (typed value as fallback)
+        const thr = usable(a.solar_threshold_entity);
+        const value = Number(solar.state);
+        const threshold = thr && Number.isFinite(Number(thr.state)) ? Number(thr.state) : Number(a.solar_threshold) || 0;
         const unit = solar.attributes.unit_of_measurement ? ` ${solar.attributes.unit_of_measurement}` : "";
         out.push(chip("mdi:pulse", `${value.toFixed(0)}${unit}`, t(hass, "info_solar"), threshold > 0 && value > threshold ? " on" : ""));
       }

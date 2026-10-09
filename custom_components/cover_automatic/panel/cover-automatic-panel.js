@@ -2059,23 +2059,17 @@ const CONDITION_MENU = [
 // evaluated in the editor preview (mirrors engine _CONTEXT_DEPENDENT_TYPES).
 const CONTEXT_DEPENDENT_TYPES = ["sun_on_facade", "temperature_comfort", "outdoor_vs_indoor", "room_occupied"];
 
-const FACADE_PRESETS = {
-  north: { start: 315, end: 45 },
-  east: { start: 45, end: 135 },
-  south: { start: 135, end: 225 },
-  west: { start: 225, end: 315 }
-};
-
 // Compass bearing of each facade direction (before house rotation).
 const FACADE_BEARINGS = { north: 0, east: 90, south: 180, west: 270 };
 // Colour of each house side on the compass and in its legend.
 const FACADE_SIDE_COLORS = { north: "#7da7c8", east: "#7fb89e", south: "#c4a979", west: "#c98969" };
 
+// Same orientation as the compass of the settings: south at the top.
 const DIRECTION_ARROWS = {
-  north: "\u2191",
-  east: "\u2192",
-  south: "\u2193",
-  west: "\u2190"
+  north: "\u2193",
+  east: "\u2190",
+  south: "\u2191",
+  west: "\u2192"
 };
 
 /* ============================================================
@@ -2245,9 +2239,9 @@ const PANEL_STYLES = `
     font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
-    color: #2e7d32;
-    background: color-mix(in srgb, #4CAF50 14%, transparent);
-    border: 1px solid color-mix(in srgb, #4CAF50 40%, transparent);
+    color: var(--ca-success);
+    background: color-mix(in srgb, var(--ca-success) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ca-success) 40%, transparent);
   }
   .update-badge {
     display: inline-flex;
@@ -4846,7 +4840,7 @@ class CoverAutomaticPanel extends HTMLElement {
     } else if (version) {
       const v = this._esc(version);
       html += ' <a class="version-info" href="https://github.com/slemeur91/CoverAutomatic/releases/tag/v' + v + '" target="_blank" rel="noopener noreferrer" title="' + this._t("version_link_title") + '">v' + v + '</a>';
-      if (this._upToDate) html += ' <span class="uptodate-badge">\u2713 ' + this._esc(this._t("update_uptodate")) + '</span>';
+      if (this._upToDate && this._config?.settings?.update_check_enabled !== false) html += ' <span class="uptodate-badge">\u2713 ' + this._esc(this._t("update_uptodate")) + '</span>';
     }
     html += '</div><div class="header-right">';
     html += '<span class="info-bar-slot">' + this._renderInfoBarInline() + '</span>';
@@ -4910,7 +4904,10 @@ class CoverAutomaticPanel extends HTMLElement {
       widgets.push('<span class="info-widget" title="' + this._esc(weatherLabel) + '">' + this._weatherIconSvg(weatherVal) + '<span class="info-widget-value">' + this._esc(weatherLabel) + '</span></span>');
     }
     if (solarVal != null) {
-      const threshold = settings.solar_threshold ?? 0;
+      // The threshold may follow an entity (typed value as fallback)
+      const thrState = settings.solar_threshold_entity && this._hass?.states ? this._hass.states[settings.solar_threshold_entity] : null;
+      const thrVal = thrState ? parseFloat(thrState.state) : NaN;
+      const threshold = Number.isFinite(thrVal) ? thrVal : (settings.solar_threshold ?? 0);
       const exceeded = threshold > 0 && solarVal > threshold;
       const unit = solarState.attributes && solarState.attributes.unit_of_measurement ? ' ' + solarState.attributes.unit_of_measurement : '';
       const solarTitle = exceeded ? this._t("info_solar_exceeded_title") : this._t("info_solar_title");
@@ -6082,30 +6079,26 @@ class CoverAutomaticPanel extends HTMLElement {
   _trimToSunSector(start, end) {
     const sector = this._sunSector();
     if (sector.sweep >= 360) return null;
-    // Half-width and centre of the dark sector
-    const half = (360 - sector.sweep) / 2;
-    const dark = (sector.from - half + 360) % 360;
-    // Bearings relative to the centre of the dark sector: lit = [half, 360 - half]
-    const s = (((start - dark) % 360) + 360) % 360;
-    let e = (((end - dark) % 360) + 360) % 360;
-    if (e <= s) e += 360;
-    const parts = [0, 360]
-      .map(k => [Math.max(s, k + half), Math.min(e, k + 360 - half)])
-      .filter(([a, b]) => b - a > 0.001);
+    const sweep = (((end - start) % 360) + 360) % 360 || 360;
+    const parts = this._clipToSector(start, sweep, sector);
     if (parts.length !== 1) return null;
-    const [a, b] = parts[0];
-    if (a - s < 0.001 && e - b < 0.001) return null;
+    const [from, width] = parts[0];
+    // Offsets from the start of the sector: of the span, and of its lit part
+    const s = (((start - sector.from) % 360) + 360) % 360;
+    const a = from - sector.from;
+    const cutStart = a - s > 0.001, cutEnd = (s + sweep) - (a + width) > 0.001;
+    if (!cutStart && !cutEnd) return null;
     // Whole degrees, rounded towards the inside of the lit sector
-    const lo = a - s < 0.001 ? a : Math.ceil(a - 0.001);
-    const hi = e - b < 0.001 ? b : Math.floor(b + 0.001);
+    const lo = cutStart ? Math.ceil(from - 0.001) : from;
+    const hi = cutEnd ? Math.floor(from + width + 0.001) : from + width;
     if (hi - lo <= 0) return null;
-    return { start: this._facadeAz(lo + dark, start), end: this._facadeAz(hi + dark, end) };
+    return { start: this._facadeAz(lo, start), end: this._facadeAz(hi, end) };
   }
 
   _renderFacadeAddForm() {
     const covers = this._config.covers || {};
     const span = this._facadeMaxSpan("south");
-    let html = `<div class="inline-form" data-facade-form="add">
+    let html = `<div class="inline-form">
       <div class="form-group">
         <label>${this._t("name")}</label>
         <input type="text" value="" data-facade-field="name" placeholder="${this._t("name")}">
@@ -6155,8 +6148,7 @@ class CoverAutomaticPanel extends HTMLElement {
    * ============================================================ */
   // Rules tab filter: a rule without facade and cover applies to every cover,
   // a rule without scenario list belongs to every scenario.
-  _ruleMatchesFilter(r) {
-    const f = this._ruleFilter;
+  _ruleMatchesFilter(r, f) {
     const covers = this._config.covers || {};
     const coverIds = r.cover_ids || [], facadeIds = r.facade_ids || [];
     const everywhere = !coverIds.length && !facadeIds.length;
@@ -6168,8 +6160,7 @@ class CoverAutomaticPanel extends HTMLElement {
     return true;
   }
 
-  _renderRuleFilterBar(shown, total) {
-    const f = this._ruleFilter;
+  _renderRuleFilterBar(f, shown, total) {
     const select = (key, allKey, options) => `<select data-action="rule-filter" data-filter-key="${key}" aria-label="${this._esc(this._t(allKey))}">
         <option value="">${this._esc(this._t(allKey))}</option>
         ${options.map(([value, label]) => `<option value="${this._esc(value)}"${f[key] === value ? " selected" : ""}>${this._esc(label)}</option>`).join("")}
@@ -6178,7 +6169,7 @@ class CoverAutomaticPanel extends HTMLElement {
     const facades = Object.values(this._config.facades || {}).map(x => [x.id, x.name]).sort(byName);
     const covers = Object.values(this._config.covers || {}).map(c => [c.entity_id, c.name]).sort(byName);
     const scenarios = Object.values(this._config.scenarios || {}).map(sc => [sc.id, sc.name]);
-    const filtering = this._ruleFilterActive();
+    const filtering = Object.values(f).some(Boolean);
     return `<div class="log-cover-filter rule-filter-bar">
       ${select("facade", "rule_filter_all_facades", facades)}
       ${select("cover", "log_filter_all_covers", covers)}
@@ -6188,23 +6179,28 @@ class CoverAutomaticPanel extends HTMLElement {
     </div>`;
   }
 
-  _ruleFilterActive() {
-    return Object.values(this._ruleFilter).some(Boolean);
+  // Filter actually applied: a choice pointing at a deleted facade, cover or
+  // scenario is ignored (the stored choice is left alone while rendering).
+  _effectiveRuleFilter() {
+    const f = this._ruleFilter, c = this._config;
+    return {
+      facade: f.facade && (c.facades || {})[f.facade] ? f.facade : "",
+      cover: f.cover && (c.covers || {})[f.cover] ? f.cover : "",
+      scenario: f.scenario && (c.scenarios || {})[f.scenario] ? f.scenario : "",
+    };
   }
 
   _renderRules() {
     const rules = this._config.rules || {};
     const all = this._rulesByPriority(rules);
-    // A filter that no longer points at an existing item is dropped
-    const f = this._ruleFilter;
-    if (f.facade && !(this._config.facades || {})[f.facade]) f.facade = "";
-    if (f.cover && !(this._config.covers || {})[f.cover]) f.cover = "";
-    if (f.scenario && !(this._config.scenarios || {})[f.scenario]) f.scenario = "";
-    const filtering = this._ruleFilterActive();
+    const f = this._effectiveRuleFilter();
+    const filtering = Object.values(f).some(Boolean);
+    const matching = filtering ? all.filter(r => this._ruleMatchesFilter(r, f)) : all;
     // The rule being edited stays visible so its draft is never hidden
-    const sorted = filtering ? all.filter(r => r.id === this._expandedRule || this._ruleMatchesFilter(r)) : all;
+    // (it is not counted when it does not match)
+    const sorted = filtering ? all.filter(r => r.id === this._expandedRule || matching.includes(r)) : all;
 
-    let html = all.length ? this._renderRuleFilterBar(sorted.length, all.length) : "";
+    let html = all.length ? this._renderRuleFilterBar(f, matching.length, all.length) : "";
     // Reordering a partial list would be ambiguous: only without filter
     html += filtering
       ? `<div class="rule-reorder-hint">${this._t("rule_filter_reorder_hint")}</div>`
@@ -7742,7 +7738,7 @@ class CoverAutomaticPanel extends HTMLElement {
       <!-- North marker (bottom): filled triangle pointing inward from the ring -->
       <polygon points="${cx - 3.5},${cy + r} ${cx + 3.5},${cy + r} ${cx},${cy + r - 8}" fill="var(--ca-primary)"/>
       <!-- Tick marks (north replaced by the triangle marker) -->
-      ${[45,90,135,180,225,270,315].map(d => { const rad=(d+90)*Math.PI/180; const i=d%90===0?9:5; return `<line x1="${cx+(r-i)*Math.cos(rad)}" y1="${cy+(r-i)*Math.sin(rad)}" x2="${cx+r*Math.cos(rad)}" y2="${cy+r*Math.sin(rad)}" stroke="var(--primary-text-color)" stroke-width="${d%90===0?1.5:1}" opacity="${d%90===0?0.5:0.25}"/>`; }).join("")}
+      ${[45,90,135,180,225,270,315].map(d => { const rad=(d+90)*Math.PI/180; const i=d%90===0?5:3; return `<line x1="${cx+r*Math.cos(rad)}" y1="${cy+r*Math.sin(rad)}" x2="${cx+(r+i)*Math.cos(rad)}" y2="${cy+(r+i)*Math.sin(rad)}" stroke="var(--primary-text-color)" stroke-width="${d%90===0?1.5:1}" opacity="${d%90===0?0.5:0.25}"/>`; }).join("")}
       <!-- Sun beams (behind house) -->
       ${sunBeams}
       <!-- House (rotated, on top of beams) -->
@@ -8959,6 +8955,7 @@ class CoverAutomaticPanel extends HTMLElement {
       const key = el.dataset.filterKey;
       if (key in this._ruleFilter) this._ruleFilter[key] = el.value || "";
       this._render();
+      this.shadowRoot.querySelector('[data-action="rule-filter"][data-filter-key="' + key + '"]')?.focus();
       return;
     }
 
@@ -9069,18 +9066,14 @@ class CoverAutomaticPanel extends HTMLElement {
 
     // Facade direction preset (applies house rotation to get real compass bearings)
     if (el.matches('[data-facade-field="direction"]')) {
-      const presets = FACADE_PRESETS[el.value];
-      if (presets) {
-        const rot = (this._config && this._config.settings && this._config.settings.house_rotation != null) ? this._config.settings.house_rotation : 0;
-        const form = el.closest(".inline-form");
-        if (form) {
-          const startInput = form.querySelector('[data-facade-field="azimuth_start"]');
-          const endInput = form.querySelector('[data-facade-field="azimuth_end"]');
-          // A new facade starts with its widest sun window; an existing one keeps the 90° preset.
-          const span = form.dataset.facadeForm === "add" ? this._facadeMaxSpan(el.value) : null;
-          if (startInput) startInput.value = span ? span.start : ((presets.start + rot) % 360 + 360) % 360;
-          if (endInput) endInput.value = span ? span.end : ((presets.end + rot) % 360 + 360) % 360;
-        }
+      const form = el.closest(".inline-form");
+      if (form && FACADE_BEARINGS[el.value] != null) {
+        // Same prefill when creating and when editing a facade
+        const span = this._facadeMaxSpan(el.value);
+        const startInput = form.querySelector('[data-facade-field="azimuth_start"]');
+        const endInput = form.querySelector('[data-facade-field="azimuth_end"]');
+        if (startInput) startInput.value = span.start;
+        if (endInput) endInput.value = span.end;
       }
       return;
     }

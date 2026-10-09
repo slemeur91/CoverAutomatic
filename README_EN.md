@@ -415,7 +415,7 @@ For each managed cover, a "CoverAutomatic *cover name*" device groups:
 | Entity | Description |
 |--------|-------------|
 | `switch` Automation | Enables / disables the automation of the cover |
-| `sensor` Status | Current status (auto / paused / manual / locked / venting / wind protection). Attributes: `rule_name`, `rule_id` and `target_position` (rule controlling the cover; empty when paused, manual, locked or wind protected, unless a safety rule controls it), plus position, pause end, safety rule, comfort mode… |
+| `sensor` Status | Current status (auto / paused / manual / locked / venting / wind protection). Attributes: `rule_name`, `rule_id` and `target_position` (rule controlling the cover; empty when paused, manual, locked or wind protected, unless a safety rule controls it), plus position, pause end, safety rule, comfort mode, `sun_on_facade` (sun on the facade of the cover), `room_temp_sensor` (room temperature sensor)… |
 | `sensor` Active rule | Name of the rule controlling the cover |
 | `sensor` Target position | Position requested by the active rule (%) |
 | `sensor` Position (rule scale) | Current position, inverted for inverted covers (%) |
@@ -434,7 +434,7 @@ Global entities ("CoverAutomatic" device):
 
 | Entity | Description |
 |--------|-------------|
-| `switch` CoverAutomatic | Master switch of the automation. When off, the open-window lock, venting and safety rules stay active |
+| `switch` CoverAutomatic | Master switch of the automation. When off, the open-window lock, venting and safety rules stay active. Attributes: the global sensors chosen in the Settings (outdoor temperature, weather, sunshine and its threshold), used by the card |
 | `select` Scenario | Active scenario (`scenario_names` attribute: display names of the scenarios) |
 | `binary_sensor` Wind protection | On when the wind exceeds the threshold (attributes: wind speed, threshold, hysteresis) |
 | `sensor` Covers paused / manual / locked | Number of covers in this status (names as attributes) |
@@ -563,13 +563,13 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.0.7
+2.0.8
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.0.7 (2026-10-09), based on the original version
+Latest version: v2.0.8 (2026-10-09), based on the original version
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler.
 
 ## License

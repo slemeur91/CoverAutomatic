@@ -416,7 +416,7 @@ Pour chaque volet géré, un appareil « CoverAutomatic *nom du volet* » regrou
 | Entité | Description |
 |--------|-------------|
 | `switch` Automatisation | Active / désactive l'automatisation du volet |
-| `sensor` Statut | Statut actuel (auto / pause / manuel / verrouillé / aération / protection vent). Attributs : `rule_name`, `rule_id` et `target_position` (règle qui commande le volet ; vide en pause, en manuel, verrouillé ou en protection vent, sauf si une règle de sécurité le commande), ainsi que position, fin de pause, règle de sécurité, mode confort… |
+| `sensor` Statut | Statut actuel (auto / pause / manuel / verrouillé / aération / protection vent). Attributs : `rule_name`, `rule_id` et `target_position` (règle qui commande le volet ; vide en pause, en manuel, verrouillé ou en protection vent, sauf si une règle de sécurité le commande), ainsi que position, fin de pause, règle de sécurité, mode confort, `sun_on_facade` (soleil sur la façade du volet), `room_temp_sensor` (capteur de température de la pièce)… |
 | `sensor` Règle active | Nom de la règle qui commande le volet |
 | `sensor` Position cible | Position demandée par la règle active (%) |
 | `sensor` Position (échelle des règles) | Position actuelle, inversée pour les volets inversés (%) |
@@ -435,7 +435,7 @@ Entités globales (appareil « CoverAutomatic ») :
 
 | Entité | Description |
 |--------|-------------|
-| `switch` CoverAutomatic | Interrupteur général de l'automatisation. Coupé, le verrouillage fenêtre ouverte, l'aération et les règles de sécurité restent actifs |
+| `switch` CoverAutomatic | Interrupteur général de l'automatisation. Coupé, le verrouillage fenêtre ouverte, l'aération et les règles de sécurité restent actifs. Attributs : capteurs globaux choisis dans les Paramètres (température extérieure, météo, ensoleillement et son seuil), utilisés par la carte |
 | `select` Scénario | Scénario actif (attribut `scenario_names` : noms affichés des scénarios) |
 | `binary_sensor` Protection vent | Activée quand le vent dépasse le seuil (attributs : vitesse du vent, seuil, hystérésis) |
 | `sensor` Volets en pause / en manuel / verrouillés | Nombre de volets dans ce statut (noms en attributs) |
@@ -564,13 +564,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.0.7
+2.0.8
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.0.7 (2026-10-09), basée sur la version d'origine
+Dernière version : v2.0.8 (2026-10-09), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
 
 ## Licence

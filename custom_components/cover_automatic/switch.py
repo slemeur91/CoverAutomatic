@@ -86,6 +86,7 @@ class CoverAutomaticMasterSwitch(CoordinatorEntity[CoverAutomaticCoordinator], S
             "weather_entity": storage.weather_entity,
             "solar_sensor": storage.solar_sensor,
             "solar_threshold": storage.solar_threshold,
+            "solar_threshold_entity": storage.solar_threshold_entity,
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
