@@ -21,6 +21,7 @@ from .const import (
     SIGNAL_DATA_UPDATED,
     LOG_EVENT_POSITION,
     LOG_EVENT_RULE,
+    LOG_EVENT_SCENARIO,
     LOG_EVENT_STATUS,
     LOG_EVENT_WIND,
     SET_POSITION_FEATURE_FLAG,
@@ -144,6 +145,8 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._wind_protected: bool = False
         self._hysteresis_info: dict[str, str | None] = {}
         self._last_matching_rules: dict[str, str | None] = {}
+        # Active scenario seen at the previous update (None before the first)
+        self._last_scenario: str | None = None
         self._last_move_rule: dict[str, str | None] = {}
         # Last position actually commanded by the apply cycle (raw, inverted)
         self._last_sent_target: dict[str, int] = {}
@@ -434,10 +437,6 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 entities_to_track.add(indoor_sensor)
             if isinstance(occupancy := cover_data.get("occupancy_sensor"), str) and occupancy:
                 entities_to_track.add(occupancy)
-            # Entities holding a per-cover comfort band
-            for key in ("comfort_temp_min_entity", "comfort_temp_max_entity"):
-                if isinstance(ref := cover_data.get(key), str) and ref:
-                    entities_to_track.add(ref)
 
         if self.storage.outdoor_temp_sensor:
             entities_to_track.add(self.storage.outdoor_temp_sensor)
@@ -457,10 +456,9 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.storage.workday_sensor:
             entities_to_track.add(self.storage.workday_sensor)
 
-        # Entities holding global thresholds (a change re-evaluates the rules)
-        for key in ("comfort_temp_min_entity", "comfort_temp_max_entity", "solar_threshold_entity"):
-            if isinstance(ref := getattr(self.storage, key, None), str) and ref:
-                entities_to_track.add(ref)
+        # Entity holding the solar threshold (a change re-evaluates the rules)
+        if isinstance(ref := self.storage.solar_threshold_entity, str) and ref:
+            entities_to_track.add(ref)
 
         for rule_data in self.storage._data.get("rules", {}).values():
             for condition in rule_data.get("conditions", []):
@@ -2114,6 +2112,30 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.log_storage:
             self.log_storage.add_entry(event_type, entity_id, message, data)
 
+    def _log_scenario_change(self) -> None:
+        """Write the new active scenario to the activity log when it changed.
+
+        Checked once per update, so every way of switching (select entity,
+        service, panel, deleted scenario) is covered. The first update after
+        startup only records the current scenario.
+        """
+        current = self.storage.effective_active_scenario
+        # getattr: coordinators built without __init__ in tests
+        previous, self._last_scenario = getattr(self, "_last_scenario", None), current
+        if previous is None or previous == current:
+            return
+        scenarios = self.storage.scenarios
+
+        def name(scenario_id: str) -> str:
+            scenario = scenarios.get(scenario_id)
+            return scenario.name if scenario else scenario_id
+
+        _LOGGER.info("Scenario changed: %s -> %s", previous, current)
+        self._log(LOG_EVENT_SCENARIO, None, f"{previous} -> {current}",
+                  {"key": "scenario_change", "from": name(previous), "to": name(current),
+                   "from_id": previous, "to_id": current})
+        self._logbook(i18n.text(self.hass, "scenario_changed", scenario=name(current)))
+
     def _logbook(self, message: str, entity_id: str | None = None) -> None:
         """Write an entry to the HA logbook when enabled in settings."""
         if not self.storage.logbook_enabled:
@@ -2138,6 +2160,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Sync cover statuses from sensors before evaluation
         self._sync_cover_statuses()
+        self._log_scenario_change()
 
         result: dict[str, Any] = {
             "covers": {},

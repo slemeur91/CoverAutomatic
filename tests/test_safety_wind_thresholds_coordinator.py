@@ -240,8 +240,6 @@ class TestThresholdTracking:
         mock_storage._data = {
             "covers": {COVER: {"comfort_temp_min_entity": "input_number.cmin"}}, "rules": {},
         }
-        mock_storage.comfort_temp_min_entity = None
-        mock_storage.comfort_temp_max_entity = "input_number.gmax"
         mock_storage.solar_threshold_entity = "number.solar"
         coordinator.engine = MagicMock()
         coordinator.engine.ha_condition_entities.return_value = set()
@@ -250,7 +248,9 @@ class TestThresholdTracking:
         ) as track:
             coordinator._setup_state_tracking()
         tracked = set(track.call_args.args[1])
-        assert {"input_number.cmin", "input_number.gmax", "number.solar"} <= tracked
+        assert "number.solar" in tracked
+        # Comfort entities of older versions are no longer followed
+        assert "input_number.cmin" not in tracked
 
 
 class TestRenameReferences:

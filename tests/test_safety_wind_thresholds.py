@@ -2,7 +2,6 @@
 # ruff: noqa: F811 -- pytest fixtures are imported from sibling test modules
 from __future__ import annotations
 
-import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,13 +13,10 @@ from custom_components.cover_automatic.api import (
     _build_config_response,
     ws_rule_add,
     ws_rule_update,
-    ws_settings_update,
 )
 from custom_components.cover_automatic.models import (
-    ComfortMode,
     Condition,
     ConditionType,
-    CoverConfig,
     Rule,
     Scenario,
 )
@@ -58,12 +54,6 @@ class TestModels:
             data["safety"] = raw
         assert Rule.from_dict(data).safety is expected
 
-    def test_cover_threshold_entities_roundtrip(self) -> None:
-        cover = CoverConfig(entity_id="cover.a", name="A", comfort_temp_min_entity="input_number.x")
-        data = cover.to_dict()
-        assert data["comfort_temp_min_entity"] == "input_number.x"
-        assert data["comfort_temp_max_entity"] is None
-        assert CoverConfig.from_dict({**data, "comfort_temp_max_entity": ""}).comfort_temp_max_entity is None
 
 
 # ---------------------------------------------------------------------------
@@ -96,52 +86,6 @@ class TestEngineSafety:
 
 
 class TestThresholdEntities:
-    def test_global_entity_overrides_number(self, engine, mock_hass, mock_storage, test_cover) -> None:
-        mock_storage.comfort_temp_min_entity = "input_number.cmin"
-        mock_storage.comfort_temp_max_entity = "input_number.cmax"
-        _states(mock_hass, {"input_number.cmin": "18", "input_number.cmax": "22.5"})
-        assert engine._comfort_range(test_cover) == (18.0, 22.5)
-
-    def test_unavailable_entity_falls_back(self, engine, mock_hass, mock_storage, test_cover, caplog) -> None:
-        mock_storage.comfort_temp_min_entity = "input_number.cmin"
-        mock_storage.comfort_temp_max_entity = None
-        _states(mock_hass, {"input_number.cmin": "unavailable"})
-        with caplog.at_level(logging.WARNING):
-            for _ in range(3):
-                assert engine._comfort_range(test_cover) == (21.0, 25.0)
-        assert sum("input_number.cmin" in r.message for r in caplog.records) == 1
-        # Recovers once readable again
-        _states(mock_hass, {"input_number.cmin": "19"})
-        assert engine._comfort_range(test_cover) == (19.0, 25.0)
-
-    def test_per_cover_order(self, engine, mock_hass, mock_storage, test_cover) -> None:
-        mock_storage.comfort_temp_min_entity = "input_number.gmin"
-        mock_storage.comfort_temp_max_entity = None
-        _states(mock_hass, {"input_number.gmin": "17", "input_number.cmin": "20", "input_number.cmax": "abc"})
-        # Global entity when the cover has nothing
-        assert engine._comfort_range(test_cover)[0] == 17.0
-        # Per-cover number beats the global entity
-        test_cover.comfort_temp_min = 19.0
-        assert engine._comfort_range(test_cover)[0] == 19.0
-        # Per-cover entity beats the per-cover number
-        test_cover.comfort_temp_min_entity = "input_number.cmin"
-        assert engine._comfort_range(test_cover)[0] == 20.0
-        # Non-numeric per-cover entity without number: global value
-        test_cover.comfort_temp_max_entity = "input_number.cmax"
-        assert engine._comfort_range(test_cover)[1] == 25.0
-
-    def test_invalid_entity_pair_uses_static(self, engine, mock_hass, mock_storage, test_cover) -> None:
-        mock_storage.comfort_temp_min_entity = "input_number.cmin"
-        mock_storage.comfort_temp_max_entity = None
-        _states(mock_hass, {"input_number.cmin": "30"})
-        assert engine._comfort_range(test_cover) == (21.0, 25.0)
-
-    def test_comfort_mode_uses_entity(self, engine, mock_hass, mock_storage, test_cover) -> None:
-        mock_storage.comfort_temp_max_entity = "input_number.cmax"
-        mock_storage.comfort_temp_min_entity = None
-        _states(mock_hass, {"sensor.indoor_temp": "23", "input_number.cmax": "22"})
-        assert engine._get_comfort_mode(test_cover) == ComfortMode.COOLING
-
     def test_solar_threshold_entity(self, engine, mock_hass, mock_storage) -> None:
         mock_storage.solar_sensor = "sensor.lux"
         mock_storage.solar_threshold = 50000.0
@@ -165,11 +109,7 @@ class TestStorage:
         storage.wind_position = 140
         assert storage.wind_position == 100
         storage.wind_position = 40
-        storage.comfort_temp_min_entity = "input_number.x"
-        storage.comfort_temp_max_entity = ""
         assert storage.wind_position == 40
-        assert storage.comfort_temp_min_entity == "input_number.x"
-        assert storage.comfort_temp_max_entity is None
 
     @pytest.mark.asyncio
     async def test_rename_rule(self, storage) -> None:
@@ -223,13 +163,13 @@ class TestApiHelpers:
     def test_settings_in_response(self) -> None:
         storage = _make_storage()
         storage.wind_position = 80
-        storage.comfort_temp_min_entity = "input_number.a"
-        storage.comfort_temp_max_entity = None
         storage.solar_threshold_entity = None
         settings = _build_config_response(storage)["settings"]
         assert settings["wind_position"] == 80
-        assert settings["comfort_temp_min_entity"] == "input_number.a"
-        assert "solar_threshold_entity" in settings and "comfort_temp_max_entity" in settings
+        assert "solar_threshold_entity" in settings
+        # The comfort band no longer follows an entity
+        assert "comfort_temp_min_entity" not in settings
+        assert "comfort_temp_max_entity" not in settings
 
     def test_schemas_registered(self) -> None:
         from custom_components.cover_automatic import api
@@ -251,7 +191,10 @@ class TestApiHelpers:
             settings({**base, "type": "cover_automatic/settings/update", "comfort_temp_min_entity": "bad"})
         cover = schemas["cover_automatic/cover/update"]
         cover({**base, "type": "cover_automatic/cover/update", "entity_id": "cover.a",
-               "comfort_temp_max_entity": None})
+               "comfort_temp_max_b": None})
+        with pytest.raises(vol.Invalid):
+            cover({**base, "type": "cover_automatic/cover/update", "entity_id": "cover.a",
+                   "comfort_temp_max_entity": None})
         for cmd in ("rule/add", "rule/update"):
             msg = {**base, "type": f"cover_automatic/{cmd}", "safety": True}
             msg.update({"name": "R"} if cmd == "rule/add" else {"rule_id": "r"})
@@ -292,18 +235,6 @@ class TestApiHandlers:
         assert storage.async_add_rule.call_args.args[0].safety is True
         assert "renamed_rule" not in conn.send_result.call_args.args[1]
 
-    @pytest.mark.asyncio
-    async def test_settings_entity_does_not_break_static_validation(self) -> None:
-        storage = _make_storage()
-        conn = _make_connection()
-        await ws_settings_update(
-            _make_hass(), conn,
-            {"id": 1, "comfort_temp_min_entity": "input_number.x", "wind_position": 30},
-            storage, _make_coordinator(),
-        )
-        conn.send_error.assert_not_called()
-        assert storage.comfort_temp_min_entity == "input_number.x"
-        assert storage.wind_position == 30
 
 
 class TestRenameIntegration:

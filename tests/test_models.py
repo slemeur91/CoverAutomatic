@@ -402,17 +402,6 @@ class TestRobustDeserialization:
             cover = CoverConfig.from_dict(data)
             assert cover.status == status
 
-    def test_cover_config_preemptive_shading_default_follows_global(self) -> None:
-        """CoverConfig.preemptive_shading defaults to None (follow global) when missing."""
-        data = {"entity_id": "cover.test", "name": "Test Cover"}
-        cover = CoverConfig.from_dict(data)
-        assert cover.preemptive_shading is None
-
-    def test_cover_config_preemptive_shading_roundtrip_false(self) -> None:
-        """CoverConfig serializes and restores preemptive_shading=False."""
-        cover = CoverConfig(entity_id="cover.bath", name="Bath", preemptive_shading=False)
-        restored = CoverConfig.from_dict(cover.to_dict())
-        assert restored.preemptive_shading is False
 
 
 class TestCoverTarget:

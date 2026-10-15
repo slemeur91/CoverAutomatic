@@ -75,9 +75,9 @@
       "comfort_mode": {
         "name": "Comfort mode",
         "state": {
-          "heating": "Cold",
-          "neutral": "Comfort",
-          "cooling": "Hot"
+          "heating": "Too cold",
+          "neutral": "Mild",
+          "cooling": "Too hot"
         }
       },
       "pause_end": {
@@ -109,6 +109,26 @@
     "binary_sensor": {
       "wind_protection": {
         "name": "Wind protection"
+      }
+    },
+    "number": {
+      "comfort_temp_min_a": {
+        "name": "Cold setpoint A"
+      },
+      "comfort_temp_max_a": {
+        "name": "Hot setpoint A"
+      },
+      "comfort_hysteresis_a": {
+        "name": "Setpoint hysteresis A"
+      },
+      "comfort_temp_min_b": {
+        "name": "Cold setpoint B"
+      },
+      "comfort_temp_max_b": {
+        "name": "Hot setpoint B"
+      },
+      "comfort_hysteresis_b": {
+        "name": "Setpoint hysteresis B"
       }
     }
   },
@@ -180,6 +200,9 @@
   "exceptions": {
     "admin_required": {
       "message": "Admin access required for this service."
+    },
+    "invalid_comfort_range": {
+      "message": "The cold setpoint must be lower than the hot setpoint."
     }
   }
 }

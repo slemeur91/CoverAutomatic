@@ -37,8 +37,6 @@ class TestSolarUnknown:
         mock_storage.solar_sensor = "sensor.lux"
         mock_storage.sun_neutral_ignore = True
         mock_storage.preemptive_shading = True
-        test_cover.sun_neutral_ignore = None
-        test_cover.preemptive_shading = None
         engine._last_comfort_mode[test_cover.entity_id] = ComfortMode.NEUTRAL
         with (
             patch.object(engine, "effective_solar_threshold", return_value=1000),

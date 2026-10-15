@@ -75,7 +75,9 @@ class TestStorageInitialization:
         assert storage._data["active_scenario"] == "everyday"
         assert storage._data["outdoor_temp_sensor"] is None
         assert storage._data["comfort_temp_min"] == 21.0
-        assert storage._data["comfort_temp_max"] == 25.0
+        assert storage._data["comfort_temp_max"] == 23.0
+        assert storage._data["comfort_temp_min_b"] == 22.0
+        assert storage._data["comfort_temp_max_b"] == 24.0
 
     @pytest.mark.asyncio
     async def test_load_existing_storage(self, storage, mock_store) -> None:

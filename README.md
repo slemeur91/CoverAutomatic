@@ -67,7 +67,7 @@ En aucun cas les auteurs ne pourront être tenus responsables de toute réclamat
 - **Volets inversés** – pris en charge (100 % = fermé)
 - **Carte de tableau de bord et capteurs** – suivi de chaque volet (règle active, position cible, fin de pause) et des
   volets en pause, en manuel ou verrouillés
-- **Journal d'activité** – historique des mouvements et des changements de statut, filtrable par volet
+- **Journal d'activité** – historique des mouvements, des changements de statut et de scénario, filtrable par volet
 - **Sauvegarde / restauration** – de toute la configuration, depuis le panneau ou par service
 - **Configuration entièrement graphique** – tout se fait dans l'interface de Home Assistant, sans YAML
 - **Indépendant du matériel** – fonctionne avec toute entité `cover` (Somfy, Velux, Shelly, Zigbee, Z-Wave…)
@@ -88,7 +88,10 @@ La V2 regroupe toutes les évolutions apportées depuis la version d'origine 1.6
   saisie par formulaire ou en YAML, vérifiée en direct (voir [plus bas](#conditions-sur-nimporte-quelle-entité-conditions-home-assistant)).
 - **Groupes de conditions et NON** : par exemple (A OU B) ET (C OU D). Une condition inversée par NON n'est jamais remplie
   tant que son capteur est indisponible, pour éviter un mouvement intempestif.
-- **Scénarios par règle** : chaque règle choisit les scénarios dans lesquels elle s'applique.
+- **Scénarios par règle** : chaque règle choisit les scénarios dans lesquels elle s'applique ; ils sont rappelés après son
+  nom dans la liste des règles.
+- **Éditeur de règle compact** : intitulés à côté des champs, aides ⓘ dépliables, champ d'inclinaison affiché seulement si
+  un volet de la règle sait incliner ses lames.
 - **Aube et crépuscule** (crépuscule civil), avec un décalage en minutes. Les paires « après le lever / avant le coucher »
   et « après l'aube / avant le crépuscule » sont complémentaires : pas de trou ni de chevauchement, même avec des décalages.
 - **Air extérieur comparé à la pièce** : « air extérieur plus frais / plus chaud que la pièce », avec un écart minimal.
@@ -114,10 +117,11 @@ La V2 regroupe toutes les évolutions apportées depuis la version d'origine 1.6
 
 ### Réglages
 - **Position de protection contre le vent** réglable (au lieu de toujours ouvrir complètement).
-- **Seuils pilotés par une entité** : les consignes de température et le seuil d'ensoleillement peuvent suivre une entité
-  (`input_number`, capteur…), avec repli sur la valeur saisie.
-- **Comportement « soleil sur la façade »** configurable, globalement puis volet par volet (pièce froide, pièce dans la
-  plage de confort, fort ensoleillement).
+- **Profils de consignes A et B** : chaque scénario utilise le profil A, le profil B ou aucun, par exemple un profil
+  pour l'été et un pour l'hiver. Chaque profil a ses consignes froide / chaude, son hystérésis et son comportement
+  « soleil sur la façade » (pièce trop froide, tempérée, fort ensoleillement). Les consignes et hystérésis de chaque
+  profil sont aussi des entités `number`, et chaque volet peut avoir les siennes pour A et pour B.
+- **Seuil d'ensoleillement piloté par une entité** (`input_number`, capteur…), avec repli sur la valeur saisie.
 - **Couleurs des températures** au choix : selon l'action à mener ou façon thermomètre.
 - Réglages réorganisés (Maison, Capteurs, Exposition au soleil, Vent, Automatisation, Sauvegarde) avec des blocs
   « Comment ça marche ? » et des options grisées quand elles sont sans effet.
@@ -133,10 +137,10 @@ La V2 regroupe toutes les évolutions apportées depuis la version d'origine 1.6
 - Les appareils et entités sont créés et supprimés automatiquement quand on ajoute ou supprime un volet ou une façade.
 
 ### Interface
-- **Fiche volet** en sections repliables : Général, Fenêtre, Pièce, Exposition au soleil, Automatisation.
+- **Fiche volet** en sections repliables : Général, Fenêtre, Pièce, Automatisation.
 - **Éditeur de règles** : conditions repliables, brouillon conservé, avertissement avant de perdre des modifications.
 - **Onglet Scénarios** : règles listées par priorité, règles désactivées grisées, badge « Sécurité ».
-- **Journal** filtrable par volet, avec un bouton depuis la fiche du volet.
+- **Journal** filtrable par volet et par type (dont les changements de scénario), avec un bouton depuis la fiche du volet.
 - **Mobile** : en-tête de la fiche accessible sous l'encoche, libellés courts, défilement et saisie conservés.
 
 ### Fiabilité et sécurité
@@ -192,7 +196,7 @@ Cliquez sur une vignette pour l'agrandir.
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/log-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/log-desktop.png" alt="Journal" /></a>
-      <p align="center"><sub><b>Journal</b> – mouvements et changements de statut</sub></p>
+      <p align="center"><sub><b>Journal</b> – mouvements, changements de statut et de scénario</sub></p>
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/cover-editor.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/cover-editor.png" alt="Fiche volet" /></a>
@@ -202,7 +206,7 @@ Cliquez sur une vignette pour l'agrandir.
   <tr>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/rules-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/rules-desktop.png" alt="Règles" /></a>
-      <p align="center"><sub><b>Règles</b> – filtre, priorités, badge Sécurité, conditions</sub></p>
+      <p align="center"><sub><b>Règles</b> – filtres, priorités, scénarios, badge Sécurité, conditions</sub></p>
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/settings-sun.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/settings-sun.png" alt="Paramètres – Exposition au soleil" /></a>
@@ -305,13 +309,13 @@ Le [wiki](https://github.com/slemeur91/CoverAutomatic/wiki) détaille chaque par
    (90° de chaque côté, rotation de la maison appliquée, sans le secteur où le soleil ne passe jamais à votre
    latitude) et restent modifiables
 3. **Règles** – créez les règles d'automatisation à partir de conditions (soleil, température, heure, météo, entités…).
-   La liste se filtre par façade, volet et scénario.
+   La liste se filtre par scénario, façade et volet.
    Les conditions peuvent être inversées (NON) et organisées en groupes, par exemple (A OU B) ET (C OU D) ;
    une règle existante peut être dupliquée comme point de départ
 4. **Scénarios** – définissez des modes comme « Quotidien », « Été », « Vacances ». Chaque règle choisit ses scénarios
    (tous par défaut) ; dans un scénario, une règle peut aussi être désactivée temporairement
 5. **Paramètres** – capteurs, consignes de température, exposition au soleil, protection contre le vent, sauvegarde…
-6. **Journal** – historique des mouvements et changements de statut, filtrable par volet et par type
+6. **Journal** – historique des mouvements, des changements de statut et de scénario, filtrable par volet et par type
 
 ### Fiche d'un volet
 
@@ -322,8 +326,7 @@ reprend la valeur par défaut des **Paramètres**.
 |---------|---------|
 | **Général** | Automatisation activée, façade, inverser le sens ouverture/fermeture, inclinaison inversée |
 | **Fenêtre** | *Fenêtre ouverte* : capteur, **garder la position actuelle** ou aller à la position de verrouillage (et son inclinaison). *Fenêtre basculée* : capteur, position d'aération (et son inclinaison) |
-| **Pièce** | Capteur de température intérieure et consignes froide / chaude (nombre ou entité), capteur d'occupation et états « pièce occupée » |
-| **Exposition au soleil** | Réglages « soleil sur la façade » propres à ce volet (ou réglage global) |
+| **Pièce** | Capteur de température intérieure ; consignes froide / chaude et hystérésis propres au volet pour le profil A et pour le profil B ; capteur d'occupation et états « pièce occupée » |
 | **Automatisation** | Durée de pause, reprise quand la position correspond à la règle, écart minimal de position, délai minimal entre changements, **durée de course du volet** (saisie ou mesurée) |
 
 Le bouton « Voir le journal de ce volet » ouvre le journal filtré sur ce volet.
@@ -333,14 +336,15 @@ Le bouton « Voir le journal de ce volet » ouvre le journal filtré sur ce vole
 | Onglet | Contenu |
 |--------|---------|
 | **Maison** | Rotation de la maison, avec boussole (Sud en haut ; position du soleil, secteur ensoleillé aux couleurs des quatre côtés de la maison, avec leurs azimuts en légende) ; choix de faire pivoter ou non les façades existantes quand la rotation change |
-| **Capteurs** | Capteur de température intérieure global et consignes froide / chaude avec leur hystérésis ; capteur de température extérieure et hystérésis utilisée par les règles ; météo ; jour ouvré |
-| **Exposition au soleil** | Comportement de « Soleil sur la façade » selon la température de la pièce ; capteur d'ensoleillement, seuil de fort ensoleillement et hystérésis |
+| **Capteurs** | Capteur de température intérieure global ; profils A et B (scénarios de chaque profil, consignes froide / chaude et hystérésis), en deux colonnes ; capteur de température extérieure et hystérésis utilisée par les règles ; météo ; jour ouvré |
+| **Exposition au soleil** | Comportement de « Soleil sur la façade » selon la température de la pièce, pour chaque profil (deux colonnes) ; capteur d'ensoleillement, seuil de fort ensoleillement et hystérésis |
 | **Protection contre le vent** | Capteur de vent, seuil, hystérésis et **position de protection** |
 | **Automatisation** | *Pause après une commande manuelle* (durée, reprise quand la position correspond à la règle) ; *Positions de fenêtre* par défaut ; *Mouvements* (écart minimal, délai minimal, délai entre commandes, durée de course par défaut) ; *Journal et mises à jour* |
 | **Sauvegarde** | Export / import de toute la configuration (fichier JSON) |
 
-Les consignes de température et le seuil d'ensoleillement peuvent suivre une **entité** (`input_number`, capteur…) :
-sa valeur est alors utilisée, le nombre saisi servant de secours si l'entité est indisponible.
+Le seuil d'ensoleillement peut suivre une **entité** (`input_number`, capteur…) : sa valeur est alors utilisée, le
+nombre saisi servant de secours si l'entité est indisponible. Les consignes de température, elles, se règlent dans le
+panneau ou par les entités `number` des profils A et B.
 
 ### Conditions disponibles
 
@@ -349,7 +353,7 @@ Le menu *Ajouter une condition* les regroupe par thème (✨ = nouveau dans la V
 | Groupe | Conditions |
 |--------|------------|
 | **Soleil** | Soleil sur la façade ; élévation solaire supérieure / inférieure à |
-| **Température** | Température extérieure supérieure / inférieure à ; température de la pièce (froide, entre les consignes, chaude) ; ✨ air extérieur comparé à la pièce (plus frais / plus chaud, écart minimal) |
+| **Température** | Température extérieure supérieure / inférieure à ; température de la pièce (trop froide, tempérée, trop chaude) ; ✨ air extérieur comparé à la pièce (plus frais / plus chaud, écart minimal) |
 | **Présence** | ✨ Pièce occupée (selon le capteur d'occupation du volet) |
 | **Horaires** | Heure comprise entre ; avant / après le lever du soleil ; avant / après le coucher du soleil ; ✨ avant / après l'aube ; ✨ avant / après le crépuscule (avec décalage en minutes) ; jour de la semaine ; jour ouvré |
 | **Météo** | La météo est (tous les états météo de Home Assistant) |
@@ -420,7 +424,7 @@ Pour chaque volet géré, un appareil « CoverAutomatic *nom du volet* » regrou
 | `sensor` Règle active | Nom de la règle qui commande le volet |
 | `sensor` Position cible | Position demandée par la règle active (%) |
 | `sensor` Position (échelle des règles) | Position actuelle, inversée pour les volets inversés (%) |
-| `sensor` Mode confort | Froid / confort / chaud selon la température de la pièce |
+| `sensor` Mode confort | Trop froide / tempérée / trop chaude selon la température de la pièce et les consignes du profil actif |
 | `sensor` Fin de pause | Heure de fin de la pause en cours |
 
 Pour chaque façade, un appareil « CoverAutomatic Façade *nom* » regroupe :
@@ -437,6 +441,7 @@ Entités globales (appareil « CoverAutomatic ») :
 |--------|-------------|
 | `switch` CoverAutomatic | Interrupteur général de l'automatisation. Coupé, le verrouillage fenêtre ouverte, l'aération et les règles de sécurité restent actifs. Attributs : capteurs globaux choisis dans les Paramètres (température extérieure, météo, ensoleillement et son seuil), utilisés par la carte |
 | `select` Scénario | Scénario actif (attribut `scenario_names` : noms affichés des scénarios) |
+| `number` Consigne froide / chaude A et B, Hystérésis des consignes A et B | Consignes et hystérésis des deux profils, modifiables depuis Home Assistant (la consigne froide doit rester inférieure à la consigne chaude) |
 | `binary_sensor` Protection vent | Activée quand le vent dépasse le seuil (attributs : vitesse du vent, seuil, hystérésis) |
 | `sensor` Volets en pause / en manuel / verrouillés | Nombre de volets dans ce statut (noms en attributs) |
 
@@ -514,16 +519,20 @@ Vérifiez dans cet ordre :
 ### Une règle de soleil n'occulte pas
 
 Pour un volet qui a un capteur de température intérieure (le sien ou le capteur global), la condition « Soleil sur la façade »
-tient compte de la température de la pièce, selon les réglages de **Paramètres > Exposition au soleil** (modifiables volet par
-volet dans la section « Exposition au soleil » de sa fiche) :
+tient compte de la température de la pièce, selon les réglages de **Paramètres > Exposition au soleil** pour le profil du
+scénario actif :
 
-- pièce **froide** (au plus la consigne froide) : avec l'option « laisser le soleil chauffer » (activée par défaut), la condition
-  répond « pas de soleil » pour laisser le soleil chauffer la pièce ;
-- pièce **entre les consignes** : selon le choix « dès que le soleil est sur la façade », « jamais (attendre que la pièce devienne
-  trop chaude) » ou « seulement en cas de fort ensoleillement » (capteur d'ensoleillement au-dessus de son seuil) ;
-- pièce **chaude** (au moins la consigne chaude) : la condition répond « soleil » dès que le soleil est sur la façade.
+- pièce **trop froide** (au plus la consigne froide) : avec la case « Action sur consigne de température froide » cochée
+  (par défaut), la condition répond « pas de soleil » ;
+- pièce **tempérée** (entre les consignes) : selon le choix « dès que le soleil est sur la façade », « jamais (attendre que
+  la pièce devienne trop chaude) » ou « seulement en cas de fort ensoleillement » (capteur d'ensoleillement au-dessus de son
+  seuil) ;
+- pièce **trop chaude** (au moins la consigne chaude) : la condition répond « soleil » dès que le soleil est sur la façade ;
+- scénario **sans profil** : seule la position du soleil compte.
 
-Le bloc « Comment ça marche ? » de ces réglages montre le résultat pour vos propres valeurs.
+Ces réglages ne commandent jamais un volet : ils ne changent que la réponse de la condition. Pour une règle qui **ouvre**
+au soleil (en hiver par exemple), laissez la case froide décochée. Le bloc « Comment ça marche ? » de chaque profil montre
+le résultat pour vos propres valeurs.
 
 ### Un volet reste VERROUILLÉ ou en AÉRATION
 
@@ -564,13 +573,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.0.8
+2.1.0
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.0.8 (2026-10-09), basée sur la version d'origine
+Dernière version : v2.1.0 (2026-10-15), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
 
 ## Licence

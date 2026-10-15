@@ -75,9 +75,9 @@
       "comfort_mode": {
         "name": "Komfortmodus",
         "state": {
-          "heating": "Kalt",
-          "neutral": "Komfort",
-          "cooling": "Warm"
+          "heating": "Zu kalt",
+          "neutral": "Temperiert",
+          "cooling": "Zu warm"
         }
       },
       "pause_end": {
@@ -109,6 +109,26 @@
     "binary_sensor": {
       "wind_protection": {
         "name": "Windschutz"
+      }
+    },
+    "number": {
+      "comfort_temp_min_a": {
+        "name": "Kalt-Sollwert A"
+      },
+      "comfort_temp_max_a": {
+        "name": "Warm-Sollwert A"
+      },
+      "comfort_hysteresis_a": {
+        "name": "Sollwert-Hysterese A"
+      },
+      "comfort_temp_min_b": {
+        "name": "Kalt-Sollwert B"
+      },
+      "comfort_temp_max_b": {
+        "name": "Warm-Sollwert B"
+      },
+      "comfort_hysteresis_b": {
+        "name": "Sollwert-Hysterese B"
       }
     }
   },
@@ -180,6 +200,9 @@
   "exceptions": {
     "admin_required": {
       "message": "Für diesen Dienst sind Administratorrechte erforderlich."
+    },
+    "invalid_comfort_range": {
+      "message": "Der Kalt-Sollwert muss unter dem Warm-Sollwert liegen."
     }
   }
 }

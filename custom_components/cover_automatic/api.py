@@ -47,12 +47,12 @@ _UPDATABLE_COVER_FIELDS = (
     "name", "facade_id", "auto_enabled", "pause_duration",
     "lock_sensor", "lock_position", "vent_sensor", "vent_position",
     "inverted", "supports_tilt", "lock_tilt_position", "vent_tilt_position",
-    "inverted_tilt", "indoor_temp_sensor", "comfort_temp_min", "comfort_temp_max",
-    "preemptive_shading", "lock_hold_position",
+    "inverted_tilt", "indoor_temp_sensor",
+    "comfort_temp_min", "comfort_temp_max", "comfort_hysteresis",
+    "comfort_temp_min_b", "comfort_temp_max_b", "comfort_hysteresis_b",
+    "lock_hold_position",
     "min_position_change", "min_time_between_changes",
     "travel_time", "measured_travel_time",
-    "comfort_temp_min_entity", "comfort_temp_max_entity",
-    "sun_heating_ignore", "sun_neutral_ignore",
     "occupancy_sensor", "occupancy_states",
     "pause_resume_on_match",
 )
@@ -73,8 +73,11 @@ _SETTINGS_FIELDS = (
     "logbook_enabled", "update_check_enabled",
     "default_travel_time",
     "wind_position",
-    "comfort_temp_min_entity", "comfort_temp_max_entity", "solar_threshold_entity",
+    "solar_threshold_entity",
     "sun_heating_ignore", "sun_neutral_ignore", "preemptive_shading",
+    "comfort_temp_min_b", "comfort_temp_max_b", "comfort_hysteresis_b",
+    "sun_heating_ignore_b", "sun_neutral_ignore_b", "preemptive_shading_b",
+    "profile_a_scenarios", "profile_b_scenarios",
     "temp_color_thermometer", "pause_resume_on_match",
     "rotate_facades_with_house",
 )
@@ -132,6 +135,7 @@ _AZIMUTH = vol.All(finite_float, _normalize_azimuth, vol.Range(min=0, max=360))
 _ELEVATION = finite_range(-90, 90)
 # Per-cover comfort band (same bounds as the global settings)
 _COVER_COMFORT_TEMP = vol.Any(None, finite_range(-50, 60))
+_COVER_COMFORT_HYSTERESIS = vol.Any(None, finite_range(0.1, 5.0))
 
 
 def _rule_id_for_name(rule_id: str, name: str, rules: dict[str, Any]) -> str:
@@ -199,12 +203,19 @@ def _build_config_response(
             "update_check_enabled": storage.update_check_enabled,
             "default_travel_time": storage.default_travel_time,
             "wind_position": storage.wind_position,
-            "comfort_temp_min_entity": storage.comfort_temp_min_entity,
-            "comfort_temp_max_entity": storage.comfort_temp_max_entity,
             "solar_threshold_entity": storage.solar_threshold_entity,
             "sun_heating_ignore": storage.sun_heating_ignore,
             "sun_neutral_ignore": storage.sun_neutral_ignore,
             "preemptive_shading": storage.preemptive_shading,
+            "comfort_temp_min_b": storage.comfort_temp_min_b,
+            "comfort_temp_max_b": storage.comfort_temp_max_b,
+            "comfort_hysteresis_b": storage.comfort_hysteresis_b,
+            "sun_heating_ignore_b": storage.sun_heating_ignore_b,
+            "sun_neutral_ignore_b": storage.sun_neutral_ignore_b,
+            "preemptive_shading_b": storage.preemptive_shading_b,
+            "profile_a_scenarios": storage.profile_a_scenarios,
+            "profile_b_scenarios": storage.profile_b_scenarios,
+            "active_profile": storage.active_profile,
             "temp_color_thermometer": storage.temp_color_thermometer,
             "pause_resume_on_match": storage.pause_resume_on_match,
             "rotate_facades_with_house": storage.rotate_facades_with_house,
@@ -344,17 +355,26 @@ async def ws_cover_update(
         connection.send_error(msg["id"], "not_found", f"Facade '{msg['facade_id']}' not found")
         return
 
-    # Per-cover comfort band (falls back to the global values when unset)
+    # Per-cover comfort band of each profile (falls back to the global
+    # values of the same profile when unset)
     def _eff_comfort(key: str) -> float:
         value = msg[key] if key in msg else raw.get(key)
         return value if value is not None else getattr(storage, key)
 
-    if _eff_comfort("comfort_temp_min") >= _eff_comfort("comfort_temp_max"):
-        connection.send_error(
-            msg["id"], "invalid_comfort_range",
-            "comfort_temp_min must be lower than comfort_temp_max",
-        )
-        return
+    for low_key, high_key in (
+        ("comfort_temp_min", "comfort_temp_max"),
+        ("comfort_temp_min_b", "comfort_temp_max_b"),
+    ):
+        # Only the profile actually edited: an inconsistent pair of the other
+        # profile (global value changed since) must not block this save.
+        if low_key not in msg and high_key not in msg:
+            continue
+        if _eff_comfort(low_key) >= _eff_comfort(high_key):
+            connection.send_error(
+                msg["id"], "invalid_comfort_range",
+                f"{low_key} must be lower than {high_key}",
+            )
+            return
 
     # Track facade change for bidirectional sync
     old_facade_id = raw.get("facade_id")
@@ -951,6 +971,24 @@ async def ws_settings_update(
             )
             return
 
+    for key in ("profile_a_scenarios", "profile_b_scenarios"):
+        if key not in msg:
+            continue
+        unknown = [s for s in msg[key] if s not in storage._data.get("scenarios", {})]
+        if unknown:
+            connection.send_error(
+                msg["id"], "not_found", f"Scenario '{unknown[0]}' not found"
+            )
+            return
+    # A scenario uses one comfort profile at most. Sent alone, one list takes
+    # its scenarios out of the other profile (like the storage setters).
+    if "profile_a_scenarios" in msg and "profile_b_scenarios" in msg \
+            and set(msg["profile_a_scenarios"]) & set(msg["profile_b_scenarios"]):
+        connection.send_error(
+            msg["id"], "invalid_profiles", "A scenario cannot use both comfort profiles"
+        )
+        return
+
     # Cross-field checks against the resulting values (new or existing).
     def _effective(key: str) -> Any:
         return msg[key] if key in msg else getattr(storage, key)
@@ -1154,21 +1192,22 @@ def async_setup_api(
                 vol.Optional("vent_tilt_position"): vol.Any(vol.All(int, vol.Range(min=0, max=100)), None),
                 vol.Optional("inverted_tilt"): bool,
                 vol.Optional("indoor_temp_sensor"): _optional_entity_id,
+                # Comfort band and hysteresis of profiles A and B
+                # (None follows the global value of the same profile)
                 vol.Optional("comfort_temp_min"): _COVER_COMFORT_TEMP,
                 vol.Optional("comfort_temp_max"): _COVER_COMFORT_TEMP,
+                vol.Optional("comfort_hysteresis"): _COVER_COMFORT_HYSTERESIS,
+                vol.Optional("comfort_temp_min_b"): _COVER_COMFORT_TEMP,
+                vol.Optional("comfort_temp_max_b"): _COVER_COMFORT_TEMP,
+                vol.Optional("comfort_hysteresis_b"): _COVER_COMFORT_HYSTERESIS,
                 # Tri-state: None follows the global setting
-                vol.Optional("preemptive_shading"): vol.Any(bool, None),
-                vol.Optional("sun_heating_ignore"): vol.Any(bool, None),
                 vol.Optional("pause_resume_on_match"): vol.Any(bool, None),
-                vol.Optional("sun_neutral_ignore"): vol.Any(bool, None),
                 vol.Optional("lock_hold_position"): bool,
                 vol.Optional("min_position_change"): vol.Any(vol.All(int, vol.Range(min=1, max=50)), None),
                 vol.Optional("min_time_between_changes"): vol.Any(vol.All(int, vol.Range(min=60, max=3600)), None),
                 vol.Optional("travel_time"): vol.Any(vol.All(int, vol.Range(min=1, max=300)), None),
                 # Only reset is allowed: the measured value is learned by the coordinator
                 vol.Optional("measured_travel_time"): None,
-                vol.Optional("comfort_temp_min_entity"): _optional_entity_id,
-                vol.Optional("comfort_temp_max_entity"): _optional_entity_id,
                 vol.Optional("occupancy_sensor"): _optional_entity_id,
                 vol.Optional("occupancy_states"): vol.Any(None, vol.All(str, vol.Length(max=200))),
             },

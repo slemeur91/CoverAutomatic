@@ -473,15 +473,15 @@ class CoverConfig:
     vent_tilt_position: int | None = None
     inverted_tilt: bool = False
     indoor_temp_sensor: str | None = None
+    # Room comfort band and hysteresis of profile A (comfort_temp_*,
+    # comfort_hysteresis) and profile B (*_b); None = global value of the
+    # same profile
     comfort_temp_min: float | None = None
     comfort_temp_max: float | None = None
-    # Entities (input_number/number/sensor) overriding the comfort band
-    comfort_temp_min_entity: str | None = None
-    comfort_temp_max_entity: str | None = None
-    # Sun-on-facade comfort switches: None = follow the global setting
-    preemptive_shading: bool | None = None
-    sun_heating_ignore: bool | None = None
-    sun_neutral_ignore: bool | None = None
+    comfort_hysteresis: float | None = None
+    comfort_temp_min_b: float | None = None
+    comfort_temp_max_b: float | None = None
+    comfort_hysteresis_b: float | None = None
     # End a manual pause once the cover is back at its rule's position
     # (None = follow the global setting)
     pause_resume_on_match: bool | None = None
@@ -520,11 +520,10 @@ class CoverConfig:
             "indoor_temp_sensor": self.indoor_temp_sensor,
             "comfort_temp_min": self.comfort_temp_min,
             "comfort_temp_max": self.comfort_temp_max,
-            "comfort_temp_min_entity": self.comfort_temp_min_entity,
-            "comfort_temp_max_entity": self.comfort_temp_max_entity,
-            "preemptive_shading": self.preemptive_shading,
-            "sun_heating_ignore": self.sun_heating_ignore,
-            "sun_neutral_ignore": self.sun_neutral_ignore,
+            "comfort_hysteresis": self.comfort_hysteresis,
+            "comfort_temp_min_b": self.comfort_temp_min_b,
+            "comfort_temp_max_b": self.comfort_temp_max_b,
+            "comfort_hysteresis_b": self.comfort_hysteresis_b,
             "pause_resume_on_match": self.pause_resume_on_match,
             "lock_hold_position": self.lock_hold_position,
             "occupancy_sensor": self.occupancy_sensor,
@@ -574,11 +573,10 @@ class CoverConfig:
             indoor_temp_sensor=_entity_id(data.get("indoor_temp_sensor")),
             comfort_temp_min=_to_float(data.get("comfort_temp_min"), None),
             comfort_temp_max=_to_float(data.get("comfort_temp_max"), None),
-            comfort_temp_min_entity=_entity_id(data.get("comfort_temp_min_entity")),
-            comfort_temp_max_entity=_entity_id(data.get("comfort_temp_max_entity")),
-            preemptive_shading=_opt_bool(data.get("preemptive_shading")),
-            sun_heating_ignore=_opt_bool(data.get("sun_heating_ignore")),
-            sun_neutral_ignore=_opt_bool(data.get("sun_neutral_ignore")),
+            comfort_hysteresis=_to_float(data.get("comfort_hysteresis"), None),
+            comfort_temp_min_b=_to_float(data.get("comfort_temp_min_b"), None),
+            comfort_temp_max_b=_to_float(data.get("comfort_temp_max_b"), None),
+            comfort_hysteresis_b=_to_float(data.get("comfort_hysteresis_b"), None),
             pause_resume_on_match=_opt_bool(data.get("pause_resume_on_match")),
             lock_hold_position=_to_bool(data.get("lock_hold_position"), False),
             occupancy_sensor=_entity_id(data.get("occupancy_sensor")),

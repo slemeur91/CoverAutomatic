@@ -86,6 +86,9 @@ class RuleEngine:
         self.storage = storage
         self._last_comfort_mode: dict[str, ComfortMode] = {}
         self._last_comfort_read: dict[str, float] = {}
+        # Comfort profile ('a'/'b') the last comfort mode was computed with:
+        # after a profile change the hysteresis restarts from the new band.
+        self._last_comfort_profile: dict[str, str] = {}
         # Hysteresis state for threshold comparisons, keyed by
         # (sensor_id, threshold, above, hysteresis) so it survives rule edits
         # and is shared only by genuinely identical checks.
@@ -121,7 +124,7 @@ class RuleEngine:
 
     def forget_covers_except(self, keep: set[str]) -> None:
         """Drop per-cover caches of covers that no longer exist."""
-        for cache in (self._last_comfort_mode, self._last_comfort_read):
+        for cache in (self._last_comfort_mode, self._last_comfort_read, self._last_comfort_profile):
             for entity_id in set(cache) - keep:
                 cache.pop(entity_id, None)
         self._comfort_range_warned &= keep
@@ -130,6 +133,7 @@ class RuleEngine:
         """No usable comfort mode any more: stop reporting a stale one."""
         self._last_comfort_mode.pop(entity_id, None)
         self._last_comfort_read.pop(entity_id, None)
+        self._last_comfort_profile.pop(entity_id, None)
 
     def evaluate_cover(
         self, cover: CoverConfig, *, safety_only: bool = False
@@ -519,16 +523,30 @@ class RuleEngine:
     def _sun_flags(self, cover: CoverConfig) -> tuple[bool, bool, bool]:
         """Effective (heating_ignore, neutral_ignore, preemptive) for a cover.
 
-        A per-cover value overrides the global setting when not None.
+        Global settings of the comfort profile of the active scenario (the
+        same for every cover). A scenario without profile has no setpoints:
+        only the sun position counts.
         """
-        def pick(own: bool | None, default: bool) -> bool:
-            return default if own is None else bool(own)
-
+        profile = self._profile()
+        if profile is None:
+            return (False, False, False)
+        if profile == "b":
+            storage = self.storage
+            return (
+                storage.sun_heating_ignore_b, storage.sun_neutral_ignore_b,
+                storage.preemptive_shading_b,
+            )
         return (
-            pick(cover.sun_heating_ignore, self.storage.sun_heating_ignore),
-            pick(cover.sun_neutral_ignore, self.storage.sun_neutral_ignore),
-            pick(cover.preemptive_shading, self.storage.preemptive_shading),
+            self.storage.sun_heating_ignore, self.storage.sun_neutral_ignore,
+            self.storage.preemptive_shading,
         )
+
+    def _profile(self) -> str | None:
+        """Comfort profile ('a', 'b') of the active scenario, None without setpoints."""
+        profile = self.storage.active_profile
+        if profile is None:
+            return None
+        return "b" if profile == "b" else "a"
 
     def _sun_uses_comfort(self, cover: CoverConfig) -> bool:
         """Whether sun_on_facade depends on the comfort mode for this cover.
@@ -544,7 +562,7 @@ class RuleEngine:
     def _comfort_known(self, cover: CoverConfig) -> bool:
         """Whether a comfort mode is known (sensor readable or held in grace)."""
         sensor_id = cover.indoor_temp_sensor or self.storage.indoor_temp_sensor
-        if not sensor_id:
+        if not sensor_id or self._profile() is None:
             return False
         if self._read_float_state(sensor_id) is not None:
             return True
@@ -757,7 +775,7 @@ class RuleEngine:
 
         Considers the indoor comfort mode when a sensor is configured
         (per-cover > global fallback) and an ignore switch is active
-        (sun_heating_ignore / sun_neutral_ignore, per-cover > global):
+        (sun_heating_ignore / sun_neutral_ignore of the active comfort profile):
         COOLING -> True; HEATING -> not heating_ignore; NEUTRAL -> True
         unless neutral_ignore, then preemptive shading with solar above
         threshold. With both switches off only the sun position counts.
@@ -816,14 +834,16 @@ class RuleEngine:
         When the sensor goes unavailable, the last known mode is held for
         COMFORT_SENSOR_GRACE_PERIOD so brief outages (e.g. Zigbee bridge
         restart) do not drop active rules. Returns None if no sensor is
-        configured, or unavailable beyond the grace period.
+        configured, if the active scenario uses no comfort profile, or if the
+        sensor is unavailable beyond the grace period.
 
         The previous mode only feeds the hysteresis when it was computed
         less than HYSTERESIS_STATE_MAX_AGE ago; otherwise the hard
         boundaries decide, as on the first evaluation.
         """
         sensor_id = cover.indoor_temp_sensor or self.storage.indoor_temp_sensor
-        if not sensor_id:
+        if not sensor_id or self._profile() is None:
+            # No sensor, or a scenario without comfort profile (no setpoints)
             self._forget_comfort(cover.entity_id)
             return None
 
@@ -852,13 +872,19 @@ class RuleEngine:
         now = monotonic()
         last_read = self._last_comfort_read.get(cover.entity_id)
         prev = self._last_comfort_mode.get(cover.entity_id)
+        profile = self._profile()
         if last_read is None or now - last_read > HYSTERESIS_STATE_MAX_AGE:
             # Not evaluated for a while (e.g. sun_on_facade stops before the
             # comfort check while the sun is off the facade): a mode from
             # hours ago must not bias the bands, use the hard boundaries.
             prev = None
+        elif self._last_comfort_profile.get(cover.entity_id) != profile:
+            # Scenario switched to the other comfort profile: the previous
+            # mode was computed with another band, use the hard boundaries.
+            prev = None
         self._last_comfort_read[cover.entity_id] = now
-        h = self.storage.comfort_hysteresis
+        self._last_comfort_profile[cover.entity_id] = profile
+        h = self._comfort_hysteresis(cover)
         comfort_min, comfort_max = self._comfort_range(cover)
         if comfort_min >= comfort_max:
             _LOGGER.warning("[%s] comfort_min (%.1f) >= comfort_max (%.1f)", cover.entity_id, comfort_min, comfort_max)
@@ -936,50 +962,27 @@ class RuleEngine:
             self._setting_entity("solar_threshold_entity"), self.storage.solar_threshold
         ))
 
-    def _global_comfort_range(self) -> tuple[float, float]:
-        """Global comfort range (entities override the static numbers).
-
-        An invalid pair coming from entities falls back to the static numbers,
-        which the API keeps valid.
-        """
-        static_min = self.storage.comfort_temp_min
-        static_max = self.storage.comfort_temp_max
-        global_min = self._threshold_level(
-            self._setting_entity("comfort_temp_min_entity"), static_min
-        )
-        global_max = self._threshold_level(
-            self._setting_entity("comfort_temp_max_entity"), static_max
-        )
-        if global_min >= global_max and (global_min, global_max) != (static_min, static_max):
-            if "__global__" not in self._comfort_range_warned:
-                self._comfort_range_warned.add("__global__")
-                _LOGGER.warning(
-                    "Invalid comfort range %.1f-%.1f from entities, using %.1f-%.1f",
-                    global_min, global_max, static_min, static_max,
-                )
-            return static_min, static_max
-        self._comfort_range_warned.discard("__global__")
-        return global_min, global_max
+    def _global_comfort_range(self, profile: str | None = None) -> tuple[float, float]:
+        """Global comfort range of a profile (default: the active one)."""
+        if (profile or self._profile()) == "b":
+            return self.storage.comfort_temp_min_b, self.storage.comfort_temp_max_b
+        return self.storage.comfort_temp_min, self.storage.comfort_temp_max
 
     def _comfort_range(self, cover: CoverConfig) -> tuple[float, float]:
-        """Effective comfort range of a cover.
+        """Effective comfort range of a cover for the active profile.
 
-        Per level (cover, then global) a readable entity wins over the
-        number. A per-cover override mixed with a changed global value can
-        produce min >= max; the global pair is then used instead of
-        disabling comfort.
+        A per-cover value overrides the global value of the same profile. A
+        per-cover override mixed with a changed global value can produce
+        min >= max; the global pair is then used instead of disabling comfort.
         """
-        global_min, global_max = self._global_comfort_range()
-        comfort_min = self._threshold_level(
-            getattr(cover, "comfort_temp_min_entity", None), cover.comfort_temp_min
-        )
-        comfort_max = self._threshold_level(
-            getattr(cover, "comfort_temp_max_entity", None), cover.comfort_temp_max
-        )
-        if comfort_min is None:
-            comfort_min = global_min
-        if comfort_max is None:
-            comfort_max = global_max
+        profile = self._profile()
+        global_min, global_max = self._global_comfort_range(profile)
+        if profile == "b":
+            own_min, own_max = cover.comfort_temp_min_b, cover.comfort_temp_max_b
+        else:
+            own_min, own_max = cover.comfort_temp_min, cover.comfort_temp_max
+        comfort_min = global_min if own_min is None else own_min
+        comfort_max = global_max if own_max is None else own_max
         if comfort_min < comfort_max:
             self._comfort_range_warned.discard(cover.entity_id)
             return comfort_min, comfort_max
@@ -992,6 +995,14 @@ class RuleEngine:
                 )
             return global_min, global_max
         return comfort_min, comfort_max
+
+    def _comfort_hysteresis(self, cover: CoverConfig) -> float:
+        """Comfort hysteresis of a cover for the active profile (own value wins)."""
+        if self._profile() == "b":
+            own, default = cover.comfort_hysteresis_b, self.storage.comfort_hysteresis_b
+        else:
+            own, default = cover.comfort_hysteresis, self.storage.comfort_hysteresis
+        return own if own is not None else default
 
     def _check_solar_intensity(self, *, update_state: bool = True) -> bool:
         """Check if solar intensity exceeds threshold for preemptive shading.

@@ -36,7 +36,8 @@ class TestExport:
         # Runtime state is not exported (the learned travel time is)
         runtime = {"status", "pause_until", "last_position_change"}
         assert set(cover) == set(CoverConfig(entity_id="x", name="x").to_dict()) - runtime
-        assert cover["sun_heating_ignore"] is None
+        assert cover["comfort_hysteresis_b"] is None
+        assert "sun_heating_ignore" not in cover
 
     def test_export_is_json_serialisable_and_does_not_touch_store(self, storage) -> None:
         storage._data = _minimal()
@@ -53,7 +54,9 @@ class TestRoundTrip:
         storage.preemptive_shading = False
         storage.solar_threshold_entity = "input_number.seuil"
         storage.wind_position = 30
-        storage._data["covers"]["cover.a"]["sun_neutral_ignore"] = True
+        storage.sun_heating_ignore_b = False
+        storage.profile_b_scenarios = []
+        storage._data["covers"]["cover.a"]["comfort_temp_max_b"] = 26.5
         storage._invalidate_cache()
         exported = json.loads(json.dumps(storage.get_export_data()))
 
@@ -68,7 +71,8 @@ class TestRoundTrip:
         assert storage.preemptive_shading is False
         assert storage.solar_threshold_entity == "input_number.seuil"
         assert storage.wind_position == 30
-        assert storage.covers["cover.a"].sun_neutral_ignore is True
+        assert storage.sun_heating_ignore_b is False
+        assert storage.covers["cover.a"].comfort_temp_max_b == 26.5
         again = storage.get_export_data()
         again.pop("migrations", None)
         exported.pop("migrations", None)

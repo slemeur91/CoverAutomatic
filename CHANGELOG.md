@@ -5,6 +5,32 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.1.0] - Unreleased
+
+### Added
+
+- Comfort profiles A and B: each scenario uses profile A, profile B or none (Settings › Sensors, one column per profile; a click adds a scenario to a profile, taking it out of the other one, or removes it; a new scenario joins A). Each profile has its own cold and hot setpoints and hysteresis; the active scenario decides which one applies. A scenario without profile has no setpoints: "Room temperature" is never met and "Sun on facade" only follows the sun position.
+- Sun exposure: the "Sun on facade" behaviour (cold room, room between the setpoints) is set per profile, in two columns. The sunshine sensor stays common.
+- Cover sheet: own setpoints and hysteresis for profile A and for profile B (empty = global value of the same profile).
+- Six `number` entities on the CoverAutomatic device: cold setpoint, hot setpoint and hysteresis of each profile. The cold setpoint must stay below the hot one.
+- Defaults of a new installation: 21 / 23 °C for profile A, 22 / 24 °C for profile B.
+- Activity log: every change of the active scenario is logged (new "Scenario" type and filter, "Everyday → Winter"); also written to the Home Assistant logbook when enabled.
+- Cover sheet: a warning appears in a profile block when its setpoints are inconsistent (own value mixed with a global value changed since, cold ≥ hot); the engine then uses the global setpoints of the profile.
+- Rule editor: more compact layout — name, target position and tilt on one line, each label beside its field and a wider gap before the scenarios; scenarios and the safety switch on one line; facades and covers with their label on the left; the condition operator, the operator between groups and "Add a group" on one line each; the ⓘ help buttons sit next to the labels. The tilt field is hidden when no cover of the rule can tilt its slats (it reappears when such a cover is selected, or when a tilt is already set).
+- Rules tab: the scenario filter comes first (same order as in the rule editor: scenarios, facades, covers).
+- Rules tab: the scenarios of each rule are shown after its name ("All scenarios" when it belongs to every one; struck through where it is switched off in the Scenarios tab).
+
+### Changed
+
+- When the scenario switches to the other profile, the comfort mode of each room is recomputed from the new setpoints (the hysteresis memory of the previous profile is dropped).
+- Room states renamed everywhere: "too cold", "mild" (between the setpoints) and "too hot" — sun exposure settings, "How does it work?" tables, the "Room temperature" condition and the states of the "Comfort mode" sensor. "Action between the setpoints" becomes "Action in a mild room"; "Action at the cold setpoint: let the sun warm the room" becomes "Action at the cold setpoint".
+- Sun exposure tab: the introduction is now a structured help box (what the settings change, the three inputs, the two profiles, the answer by room state, advice for closing and opening rules); the hints under each setting are short summaries.
+
+### Removed
+
+- The setpoints can no longer follow an entity (`input_number`, sensor…), globally or per cover: use the new `number` entities instead. On update, a setpoint that came from an entity gets the profile A default.
+- Per-cover sun exposure settings: the behaviour is now global, per profile. On update, a setting forced to the same value on every cover becomes the global value, so the behaviour in use is kept.
+
 ## [2.0.8] - 2026-10-09
 
 Code review of the changes made since 2.0.2.

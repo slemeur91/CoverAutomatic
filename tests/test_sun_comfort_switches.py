@@ -1,7 +1,7 @@
-"""Tests for the sun-on-facade comfort switches (global + per-cover override)."""
+"""Tests for the sun-on-facade comfort switches (global, per comfort profile)."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -15,6 +15,7 @@ from custom_components.cover_automatic.models import (
 )
 from custom_components.cover_automatic.storage import (
     _ALL_MIGRATIONS,
+    MIGRATION_COMFORT_PROFILES,
     MIGRATION_PAUSE_DURATION_120,
     MIGRATION_PREEMPTIVE_TRISTATE,
 )
@@ -31,17 +32,19 @@ NOT_SUN = Condition(type=ConditionType.SUN_ON_FACADE, params={}, negate=True)
 
 def _setup(hass, store, *, temp: str | None, solar: str = SOLAR_HIGH,
            heating: bool = True, neutral: bool = True, preemptive: bool = True,
-           sensor: str | None = "sensor.indoor_temp") -> None:
+           sensor: str | None = "sensor.indoor_temp", profile: str = "a") -> None:
     store.facades = {"south": Facade(id="south", name="S", azimuth_start=90, azimuth_end=270)}
     store.indoor_temp_sensor = sensor
     store.solar_sensor = "sensor.pv_power"
     store.solar_threshold = 5000.0
     store.solar_threshold_entity = None
-    store.comfort_temp_min_entity = None
-    store.comfort_temp_max_entity = None
-    store.sun_heating_ignore = heating
-    store.sun_neutral_ignore = neutral
-    store.preemptive_shading = preemptive
+    store.active_profile = profile
+    suffix = "_b" if profile == "b" else ""
+    setattr(store, "sun_heating_ignore" + suffix, heating)
+    setattr(store, "sun_neutral_ignore" + suffix, neutral)
+    setattr(store, "preemptive_shading" + suffix, preemptive)
+    if profile == "b":
+        store.comfort_temp_min_b, store.comfort_temp_max_b = 21.0, 25.0
     states = {"sensor.pv_power": MockState(solar)}
     if temp is not None:
         states["sensor.indoor_temp"] = MockState(temp)
@@ -102,38 +105,25 @@ class TestEngineSemantics:
         _setup(mock_hass, mock_storage, temp=HEATING, sensor=None)
         assert _eval(engine, _cover()) is True
 
-    def test_cover_override_beats_global(self, engine, mock_hass, mock_storage) -> None:  # noqa: F811
-        _setup(mock_hass, mock_storage, temp=HEATING)
-        assert _eval(engine, _cover()) is False
-        assert _eval(engine, _cover(sun_heating_ignore=False)) is True
-        # Global off, cover forces it back on
-        _setup(mock_hass, mock_storage, temp=HEATING, heating=False)
-        assert _eval(engine, _cover()) is True
-        assert _eval(engine, _cover(sun_heating_ignore=True)) is False
-
-    def test_neutral_override(self, engine, mock_hass, mock_storage) -> None:  # noqa: F811
-        _setup(mock_hass, mock_storage, temp=NEUTRAL, solar=SOLAR_LOW)
-        assert _eval(engine, _cover()) is False
-        assert _eval(engine, _cover(sun_neutral_ignore=False)) is True
-        _setup(mock_hass, mock_storage, temp=NEUTRAL, solar=SOLAR_LOW, neutral=False)
-        assert _eval(engine, _cover(sun_neutral_ignore=True)) is False
-
-    def test_preemptive_override(self, engine, mock_hass, mock_storage) -> None:  # noqa: F811
-        _setup(mock_hass, mock_storage, temp=NEUTRAL, preemptive=False)
-        assert _eval(engine, _cover()) is False
-        assert _eval(engine, _cover(preemptive_shading=True)) is True
-        _setup(mock_hass, mock_storage, temp=NEUTRAL, preemptive=True)
-        assert _eval(engine, _cover()) is True
-        assert _eval(engine, _cover(preemptive_shading=False)) is False
-
-    def test_sun_flags_resolution(self, engine, mock_storage) -> None:  # noqa: F811
+    def test_sun_flags_follow_active_profile(self, engine, mock_storage) -> None:  # noqa: F811
         mock_storage.sun_heating_ignore = True
         mock_storage.sun_neutral_ignore = False
         mock_storage.preemptive_shading = True
+        mock_storage.sun_heating_ignore_b = False
+        mock_storage.sun_neutral_ignore_b = True
+        mock_storage.preemptive_shading_b = False
+        mock_storage.active_profile = "a"
         assert engine._sun_flags(_cover()) == (True, False, True)
-        assert engine._sun_flags(
-            _cover(sun_heating_ignore=False, sun_neutral_ignore=True, preemptive_shading=False)
-        ) == (False, True, False)
+        mock_storage.active_profile = "b"
+        assert engine._sun_flags(_cover()) == (False, True, False)
+
+    def test_profile_b_flags_drive_the_condition(self, engine, mock_hass, mock_storage) -> None:  # noqa: F811
+        # Winter-like profile B: the sun counts in a cold room
+        _setup(mock_hass, mock_storage, temp=HEATING, heating=False, profile="b")
+        mock_storage.sun_heating_ignore = True  # profile A would answer "no sun"
+        assert _eval(engine, _cover()) is True
+        mock_storage.active_profile = "a"
+        assert _eval(engine, _cover()) is False
 
 
 class TestUnknownMode:
@@ -151,9 +141,6 @@ class TestUnknownMode:
     def test_unknown_both_off_position_only(self, engine, mock_hass, mock_storage) -> None:  # noqa: F811
         _setup(mock_hass, mock_storage, temp=None, heating=False, neutral=False)
         assert _eval(engine, _cover()) is True
-        # Per-cover override off on a global-on install
-        _setup(mock_hass, mock_storage, temp=None)
-        assert _eval(engine, _cover(sun_heating_ignore=False, sun_neutral_ignore=False)) is True
 
 
 class TestNegateKnown:
@@ -188,7 +175,8 @@ def _legacy_data() -> dict:
     return {
         "covers": {
             "cover.a": {"entity_id": "cover.a", "name": "A", "preemptive_shading": True},
-            "cover.b": {"entity_id": "cover.b", "name": "B", "preemptive_shading": False},
+            "cover.b": {"entity_id": "cover.b", "name": "B", "preemptive_shading": False,
+                        "sun_heating_ignore": True, "sun_neutral_ignore": False},
             "cover.c": {"entity_id": "cover.c", "name": "C"},
         },
         "rules": {}, "scenarios": {}, "facades": {},
@@ -198,29 +186,23 @@ def _legacy_data() -> dict:
 
 class TestMigration:
     @pytest.mark.asyncio
-    async def test_preemptive_tristate(self, storage, mock_store) -> None:  # noqa: F811
+    async def test_per_cover_switches_removed(self, storage, mock_store) -> None:  # noqa: F811
         mock_store.async_load.return_value = _legacy_data()
         await storage.async_load()
-        covers = storage._data["covers"]
-        assert covers["cover.a"]["preemptive_shading"] is None
-        assert covers["cover.b"]["preemptive_shading"] is False
-        assert "preemptive_shading" not in covers["cover.c"]
+        for cover_data in storage._data["covers"].values():
+            for legacy in ("preemptive_shading", "sun_heating_ignore", "sun_neutral_ignore"):
+                assert legacy not in cover_data
         assert MIGRATION_PREEMPTIVE_TRISTATE in storage._data["migrations"]
+        assert MIGRATION_COMFORT_PROFILES in storage._data["migrations"]
         mock_store.async_delay_save.assert_called()
-        assert storage.covers["cover.a"].preemptive_shading is None
-        assert storage.covers["cover.b"].preemptive_shading is False
-        assert storage.covers["cover.c"].preemptive_shading is None
 
     @pytest.mark.asyncio
     async def test_runs_once(self, storage, mock_store) -> None:  # noqa: F811
         mock_store.async_load.return_value = _legacy_data()
         await storage.async_load()
-        # Explicit True set afterwards survives the next load
-        storage._data["covers"]["cover.a"]["preemptive_shading"] = True
         mock_store.async_load.return_value = storage._data
         mock_store.async_delay_save.reset_mock()
         await storage.async_load()
-        assert storage._data["covers"]["cover.a"]["preemptive_shading"] is True
         mock_store.async_delay_save.assert_not_called()
 
     @pytest.mark.asyncio
@@ -228,24 +210,16 @@ class TestMigration:
         mock_store.async_load.return_value = None
         await storage.async_load()
         assert MIGRATION_PREEMPTIVE_TRISTATE in storage._data["migrations"]
-        assert MIGRATION_PREEMPTIVE_TRISTATE in _ALL_MIGRATIONS
+        assert MIGRATION_COMFORT_PROFILES in storage._data["migrations"]
+        assert MIGRATION_COMFORT_PROFILES in _ALL_MIGRATIONS
 
     @pytest.mark.asyncio
     async def test_import_legacy_export_converted(self, storage, mock_store) -> None:  # noqa: F811
         mock_store.async_load.return_value = None
         await storage.async_load()
         await storage.async_import_data(_legacy_data())
-        assert storage._data["covers"]["cover.a"]["preemptive_shading"] is None
-        assert storage._data["covers"]["cover.b"]["preemptive_shading"] is False
-
-    @pytest.mark.asyncio
-    async def test_import_current_export_kept(self, storage, mock_store) -> None:  # noqa: F811
-        mock_store.async_load.return_value = None
-        await storage.async_load()
-        data = _legacy_data()
-        data["migrations"] = list(_ALL_MIGRATIONS)
-        await storage.async_import_data(data)
-        assert storage._data["covers"]["cover.a"]["preemptive_shading"] is True
+        assert "preemptive_shading" not in storage._data["covers"]["cover.a"]
+        assert "sun_neutral_ignore" not in storage._data["covers"]["cover.b"]
 
 
 class TestGlobalSettings:
@@ -277,34 +251,6 @@ class TestGlobalSettings:
 
 
 # ---------------------------------------------------------------------------
-# Models
-# ---------------------------------------------------------------------------
-
-class TestModels:
-    @pytest.mark.parametrize("value", [None, True, False])
-    def test_roundtrip(self, value) -> None:
-        cover = _cover(sun_heating_ignore=value, sun_neutral_ignore=value, preemptive_shading=value)
-        restored = CoverConfig.from_dict(cover.to_dict())
-        assert restored.sun_heating_ignore is value
-        assert restored.sun_neutral_ignore is value
-        assert restored.preemptive_shading is value
-
-    def test_defaults_none(self) -> None:
-        cover = CoverConfig.from_dict({"entity_id": "cover.x", "name": "X"})
-        assert cover.sun_heating_ignore is None
-        assert cover.sun_neutral_ignore is None
-        assert cover.preemptive_shading is None
-
-    @pytest.mark.parametrize(
-        ("raw", "expected"),
-        [("true", True), ("off", False), (1, True), (0, False), ("garbage", None), ([], None)],
-    )
-    def test_legacy_values(self, raw, expected) -> None:
-        cover = CoverConfig.from_dict({"entity_id": "cover.x", "name": "X", "preemptive_shading": raw})
-        assert cover.preemptive_shading is expected
-
-
-# ---------------------------------------------------------------------------
 # API
 # ---------------------------------------------------------------------------
 
@@ -324,14 +270,12 @@ def _schemas() -> dict:
 
 
 class TestApi:
-    @pytest.mark.parametrize("value", [None, True, False])
-    def test_cover_update_schema_tristate(self, value) -> None:
+    @pytest.mark.parametrize("field", ["sun_heating_ignore", "sun_neutral_ignore", "preemptive_shading"])
+    def test_cover_update_has_no_sun_switches(self, field) -> None:
         schema = _schemas()["cover_automatic/cover/update"]
-        msg = {"id": 1, "type": "cover_automatic/cover/update", "entity_id": "cover.a",
-               "sun_heating_ignore": value, "sun_neutral_ignore": value, "preemptive_shading": value}
-        out = schema(msg)
-        assert out["sun_heating_ignore"] is value
-        assert out["preemptive_shading"] is value
+        with pytest.raises(vol.Invalid):
+            schema({"id": 1, "type": "cover_automatic/cover/update", "entity_id": "cover.a",
+                    field: True})
 
     def test_cover_update_schema_rejects_garbage(self) -> None:
         schema = _schemas()["cover_automatic/cover/update"]
@@ -346,19 +290,6 @@ class TestApi:
         assert out["sun_heating_ignore"] is False
         with pytest.raises(vol.Invalid):
             schema({"id": 1, "type": "cover_automatic/settings/update", "preemptive_shading": None})
-
-    @pytest.mark.asyncio
-    async def test_cover_update_stores_null(self) -> None:
-        from custom_components.cover_automatic.api import ws_cover_update
-
-        st = _make_storage()
-        raw = {"entity_id": "cover.a", "name": "A", "preemptive_shading": False}
-        st.get_cover_raw = MagicMock(return_value=raw)
-        msg = {"id": 1, "type": "cover_automatic/cover/update", "entity_id": "cover.a",
-               "preemptive_shading": None, "sun_heating_ignore": False}
-        await ws_cover_update(_make_hass(), _make_connection(), msg, st, _make_coordinator())
-        assert raw["preemptive_shading"] is None
-        assert raw["sun_heating_ignore"] is False
 
     @pytest.mark.asyncio
     async def test_settings_update_and_response(self) -> None:

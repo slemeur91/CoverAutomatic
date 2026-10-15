@@ -230,7 +230,7 @@ class TestImportSettingsBounds:
         await storage.async_load()
         await storage.async_import_data({**_base_config(), "comfort_temp_min": 26,
                                          "comfort_temp_max": 22})
-        assert (storage.comfort_temp_min, storage.comfort_temp_max) == (21.0, 25.0)
+        assert (storage.comfort_temp_min, storage.comfort_temp_max) == (21.0, 23.0)
         # Only one side imported, but conflicting with the local other side
         await storage.async_import_data({**_base_config(), "comfort_temp_min": 30})
         assert storage.comfort_temp_min < storage.comfort_temp_max
@@ -445,12 +445,12 @@ class TestExport:
     async def test_roundtrip_does_not_replay_migrations(self, storage) -> None:
         await storage.async_load()
         data = _base_config()
-        data["covers"]["cover.a"].update({"pause_duration": 120, "preemptive_shading": True})
+        data["covers"]["cover.a"].update({"pause_duration": 120, "comfort_hysteresis_b": 0.4})
         await storage.async_import_data(data)
         exported = json.loads(json.dumps(storage.get_export_data()))
         await storage.async_import_data(exported)
         assert storage.covers["cover.a"].pause_duration == 120
-        assert storage.covers["cover.a"].preemptive_shading is True
+        assert storage.covers["cover.a"].comfort_hysteresis_b == 0.4
 
 
 # ---------------------------------------------------------------------------
@@ -466,7 +466,7 @@ class TestImportMigrations:
         data["covers"]["cover.a"].update({"pause_duration": 120, "preemptive_shading": True})
         await storage.async_import_data(data)
         assert storage.covers["cover.a"].pause_duration is None
-        assert storage.covers["cover.a"].preemptive_shading is None
+        assert "preemptive_shading" not in storage._data["covers"]["cover.a"]
         assert set(storage._data["migrations"]) == set(_ALL_MIGRATIONS)
 
     @pytest.mark.asyncio
@@ -474,10 +474,9 @@ class TestImportMigrations:
         await storage.async_load()
         data = _base_config()
         data["migrations"] = [MIGRATION_PREEMPTIVE_TRISTATE, "future_migration"]
-        data["covers"]["cover.a"].update({"pause_duration": 120, "preemptive_shading": True})
+        data["covers"]["cover.a"].update({"pause_duration": 120})
         await storage.async_import_data(data)
         assert storage.covers["cover.a"].pause_duration is None
-        assert storage.covers["cover.a"].preemptive_shading is True
         assert MIGRATION_PAUSE_DURATION_120 in storage._data["migrations"]
         assert "future_migration" in storage._data["migrations"]
 

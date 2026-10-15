@@ -148,6 +148,9 @@ class TestStaleThresholdState:
 
     def test_old_keys_purged(self, engine) -> None:
         clock = [1000.0]
+        # The engine took its purge timestamp from the real clock when it was
+        # created: align it with the simulated one.
+        engine._threshold_purged_at = clock[0]
         with patch.object(engine_mod, "monotonic", side_effect=lambda: clock[0]):
             engine._threshold_with_hysteresis(
                 "sensor.old", 26.0, 25.0, above=True, update_state=True, hysteresis=1.0

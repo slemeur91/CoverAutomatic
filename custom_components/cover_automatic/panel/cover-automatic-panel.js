@@ -157,6 +157,7 @@ const I18N = {
     error_too_large: "Import file is too large",
     error_unauthorized: "Administrator rights required",
     error_invalid_comfort_range: "The cold setpoint must be lower than the hot setpoint",
+    error_invalid_profiles: "A scenario cannot use both profiles",
     error_invalid_wind_hysteresis: "The wind hysteresis must be lower than the wind threshold",
     rule_priority_up: "Raise priority",
     rule_priority_down: "Lower priority",
@@ -189,7 +190,7 @@ const I18N = {
     rule_copy_suffix: "copy",
     settings_wind_off_note: "Choose a wind sensor to enable wind protection.",
     settings_solar_off_note: "Choose a sensor to set the threshold and hysteresis.",
-    settings_solar_nested_off: "Only used by the option “Only with strong sunshine” (here or on a cover).",
+    settings_solar_nested_off: "Only used by the option “Only with strong sunshine” (profile A or B).",
     cover_lock_box_title: "Window open",
     cover_lock_off_note: "Choose a window sensor to enable these settings.",
     cover_vent_box_title: "Window tilted (ventilation)",
@@ -223,32 +224,38 @@ const I18N = {
     cover_vent_position_hint: "Target position when window is tilted. Empty = use global default.",
     cover_comfort_min: "Cold temperature setpoint (°C)",
     cover_comfort_max: "Hot temperature setpoint (°C)",
-    cover_comfort_hint: "Setpoints for this room. Empty = global values from settings.",
-    cover_comfort_global: "Empty = global value: {v} °C ({src})",
+    cover_comfort_hint: "Setpoints for this room, per profile. Empty = global value of the same profile (Settings › Sensors).",
     cover_default_note: "Empty = default value: {v} (Settings)",
     unit_sensor: "sensor unit",
-    cover_comfort_src_settings: "Settings",
-    cover_sun_switches_hint: "Settings for this cover only; “Global” = value from Settings › Sun exposure.",
     tristate_global: "Global ({value})",
-    settings_sun_facade_hint: "These settings only change the answer of the “Sun on facade” condition, for covers with an indoor temperature sensor (own or global). They are meant for rules that close when the sun is out: close only when it helps. Leave everything off if a rule opens the covers when the sun is out.",
-    sun_heating_label: "Action at the cold setpoint: let the sun warm the room",
-    sun_heating_hint: "The condition answers “no sun”: rules that close in the sun don't close and the sun warms the room. Avoid it if a rule opens the covers when the sun is out (it would no longer apply).",
+    settings_sun_facade_hint: "**These settings never move a cover.** They only change the answer of the **“Sun on facade”** condition (“sun” or “no sun”) when a rule uses it. The rule moves the cover.\n\nThey only apply when the indoor temperature sensor, global or specific to the cover, is set. For the other covers, only the sun position is taken into account.\n\n**The three inputs used**\n- **Sun position**: is the sun on the facade (azimuth and elevation)? If not, the answer is always “no sun” and nothing else is checked.\n- **Current room temperature**, compared with the setpoints of the profile (see below).\n- **Sunshine** (light, radiation or UV sensor): only used by the “Only with strong sunshine” option.\n\n**Two possible behaviours (one per profile)**\n- For example profile A for the Summer scenario and profile B for the Winter scenario. The profile of the active scenario applies.\n- For a scenario in neither profile, only the sun position counts.\n\n**Answer when the sun is on the facade**, depending on the current room temperature:\n- **Room too cold** (≤ cold setpoint): depends on the “Action at the cold setpoint” box.\n- **Mild room** (between the setpoints): depends on the “Action in a mild room” choice. Only the “strong sunshine” option reads the sunshine sensor.\n- **Room too hot** (≥ hot setpoint): always “sun”.\n\n**Depending on your rules**\n- Rule that **closes** in the sun: these settings avoid closing when it is not useful (room too cold, or mild).\n- Rule that **opens** in the sun (in winter for example): leave the box unchecked and choose “As soon as the sun is on the facade”. Otherwise the rule will not apply in a room that is too cold or mild.",
+    sun_heating_label: "Action at the cold setpoint",
+    sun_heating_hint: "Room too cold. Checked: answer “no sun”. Unchecked: depends on the sun position.",
     sun_below: "≤ {t} °C",
     sun_above: "≥ {t} °C",
     sun_between: "between {min} and {max} °C",
     settings_comfort_range_title: "Indoor temperature setpoints",
-    settings_indoor_reminder: "Applies according to each room's indoor temperature (Sensors tab: global sensor {name}, setpoints {min} and {max} °C). A cover can have its own sensor and setpoints.",
+    profile_title: "Profile {p}",
+    profile_intro: "Each scenario uses profile A, profile B or none. Click a scenario to add it to a profile (it leaves the other one) or to remove it. Without profile there are no setpoints: « Room temperature » is never met and « Sun on facade » only follows the sun position. A new scenario joins profile A.",
+    profile_free: "Without profile (no setpoints): {list}",
+    profile_scenarios: "Scenarios",
+    profile_off_note: "No scenario uses this profile: its settings are kept but inactive.",
+    profile_no_scenario: "no scenario",
+    profile_sun_scenarios_note: "Scenarios chosen in Settings › Sensors.",
+    profile_sun_reminder: "Sensor: {name} · setpoints {min} / {max} °C (Sensors tab).",
+    cover_comfort_hysteresis: "Hysteresis (°C)",
+    hyst_title_comfort_b: "How does it work? – hysteresis between the setpoints",
     settings_indoor_none: "not set",
     sun_explain_title: "How does it work?",
     sun_explain_intro: "Example: a “close if sun” rule with the sun on the facade. Highlighted rows match your settings.",
     sun_explain_col_room: "Room",
     sun_explain_col_answer: "“Sun on facade” answers",
     sun_explain_col_effect: "Effect",
-    sun_explain_room_cold_on: "Cold, “let the sun warm it” checked",
-    sun_explain_room_cold_off: "Cold, box unchecked",
-    sun_explain_room_position: "Comfortable, “As soon as the sun is on the facade”",
-    sun_explain_room_ignore: "Comfortable, “Never”",
-    sun_explain_room_preemptive: "Comfortable, “Only with strong sunshine”",
+    sun_explain_room_cold_on: "Too cold, “Action at the cold setpoint” checked",
+    sun_explain_room_cold_off: "Too cold, box unchecked",
+    sun_explain_room_position: "Mild, “As soon as the sun is on the facade”",
+    sun_explain_room_ignore: "Mild, “Never”",
+    sun_explain_room_preemptive: "Mild, “Only with strong sunshine”",
     sun_explain_room_hot: "Too hot",
     sun_explain_sun: "“sun”",
     sun_explain_no_sun: "“no sun”",
@@ -256,22 +263,21 @@ const I18N = {
     sun_explain_sun_if_strong: "“sun” if the sensor exceeds the threshold, otherwise “no sun”",
     sun_explain_eff_warm: "Does not close: the cover stays open and the room warms up.",
     sun_explain_eff_close: "Closes.",
-    sun_explain_eff_close_as_hot: "Closes, as if the room were hot.",
+    sun_explain_eff_close_as_hot: "Closes, as if the room were too hot.",
     sun_explain_eff_wait: "Does not close; will close once the room gets too hot.",
     sun_explain_eff_strong: "Only closes in bright sunshine, before the room heats up.",
     sun_explain_so: "So",
-    sun_explain_cold: "Cold room: the box does not open the cover, it prevents closing because of the sun. If the cover is already open (by a daytime opening rule, for example), it stays open.",
+    sun_explain_cold: "Room too cold: the box does not open the cover, it prevents closing because of the sun. If the cover is already open (by a daytime opening rule, for example), it stays open.",
     sun_explain_hot: "Room too hot: the cover only closes if a “close if sun” rule applies to this cover and to the active scenario.",
-    sun_explain_comfort: "Comfortable room: the in-between, where you choose when the sun should count.",
-    sun_comfort_label: "Action between the setpoints: behaviour depending on the sun",
+    sun_explain_comfort: "Mild room: the in-between, where you choose when the sun should count.",
+    sun_comfort_label: "Action in a mild room",
     sun_comfort_position: "As soon as the sun is on the facade",
-    sun_comfort_position_hint: "The condition is true as soon as the sun is on the facade.",
+    sun_comfort_position_hint: "Answer “sun” as soon as the sun is on the facade.",
     sun_comfort_ignore: "Never (wait until the room gets too hot)",
-    sun_comfort_ignore_hint: "Answers “no sun”: the cover only closes once the room gets too hot.",
+    sun_comfort_ignore_hint: "Answer “no sun” as long as the room is not too hot.",
     sun_comfort_preemptive: "Only with strong sunshine",
-    sun_comfort_preemptive_hint: "Answers “sun” as soon as the sunshine sensor exceeds its threshold: the cover closes before the room heats up.",
-    sun_comfort_hint: "Behaviour of “Sun on facade” while the room is between the setpoints. Global = value set in Settings › Sun exposure.",
-    sun_hot_note: "Room too hot (≥ {t} °C): the sun always counts as soon as it is on the facade.",
+    sun_comfort_preemptive_hint: "Answer “sun” when the sunshine sensor exceeds its threshold (Sunshine box).",
+    sun_hot_note: "Room too hot (≥ {t} °C): always “sun”.",
     solar_used_by: "Used by the option “Only with strong sunshine”: {n} cover(s).",
     solar_unused: "Only used by the option “Only with strong sunshine” (no cover uses it at the moment).",
     tristate_on: "Enabled",
@@ -294,8 +300,8 @@ const I18N = {
     cover_section_room: "Room",
     cover_inverted_short: "Reversed",
     cover_lock_hold_short: "Keep position",
-    sun_heating_label_short: "Cold: let it warm",
-    sun_comfort_label_short: "Between setpoints",
+    sun_heating_label_short: "Cold setpoint",
+    sun_comfort_label_short: "Mild room",
     settings_comfort_min_short: "Cold setpoint (°C)",
     settings_comfort_max_short: "Hot setpoint (°C)",
     cover_comfort_min_short: "Cold setpoint (°C)",
@@ -325,12 +331,6 @@ const I18N = {
     cover_sum_all_global: "default values",
     cover_sum_global: "global",
     cover_sum_no_indoor: "No indoor sensor",
-    cover_sum_sun_heat_on: "Cold: let the sun warm",
-    cover_sum_sun_heat_off: "Cold: sun counts",
-    cover_sum_sun_between: "Between: {v}",
-    cover_sum_mode_position: "as soon as the sun is there",
-    cover_sum_mode_ignore: "never",
-    cover_sum_mode_preemptive: "strong sunshine",
     cover_auto_enabled: "Automation enabled",
     cover_temp: "Temp",
     cover_current_pos: "Current",
@@ -353,12 +353,12 @@ const I18N = {
     show_hint: "Show hint",
     settings_temp_color: "Room temperature colours (cover list)",
     settings_temp_color_action: "By action needed",
-    settings_temp_color_action_hint: "Cold room in red (to heat), hot room in blue (to cool).",
+    settings_temp_color_action_hint: "Room too cold in red (to heat), room too hot in blue (to cool).",
     settings_temp_color_thermometer: "By temperature",
-    settings_temp_color_thermometer_hint: "Cold room in blue, hot room in red, like a thermometer.",
-    comfort_cooling: "Hot – to cool",
-    comfort_heating: "Cold – to heat",
-    comfort_neutral: "Comfort",
+    settings_temp_color_thermometer_hint: "Room too cold in blue, room too hot in red, like a thermometer.",
+    comfort_cooling: "Too hot – to cool",
+    comfort_heating: "Too cold – to heat",
+    comfort_neutral: "Mild",
     cover_add: "Add covers",
     // Facades
     facade_direction: "Direction",
@@ -391,6 +391,8 @@ const I18N = {
     rule_safety: "Safety rule",
     rule_safety_hint: "Acts even when the cover is paused after a manual move, in manual mode, wind-protected or with automation disabled. Does not override the lock (window open). Between rules, priority decides: put it at the top of the list. Reserve it for emergencies, e.g. the fire alarm.",
     rule_safety_badge: "Safety",
+    rule_scen_none: "no scenario",
+    rule_scen_off: "Switched off in this scenario (Scenarios tab)",
     scenario_no_member_rules: "No rule belongs to this scenario (select it in the rule editor).",
     rule_groups_operator: "Groups are joined by",
     rule_groups_hint: "AND = every group must match. OR = one group is enough. Inside a group, its own operator applies.",
@@ -485,7 +487,7 @@ const I18N = {
     cond_preview_context: "context-dependent",
     day_mon: "Mon", day_tue: "Tue", day_wed: "Wed", day_thu: "Thu", day_fri: "Fri", day_sat: "Sat", day_sun: "Sun",
     opt_on: "On (workday)", opt_off: "Off (non-workday)",
-    opt_cooling: "Hot (≥ hot setpoint)", opt_heating: "Cold (≤ cold setpoint)", opt_neutral: "Between the setpoints",
+    opt_cooling: "Too hot (≥ hot setpoint)", opt_heating: "Too cold (≤ cold setpoint)", opt_neutral: "Mild (between the setpoints)",
     // Scenarios
     scenario_add: "Add scenario",
     scenario_icon: "Icon",
@@ -502,9 +504,9 @@ const I18N = {
     settings_weather_hint: "Used for weather-based rule conditions (e.g. only shade when sunny).",
     settings_comfort_min: "Cold temperature setpoint (°C)",
     settings_comfort_max: "Hot temperature setpoint (°C)",
-    settings_comfort_hint: "Temperature range in which a room is considered comfortable. At or below the cold setpoint: cold room; at or above the hot setpoint: room too hot. Used by the “Room temperature” condition and by “Sun on facade” (Sun exposure tab).",
+    settings_comfort_hint: "At or below the cold setpoint: room too cold; between the setpoints: mild room; at or above the hot setpoint: room too hot. Used by the “Room temperature” condition and by “Sun on facade” (Sun exposure tab).",
     settings_comfort_hysteresis: "Hysteresis – between the setpoints (°C)",
-    settings_comfort_hysteresis_hint: "Prevents a room close to a setpoint from changing state with every reading: it only becomes comfortable again once it has moved away from the setpoint by this value.",
+    settings_comfort_hysteresis_hint: "Prevents a room close to a setpoint from changing state with every reading: it only becomes mild again once it has moved away from the setpoint by this value.",
     settings_threshold_hysteresis: "Hysteresis – on outdoor temperature in rules (°C)",
     settings_threshold_hysteresis_hint: "Prevents an “outdoor temperature above/below” or “Outdoor air compared to the room” condition from flipping with every reading while the temperature stays close to the threshold. 0 = no hysteresis.",
     settings_house_rotation: "House rotation (degrees)",
@@ -542,7 +544,7 @@ const I18N = {
     settings_command_stagger: "Command stagger delay (s)",
     settings_command_stagger_hint: "Delay in seconds between commands when multiple covers move simultaneously. Recommended 0.3-0.5 for radio-based systems (Z-Wave, Zigbee). 0 = no delay.",
     settings_logbook_enabled: "Write logbook entries",
-    settings_logbook_enabled_hint: "Record cover movements, lock/unlock, pause/resume and wind protection in Home Assistant's logbook.",
+    settings_logbook_enabled_hint: "Record cover movements, lock/unlock, pause/resume, wind protection and scenario changes in Home Assistant's logbook.",
     settings_update_check_enabled: "Check for updates",
     settings_update_check_enabled_hint: "When the panel opens, query the public GitHub API once for the latest release and show an update hint. Disable to prevent any outbound request to GitHub.",
     settings_current_value: "Current",
@@ -568,14 +570,14 @@ const I18N = {
     hyst_comfort_intro: "{w}: setpoints {a} and {b} °C, hysteresis {h} °C.",
     hyst_col_room_temp: "Room temperature",
     hyst_col_state: "State",
-    hyst_cold: "Cold",
-    hyst_hot: "Hot",
-    hyst_comfortable: "Comfortable",
-    hyst_stay_cold: "Stays cold if it was, otherwise comfortable",
-    hyst_stay_hot: "Stays hot if it was, otherwise comfortable",
-    hyst_comfort_so1: "Hysteresis does not move the setpoints: the room becomes cold at {a} °C and hot at {b} °C.",
-    hyst_comfort_so2: "It only acts on the way back: a cold room must warm up to {ah} °C to be comfortable again, a hot room must cool down to {bh} °C.",
-    hyst_comfort_so3: "Example: the room drops to {a} °C → cold. It rises to {mid} °C → still cold. At {ah} °C → comfortable. If it drops back to {mid} °C → it stays comfortable (it only becomes cold again at {a} °C).",
+    hyst_cold: "Too cold",
+    hyst_hot: "Too hot",
+    hyst_comfortable: "Mild",
+    hyst_stay_cold: "Stays too cold if it was, otherwise mild",
+    hyst_stay_hot: "Stays too hot if it was, otherwise mild",
+    hyst_comfort_so1: "Hysteresis does not move the setpoints: the room becomes too cold at {a} °C and too hot at {b} °C.",
+    hyst_comfort_so2: "It only acts on the way back: a room that is too cold must warm up to {ah} °C to be mild again, a room that is too hot must cool down to {bh} °C.",
+    hyst_comfort_so3: "Example: the room drops to {a} °C → too cold. It rises to {mid} °C → still too cold. At {ah} °C → mild. If it drops back to {mid} °C → it stays mild (it only becomes too cold again at {a} °C).",
     hyst_comfort_so4: "Without hysteresis, a room hovering around a setpoint would change state with every reading, and the covers with it.",
     hyst_rules_intro: "Example (none of your rules has this condition yet): a condition “outdoor temperature above {t} °C”, hysteresis {h} °C.",
     hyst_rules_scope: "This hysteresis only applies to the “Outdoor temperature above / below” conditions (each with its own threshold) and “Outdoor air compared to the room” (on the outdoor – room difference) of your rules. It has no effect on the indoor temperature setpoints.",
@@ -664,12 +666,15 @@ const I18N = {
     log_type_status: "Status",
     log_type_rule: "Rule",
     log_type_wind: "Wind",
+    log_type_scenario: "Scenario",
+    log_msg_scenario_change: "{from} → {to}",
+    cover_profile_invalid: "Inconsistent setpoints: cold {min} °C ≥ hot {max} °C (a global value changed since). The global setpoints of the profile apply ({gmin} / {gmax} °C): correct or empty the fields.",
     log_loading: "Loading log...",
     log_empty: "No log entries in the last 3 days.",
     log_filter_all: "All",
     log_filter_cover: "Cover:",
     log_filter_all_covers: "All covers",
-    log_filter_cover_note: "Global events (wind) are also shown.",
+    log_filter_cover_note: "Global events (wind, scenario) are also shown.",
     log_clear: "Clear log",
     log_clear_confirm: "Delete all log entries?",
     log_clear_confirm_all: "Clear the whole log (all covers)?",
@@ -810,6 +815,7 @@ const I18N = {
     error_too_large: "Importdatei ist zu groß",
     error_unauthorized: "Administratorrechte erforderlich",
     error_invalid_comfort_range: "Der Kalt-Sollwert muss unter dem Warm-Sollwert liegen",
+    error_invalid_profiles: "Ein Szenario kann nicht beide Profile nutzen",
     error_invalid_wind_hysteresis: "Die Wind-Hysterese muss kleiner als der Windschwellwert sein",
     rule_priority_up: "Priorität erhöhen",
     rule_priority_down: "Priorität senken",
@@ -842,7 +848,7 @@ const I18N = {
     rule_copy_suffix: "Kopie",
     settings_wind_off_note: "Wählen Sie einen Windsensor, um den Windschutz zu aktivieren.",
     settings_solar_off_note: "Wählen Sie einen Sensor, um Schwelle und Hysterese einzustellen.",
-    settings_solar_nested_off: "Nur von der Option „Nur bei starkem Sonnenschein“ verwendet (hier oder bei einem Behang).",
+    settings_solar_nested_off: "Nur von der Option „Nur bei starkem Sonnenschein“ verwendet (Profil A oder B).",
     cover_lock_box_title: "Fenster offen",
     cover_lock_off_note: "Wählen Sie einen Fenstersensor, um diese Einstellungen zu aktivieren.",
     cover_vent_box_title: "Fenster gekippt (Lüftung)",
@@ -875,32 +881,38 @@ const I18N = {
     cover_vent_position_hint: "Zielposition bei gekipptem Fenster. Leer = globaler Standard.",
     cover_comfort_min: "Temperatursollwert kalt (°C)",
     cover_comfort_max: "Temperatursollwert warm (°C)",
-    cover_comfort_hint: "Sollwerte für diesen Raum. Leer = globale Werte aus den Einstellungen.",
-    cover_comfort_global: "Leer = globaler Wert: {v} °C ({src})",
+    cover_comfort_hint: "Sollwerte für diesen Raum, je Profil. Leer = globaler Wert desselben Profils (Einstellungen › Sensoren).",
     cover_default_note: "Leer = Standardwert: {v} (Einstellungen)",
     unit_sensor: "Sensoreinheit",
-    cover_comfort_src_settings: "Einstellungen",
-    cover_sun_switches_hint: "Einstellungen nur für diesen Behang; „Global“ = Wert aus Einstellungen › Sonnenexposition.",
     tristate_global: "Global ({value})",
-    settings_sun_facade_hint: "Diese Einstellungen ändern nur die Antwort der Bedingung „Sonne auf Fassade“, für Behänge mit Innentemperatursensor (eigener oder globaler). Sie dienen Regeln, die bei Sonne schließen: nur schließen, wenn es nützt. Alles aus lassen, wenn eine Regel die Behänge bei Sonne öffnet.",
-    sun_heating_label: "Aktion beim Kalt-Sollwert: Sonne wärmen lassen",
-    sun_heating_hint: "Die Bedingung meldet „keine Sonne“: Regeln, die bei Sonne schließen, schließen nicht und die Sonne wärmt den Raum. Vermeiden, wenn eine Regel die Behänge bei Sonne öffnet (sie würde nicht mehr greifen).",
+    settings_sun_facade_hint: "**Diese Einstellungen bewegen keinen Behang.** Sie ändern nur die Antwort der Bedingung **„Sonne auf der Fassade“** („Sonne“ oder „keine Sonne“), wenn eine Regel sie nutzt. Die Regel bewegt den Behang.\n\nSie gelten nur, wenn der Innentemperatursensor – global oder für den Behang – festgelegt ist. Für die anderen Behänge zählt nur der Sonnenstand.\n\n**Die drei verwendeten Angaben**\n- **Sonnenstand**: Steht die Sonne auf der Fassade (Azimut und Höhe)? Wenn nicht, lautet die Antwort immer „keine Sonne“ und der Rest wird nicht geprüft.\n- **Aktuelle Raumtemperatur**, verglichen mit den Sollwerten des Profils (siehe unten).\n- **Sonneneinstrahlung** (Helligkeits-, Strahlungs- oder UV-Sensor): nur für die Option „Nur bei starkem Sonnenschein“.\n\n**Zwei mögliche Verhalten (eines pro Profil)**\n- Zum Beispiel Profil A für das Szenario Sommer und Profil B für das Szenario Winter. Das Profil des aktiven Szenarios gilt.\n- Für ein Szenario ohne Profil zählt nur der Sonnenstand.\n\n**Antwort, wenn die Sonne auf der Fassade steht**, je nach aktueller Raumtemperatur:\n- **Zu kalter Raum** (≤ Kalt-Sollwert): je nach Kästchen „Aktion beim Kalt-Sollwert“.\n- **Temperierter Raum** (zwischen den Sollwerten): je nach Wahl „Aktion bei temperiertem Raum“. Nur die Option „starker Sonnenschein“ liest den Sonnensensor.\n- **Zu warmer Raum** (≥ Warm-Sollwert): immer „Sonne“.\n\n**Je nach Ihren Regeln**\n- Regel, die bei Sonne **schließt**: Diese Einstellungen verhindern unnötiges Schließen (Raum zu kalt oder temperiert).\n- Regel, die bei Sonne **öffnet** (z. B. im Winter): Kästchen deaktiviert lassen und „Sobald die Sonne auf der Fassade steht“ wählen. Sonst greift die Regel in einem zu kalten oder temperierten Raum nicht.",
+    sun_heating_label: "Aktion beim Kalt-Sollwert",
+    sun_heating_hint: "Raum zu kalt. Aktiviert: Antwort „keine Sonne“. Deaktiviert: je nach Sonnenstand.",
     sun_below: "≤ {t} °C",
     sun_above: "≥ {t} °C",
     sun_between: "zwischen {min} und {max} °C",
     settings_comfort_range_title: "Innentemperatur-Sollwerte",
-    settings_indoor_reminder: "Gilt je nach Innentemperatur jedes Raums (Reiter Sensoren: globaler Sensor {name}, Sollwerte {min} und {max} °C). Ein Behang kann eigenen Sensor und eigene Sollwerte haben.",
+    profile_title: "Profil {p}",
+    profile_intro: "Jedes Szenario nutzt Profil A, Profil B oder keines. Klicken Sie auf ein Szenario, um es einem Profil zuzuordnen (es verlässt das andere) oder es zu entfernen. Ohne Profil gibt es keine Sollwerte: « Raumtemperatur » ist nie erfüllt und « Sonne auf der Fassade » folgt nur dem Sonnenstand. Ein neues Szenario kommt in Profil A.",
+    profile_free: "Ohne Profil (keine Sollwerte): {list}",
+    profile_scenarios: "Szenarien",
+    profile_off_note: "Kein Szenario nutzt dieses Profil: Die Einstellungen bleiben erhalten, sind aber inaktiv.",
+    profile_no_scenario: "kein Szenario",
+    profile_sun_scenarios_note: "Szenarien werden unter Einstellungen › Sensoren gewählt.",
+    profile_sun_reminder: "Sensor: {name} · Sollwerte {min} / {max} °C (Reiter Sensoren).",
+    cover_comfort_hysteresis: "Hysterese (°C)",
+    hyst_title_comfort_b: "Wie funktioniert das? – Hysterese zwischen den Sollwerten",
     settings_indoor_none: "nicht festgelegt",
     sun_explain_title: "Wie funktioniert das?",
     sun_explain_intro: "Beispiel: eine Regel „schließen bei Sonne“ und Sonne auf der Fassade. Hervorgehobene Zeilen entsprechen Ihren Einstellungen.",
     sun_explain_col_room: "Raum",
     sun_explain_col_answer: "Antwort von „Sonne auf Fassade“",
     sun_explain_col_effect: "Wirkung",
-    sun_explain_room_cold_on: "Kalt, „Sonne wärmen lassen“ aktiviert",
-    sun_explain_room_cold_off: "Kalt, Kästchen deaktiviert",
-    sun_explain_room_position: "Angenehm, „Sobald die Sonne auf der Fassade steht“",
-    sun_explain_room_ignore: "Angenehm, „Nie“",
-    sun_explain_room_preemptive: "Angenehm, „Nur bei starkem Sonnenschein“",
+    sun_explain_room_cold_on: "Zu kalt, „Aktion beim Kalt-Sollwert“ aktiviert",
+    sun_explain_room_cold_off: "Zu kalt, Kästchen deaktiviert",
+    sun_explain_room_position: "Temperiert, „Sobald die Sonne auf der Fassade steht“",
+    sun_explain_room_ignore: "Temperiert, „Nie“",
+    sun_explain_room_preemptive: "Temperiert, „Nur bei starkem Sonnenschein“",
     sun_explain_room_hot: "Zu warm",
     sun_explain_sun: "„Sonne“",
     sun_explain_no_sun: "„keine Sonne“",
@@ -908,22 +920,21 @@ const I18N = {
     sun_explain_sun_if_strong: "„Sonne“, wenn der Sensor die Schwelle überschreitet, sonst „keine Sonne“",
     sun_explain_eff_warm: "Schließt nicht: der Behang bleibt offen und der Raum erwärmt sich.",
     sun_explain_eff_close: "Schließt.",
-    sun_explain_eff_close_as_hot: "Schließt, als wäre der Raum warm.",
+    sun_explain_eff_close_as_hot: "Schließt, als wäre der Raum zu warm.",
     sun_explain_eff_wait: "Schließt nicht; schließt, sobald der Raum zu warm wird.",
     sun_explain_eff_strong: "Schließt nur bei starkem Sonnenschein, bevor der Raum warm wird.",
     sun_explain_so: "Also",
-    sun_explain_cold: "Kalter Raum: das Kästchen öffnet den Behang nicht, es verhindert das Schließen wegen der Sonne. Ist der Behang bereits offen (z. B. durch eine Öffnungsregel am Tag), bleibt er offen.",
+    sun_explain_cold: "Zu kalter Raum: das Kästchen öffnet den Behang nicht, es verhindert das Schließen wegen der Sonne. Ist der Behang bereits offen (z. B. durch eine Öffnungsregel am Tag), bleibt er offen.",
     sun_explain_hot: "Zu warmer Raum: der Behang schließt nur, wenn eine Regel „schließen bei Sonne“ für diesen Behang und das aktive Szenario gilt.",
-    sun_explain_comfort: "Angenehmer Raum: der Zwischenbereich, in dem Sie wählen, wann die Sonne zählt.",
-    sun_comfort_label: "Aktion zwischen den Sollwerten: Verhalten je nach Sonne",
+    sun_explain_comfort: "Temperierter Raum: der Zwischenbereich, in dem Sie wählen, wann die Sonne zählt.",
+    sun_comfort_label: "Aktion bei temperiertem Raum",
     sun_comfort_position: "Sobald die Sonne auf der Fassade steht",
-    sun_comfort_position_hint: "Die Bedingung ist wahr, sobald die Sonne auf der Fassade steht.",
+    sun_comfort_position_hint: "Antwort „Sonne“, sobald die Sonne auf der Fassade steht.",
     sun_comfort_ignore: "Nie (warten, bis der Raum zu warm wird)",
-    sun_comfort_ignore_hint: "Meldet „keine Sonne“: der Behang schließt erst, wenn der Raum zu warm wird.",
+    sun_comfort_ignore_hint: "Antwort „keine Sonne“, solange der Raum nicht zu warm ist.",
     sun_comfort_preemptive: "Nur bei starkem Sonnenschein",
-    sun_comfort_preemptive_hint: "Meldet „Sonne“, sobald der Sonnenscheinsensor seine Schwelle überschreitet: der Behang schließt, bevor der Raum warm wird.",
-    sun_comfort_hint: "Verhalten von „Sonne auf Fassade“, solange der Raum zwischen den Sollwerten liegt. Global = Wert aus Einstellungen › Sonnenexposition.",
-    sun_hot_note: "Raum zu warm (≥ {t} °C): die Sonne zählt immer, sobald sie auf der Fassade steht.",
+    sun_comfort_preemptive_hint: "Antwort „Sonne“, wenn der Sonnensensor seine Schwelle überschreitet (Bereich Sonneneinstrahlung).",
+    sun_hot_note: "Raum zu warm (≥ {t} °C): immer „Sonne“.",
     solar_used_by: "Verwendet von der Option „Nur bei starkem Sonnenschein“: {n} Behang/Behänge.",
     solar_unused: "Nur von der Option „Nur bei starkem Sonnenschein“ verwendet (derzeit kein Behang).",
     tristate_on: "Aktiviert",
@@ -946,8 +957,8 @@ const I18N = {
     cover_section_room: "Raum",
     cover_inverted_short: "Umgekehrt",
     cover_lock_hold_short: "Position halten",
-    sun_heating_label_short: "Kalt: wärmen lassen",
-    sun_comfort_label_short: "Zwischen den Sollwerten",
+    sun_heating_label_short: "Kalt-Sollwert",
+    sun_comfort_label_short: "Temperierter Raum",
     settings_comfort_min_short: "Sollwert kalt (°C)",
     settings_comfort_max_short: "Sollwert warm (°C)",
     cover_comfort_min_short: "Sollwert kalt (°C)",
@@ -977,12 +988,6 @@ const I18N = {
     cover_sum_all_global: "Standardwerte",
     cover_sum_global: "global",
     cover_sum_no_indoor: "Kein Innensensor",
-    cover_sum_sun_heat_on: "Kalt: Sonne wärmen lassen",
-    cover_sum_sun_heat_off: "Kalt: Sonne zählt",
-    cover_sum_sun_between: "Dazwischen: {v}",
-    cover_sum_mode_position: "sobald die Sonne da ist",
-    cover_sum_mode_ignore: "nie",
-    cover_sum_mode_preemptive: "starker Sonnenschein",
     cover_auto_enabled: "Automatik aktiviert",
     cover_temp: "Temp",
     cover_current_pos: "Ist",
@@ -1005,12 +1010,12 @@ const I18N = {
     show_hint: "Hilfe anzeigen",
     settings_temp_color: "Farben der Raumtemperatur (Behangliste)",
     settings_temp_color_action: "Nach nötiger Aktion",
-    settings_temp_color_action_hint: "Kalter Raum rot (heizen), warmer Raum blau (kühlen).",
+    settings_temp_color_action_hint: "Zu kalter Raum rot (heizen), zu warmer Raum blau (kühlen).",
     settings_temp_color_thermometer: "Nach Temperatur",
-    settings_temp_color_thermometer_hint: "Kalter Raum blau, warmer Raum rot, wie ein Thermometer.",
-    comfort_cooling: "Warm – kühlen",
-    comfort_heating: "Kalt – heizen",
-    comfort_neutral: "Komfort",
+    settings_temp_color_thermometer_hint: "Zu kalter Raum blau, zu warmer Raum rot, wie ein Thermometer.",
+    comfort_cooling: "Zu warm – kühlen",
+    comfort_heating: "Zu kalt – heizen",
+    comfort_neutral: "Temperiert",
     cover_add: "Behänge hinzufügen",
     facade_direction: "Richtung",
     facade_direction_hint: "Setzt Azimutwerte mit Hausrotation automatisch.",
@@ -1041,6 +1046,8 @@ const I18N = {
     rule_safety: "Sicherheitsregel",
     rule_safety_hint: "Wirkt auch während der Pause nach manueller Bedienung, im manuellen Modus des Behangs, bei Windschutz und bei deaktivierter Automatik. Setzt die Sperre (Fenster offen) nicht außer Kraft. Zwischen Regeln entscheidet die Priorität: oben in der Liste platzieren. Nur für Notfälle verwenden, z. B. den Feueralarm.",
     rule_safety_badge: "Sicherheit",
+    rule_scen_none: "kein Szenario",
+    rule_scen_off: "In diesem Szenario ausgeschaltet (Reiter Szenarien)",
     scenario_no_member_rules: "Diesem Szenario ist keine Regel zugeordnet (im Regeleditor auswählen).",
     rule_groups_operator: "Gruppen verknüpft mit",
     rule_groups_hint: "UND = alle Gruppen müssen zutreffen. ODER = eine Gruppe reicht. Innerhalb einer Gruppe gilt ihr eigener Operator.",
@@ -1133,7 +1140,7 @@ const I18N = {
     cond_preview_context: "kontextabhängig",
     day_mon: "Mo", day_tue: "Di", day_wed: "Mi", day_thu: "Do", day_fri: "Fr", day_sat: "Sa", day_sun: "So",
     opt_on: "An (Arbeitstag)", opt_off: "Aus (kein Arbeitstag)",
-    opt_cooling: "Warm (≥ Warm-Sollwert)", opt_heating: "Kalt (≤ Kalt-Sollwert)", opt_neutral: "Zwischen den Sollwerten",
+    opt_cooling: "Zu warm (≥ Warm-Sollwert)", opt_heating: "Zu kalt (≤ Kalt-Sollwert)", opt_neutral: "Temperiert (zwischen den Sollwerten)",
     scenario_add: "Szenario hinzufügen",
     scenario_icon: "Symbol",
     scenario_icon_custom: "Eigenes MDI-Icon",
@@ -1148,9 +1155,9 @@ const I18N = {
     settings_weather_hint: "Wird für wetterbasierte Regelbedingungen verwendet (z. B. nur beschatten bei Sonne).",
     settings_comfort_min: "Temperatursollwert kalt (°C)",
     settings_comfort_max: "Temperatursollwert warm (°C)",
-    settings_comfort_hint: "Temperaturbereich, in dem ein Raum als angenehm gilt. Bis zum Kalt-Sollwert: kalter Raum; ab dem Warm-Sollwert: zu warmer Raum. Verwendet von der Bedingung „Raumtemperatur“ und von „Sonne auf Fassade“ (Reiter Sonnenexposition).",
+    settings_comfort_hint: "Bis zum Kalt-Sollwert: Raum zu kalt; zwischen den Sollwerten: temperierter Raum; ab dem Warm-Sollwert: Raum zu warm. Verwendet von der Bedingung „Raumtemperatur“ und von „Sonne auf Fassade“ (Reiter Sonnenexposition).",
     settings_comfort_hysteresis: "Hysterese – zwischen den Sollwerten (°C)",
-    settings_comfort_hysteresis_hint: "Verhindert, dass ein Raum nahe einem Sollwert bei jedem Messwert den Zustand wechselt: er wird erst wieder angenehm, wenn er sich um diesen Wert vom Sollwert entfernt hat.",
+    settings_comfort_hysteresis_hint: "Verhindert, dass ein Raum nahe einem Sollwert bei jedem Messwert den Zustand wechselt: er wird erst wieder temperiert, wenn er sich um diesen Wert vom Sollwert entfernt hat.",
     settings_threshold_hysteresis: "Hysterese – Außentemperatur in Regeln (°C)",
     settings_threshold_hysteresis_hint: "Verhindert, dass eine Bedingung „Außentemperatur über/unter“ oder „Außenluft im Vergleich zum Raum“ bei jedem Messwert kippt, solange die Temperatur nahe der Schwelle bleibt. 0 = keine Hysterese.",
     settings_house_rotation: "Hausrotation (Grad)",
@@ -1188,7 +1195,7 @@ const I18N = {
     settings_command_stagger: "Kommando-Verzögerung (s)",
     settings_command_stagger_hint: "Verzögerung in Sekunden zwischen Kommandos, wenn mehrere Behänge gleichzeitig fahren. Empfohlen 0,3-0,5 für Funksysteme (Z-Wave, Zigbee). 0 = keine Verzögerung.",
     settings_logbook_enabled: "Logbuch-Einträge schreiben",
-    settings_logbook_enabled_hint: "Bewegungen, Sperren, Pausen und Windschutz im Home-Assistant-Logbuch protokollieren.",
+    settings_logbook_enabled_hint: "Bewegungen, Sperren, Pausen, Windschutz und Szenariowechsel im Home-Assistant-Logbuch protokollieren.",
     settings_update_check_enabled: "Auf Updates prüfen",
     settings_update_check_enabled_hint: "Beim Öffnen des Panels einmalig die öffentliche GitHub-API nach dem neuesten Release abfragen und einen Update-Hinweis anzeigen. Deaktivieren, um jegliche Anfrage an GitHub zu unterbinden.",
     settings_current_value: "Aktuell",
@@ -1214,14 +1221,14 @@ const I18N = {
     hyst_comfort_intro: "{w}: Sollwerte {a} und {b} °C, Hysterese {h} °C.",
     hyst_col_room_temp: "Raumtemperatur",
     hyst_col_state: "Zustand",
-    hyst_cold: "Kalt",
-    hyst_hot: "Warm",
-    hyst_comfortable: "Angenehm",
-    hyst_stay_cold: "Bleibt kalt, wenn er es war, sonst angenehm",
-    hyst_stay_hot: "Bleibt warm, wenn er es war, sonst angenehm",
-    hyst_comfort_so1: "Die Hysterese verschiebt die Sollwerte nicht: der Raum wird ab {a} °C kalt und ab {b} °C warm.",
-    hyst_comfort_so2: "Sie wirkt nur auf dem Rückweg: ein kalter Raum muss auf {ah} °C steigen, um wieder angenehm zu sein, ein warmer Raum auf {bh} °C fallen.",
-    hyst_comfort_so3: "Beispiel: der Raum fällt auf {a} °C → kalt. Er steigt auf {mid} °C → noch kalt. Bei {ah} °C → angenehm. Fällt er wieder auf {mid} °C → bleibt angenehm (kalt erst wieder bei {a} °C).",
+    hyst_cold: "Zu kalt",
+    hyst_hot: "Zu warm",
+    hyst_comfortable: "Temperiert",
+    hyst_stay_cold: "Bleibt zu kalt, wenn er es war, sonst temperiert",
+    hyst_stay_hot: "Bleibt zu warm, wenn er es war, sonst temperiert",
+    hyst_comfort_so1: "Die Hysterese verschiebt die Sollwerte nicht: der Raum wird ab {a} °C zu kalt und ab {b} °C zu warm.",
+    hyst_comfort_so2: "Sie wirkt nur auf dem Rückweg: ein zu kalter Raum muss auf {ah} °C steigen, um wieder temperiert zu sein, ein zu warmer Raum auf {bh} °C fallen.",
+    hyst_comfort_so3: "Beispiel: der Raum fällt auf {a} °C → zu kalt. Er steigt auf {mid} °C → noch zu kalt. Bei {ah} °C → temperiert. Fällt er wieder auf {mid} °C → bleibt temperiert (zu kalt erst wieder bei {a} °C).",
     hyst_comfort_so4: "Ohne Hysterese würde ein Raum nahe einem Sollwert bei jedem Messwert den Zustand wechseln, und die Behänge mit ihm.",
     hyst_rules_intro: "Beispiel (noch keine Ihrer Regeln hat diese Bedingung): eine Bedingung „Außentemperatur über {t} °C“, Hysterese {h} °C.",
     hyst_rules_scope: "Diese Hysterese gilt nur für die Bedingungen „Außentemperatur über / unter“ (jeweils mit eigener Schwelle) und „Außenluft im Vergleich zum Raum“ (auf die Differenz außen – Raum) Ihrer Regeln. Sie wirkt sich nicht auf die Innentemperatur-Sollwerte aus.",
@@ -1310,12 +1317,15 @@ const I18N = {
     log_type_status: "Status",
     log_type_rule: "Regel",
     log_type_wind: "Wind",
+    log_type_scenario: "Szenario",
+    log_msg_scenario_change: "{from} → {to}",
+    cover_profile_invalid: "Unstimmige Sollwerte: kalt {min} °C ≥ warm {max} °C (ein globaler Wert wurde inzwischen geändert). Es gelten die globalen Sollwerte des Profils ({gmin} / {gmax} °C): Felder korrigieren oder leeren.",
     log_loading: "Protokoll wird geladen...",
     log_empty: "Keine Einträge in den letzten 3 Tagen.",
     log_filter_all: "Alle",
     log_filter_cover: "Behang:",
     log_filter_all_covers: "Alle Behänge",
-    log_filter_cover_note: "Globale Ereignisse (Wind) werden ebenfalls angezeigt.",
+    log_filter_cover_note: "Globale Ereignisse (Wind, Szenario) werden ebenfalls angezeigt.",
     log_clear: "Protokoll leeren",
     log_clear_confirm: "Alle Protokolleinträge löschen?",
     log_clear_confirm_all: "Gesamtes Protokoll löschen (alle Behänge)?",
@@ -1456,6 +1466,7 @@ const I18N = {
     error_too_large: "Le fichier d'import est trop volumineux",
     error_unauthorized: "Droits administrateur requis",
     error_invalid_comfort_range: "La consigne froide doit être inférieure à la consigne chaude",
+    error_invalid_profiles: "Un scénario ne peut pas utiliser les deux profils",
     error_invalid_wind_hysteresis: "L'hystérésis du vent doit être inférieure au seuil de vent",
     rule_priority_up: "Monter la priorité",
     rule_priority_down: "Baisser la priorité",
@@ -1488,7 +1499,7 @@ const I18N = {
     rule_copy_suffix: "copie",
     settings_wind_off_note: "Choisissez un capteur de vent pour activer la protection.",
     settings_solar_off_note: "Choisissez un capteur pour régler le seuil et l'hystérésis.",
-    settings_solar_nested_off: "Utilisé seulement par l'option « Seulement en cas de fort ensoleillement » (ici ou sur un volet).",
+    settings_solar_nested_off: "Utilisé seulement par l'option « Seulement en cas de fort ensoleillement » (profil A ou B).",
     cover_lock_box_title: "Fenêtre ouverte",
     cover_lock_off_note: "Choisissez un capteur d'ouverture pour activer ces réglages.",
     cover_vent_box_title: "Fenêtre basculée (aération)",
@@ -1522,32 +1533,38 @@ const I18N = {
     cover_vent_position_hint: "Position cible lorsque la fenêtre est basculée. Vide = valeur globale par défaut.",
     cover_comfort_min: "Consigne de température froide (°C)",
     cover_comfort_max: "Consigne de température chaude (°C)",
-    cover_comfort_hint: "Consignes propres à la pièce. Vide = valeurs globales des paramètres.",
-    cover_comfort_global: "Vide = valeur globale : {v} °C ({src})",
+    cover_comfort_hint: "Consignes propres à la pièce, pour chaque profil. Vide = valeur globale du même profil (Paramètres › Capteurs).",
     cover_default_note: "Vide = valeur par défaut : {v} (Paramètres)",
     unit_sensor: "unité du capteur",
-    cover_comfort_src_settings: "Paramètres",
-    cover_sun_switches_hint: "Réglages propres à ce volet ; « Global » = valeur de Paramètres › Exposition au soleil.",
     tristate_global: "Global ({value})",
-    settings_sun_facade_hint: "Ces réglages ne changent que la réponse de la condition « Soleil sur la façade », pour les volets ayant un capteur de température intérieure (propre ou global). Ils servent aux règles de fermeture au soleil : ne fermer que lorsque c'est utile. Laissez tout désactivé si une règle ouvre les volets quand il y a du soleil.",
-    sun_heating_label: "Action sur consigne de température froide : laisser le soleil chauffer",
-    sun_heating_hint: "La condition répond « pas de soleil » : les règles de fermeture au soleil ne ferment pas et le soleil chauffe la pièce. À éviter si une règle ouvre les volets quand il y a du soleil (elle ne s'appliquerait plus).",
+    settings_sun_facade_hint: "**Ces réglages ne commandent aucun volet.** Ils changent seulement la réponse de la condition **« Soleil sur la façade »** (« soleil » ou « pas de soleil »), quand une règle l'utilise. C'est la règle qui actionne le volet.\n\nIls ne s'appliquent que lorsque le capteur de température intérieure, global ou spécifique au volet, est défini. Pour les autres volets, seule la position du soleil est prise en compte.\n\n**Les trois informations utilisées**\n- **Position du soleil** : le soleil est-il sur la façade (azimut et hauteur) ? S'il n'y est pas, la réponse est toujours « pas de soleil » et le reste n'est pas regardé.\n- **Température actuelle de la pièce**, comparée aux consignes du profil (voir ci-dessous).\n- **Ensoleillement** (capteur de luminosité, de rayonnement ou d'UV) : il ne sert qu'à l'option « Seulement en cas de fort ensoleillement ».\n\n**Deux comportements possibles (un par profil)**\n- Par exemple le profil A pour le scénario Été et le profil B pour le scénario Hiver. Le profil du scénario actif s'applique.\n- Pour un scénario non appliqué sur les profils, seule la position du soleil compte.\n\n**Réponse quand le soleil est sur la façade**, selon la température actuelle de la pièce :\n- **Pièce trop froide** (≤ consigne froide) : selon la case « Action sur consigne de température froide ».\n- **Pièce tempérée** (entre les consignes) : selon le choix « Action en pièce tempérée ». Seule l'option « fort ensoleillement » regarde le capteur d'ensoleillement.\n- **Pièce trop chaude** (≥ consigne chaude) : toujours « soleil ».\n\n**Selon vos règles**\n- Règle qui **ferme** au soleil : ces réglages évitent de fermer quand ce n'est pas utile (pièce trop froide, ou tempérée).\n- Règle qui **ouvre** au soleil (en hiver par exemple) : laissez la case décochée et choisissez « Dès que le soleil est sur la façade ». Sinon, la règle ne s'appliquera pas dans une pièce trop froide ou tempérée.",
+    sun_heating_label: "Action sur consigne de température froide",
+    sun_heating_hint: "Pièce trop froide. Cochée : réponse « pas de soleil ». Décochée : selon la position du soleil.",
     sun_below: "≤ {t} °C",
     sun_above: "≥ {t} °C",
     sun_between: "entre {min} et {max} °C",
     settings_comfort_range_title: "Consignes de température intérieure",
-    settings_indoor_reminder: "S'applique selon la température intérieure de chaque pièce (onglet Capteurs : capteur global {name}, consignes {min} et {max} °C). Un volet peut avoir son propre capteur et ses propres consignes.",
+    profile_title: "Profil {p}",
+    profile_intro: "Chaque scénario utilise le profil A, le profil B ou aucun. Cliquez sur un scénario pour l'ajouter à un profil (il quitte l'autre) ou pour l'en retirer. Sans profil, il n'y a pas de consignes : « Température de la pièce » n'est jamais remplie et « Soleil sur la façade » ne suit que la position du soleil. Un nouveau scénario rejoint le profil A.",
+    profile_free: "Sans profil (pas de consignes) : {list}",
+    profile_scenarios: "Scénarios",
+    profile_off_note: "Aucun scénario n'utilise ce profil : ses réglages sont conservés mais inactifs.",
+    profile_no_scenario: "aucun scénario",
+    profile_sun_scenarios_note: "Scénarios choisis dans Paramètres › Capteurs.",
+    profile_sun_reminder: "Capteur : {name} · consignes {min} / {max} °C (onglet Capteurs).",
+    cover_comfort_hysteresis: "Hystérésis (°C)",
+    hyst_title_comfort_b: "Comment ça marche ? – hystérésis entre les consignes",
     settings_indoor_none: "non défini",
     sun_explain_title: "Comment ça marche ?",
     sun_explain_intro: "Exemple : une règle « fermer si soleil » et le soleil sur la façade. Les lignes surlignées correspondent à vos réglages.",
     sun_explain_col_room: "Pièce",
     sun_explain_col_answer: "Réponse de « Soleil sur la façade »",
     sun_explain_col_effect: "Effet",
-    sun_explain_room_cold_on: "Froide, « laisser le soleil chauffer » coché",
-    sun_explain_room_cold_off: "Froide, case décochée",
-    sun_explain_room_position: "Confortable, « Dès que le soleil est sur la façade »",
-    sun_explain_room_ignore: "Confortable, « Jamais »",
-    sun_explain_room_preemptive: "Confortable, « Seulement en cas de fort ensoleillement »",
+    sun_explain_room_cold_on: "Trop froide, case « Action sur consigne de température froide » cochée",
+    sun_explain_room_cold_off: "Trop froide, case décochée",
+    sun_explain_room_position: "Tempérée, « Dès que le soleil est sur la façade »",
+    sun_explain_room_ignore: "Tempérée, « Jamais »",
+    sun_explain_room_preemptive: "Tempérée, « Seulement en cas de fort ensoleillement »",
     sun_explain_room_hot: "Trop chaude",
     sun_explain_sun: "« soleil »",
     sun_explain_no_sun: "« pas de soleil »",
@@ -1555,22 +1572,21 @@ const I18N = {
     sun_explain_sun_if_strong: "« soleil » si le capteur dépasse le seuil, sinon « pas de soleil »",
     sun_explain_eff_warm: "Ne ferme pas : le volet reste ouvert et la pièce se réchauffe.",
     sun_explain_eff_close: "Ferme.",
-    sun_explain_eff_close_as_hot: "Ferme, comme si la pièce était chaude.",
+    sun_explain_eff_close_as_hot: "Ferme, comme si la pièce était trop chaude.",
     sun_explain_eff_wait: "Ne ferme pas ; fermera quand la pièce deviendra trop chaude.",
     sun_explain_eff_strong: "Ne ferme que par grand soleil, avant que la pièce chauffe.",
     sun_explain_so: "Donc",
-    sun_explain_cold: "Pièce froide : la case n'ouvre pas le volet, elle empêche la fermeture au soleil. Si le volet est déjà ouvert (par une règle d'ouverture le jour, par exemple), il le reste.",
+    sun_explain_cold: "Pièce trop froide : la case n'ouvre pas le volet, elle empêche la fermeture au soleil. Si le volet est déjà ouvert (par une règle d'ouverture le jour, par exemple), il le reste.",
     sun_explain_hot: "Pièce trop chaude : le volet ne ferme que si une règle « fermer si soleil » s'applique à ce volet et au scénario actif.",
-    sun_explain_comfort: "Pièce confortable : c'est l'entre-deux, où vous choisissez quand le soleil doit compter.",
-    sun_comfort_label: "Action entre les consignes : comportement suivant le soleil",
+    sun_explain_comfort: "Pièce tempérée : c'est l'entre-deux, où vous choisissez quand le soleil doit compter.",
+    sun_comfort_label: "Action en pièce tempérée",
     sun_comfort_position: "Dès que le soleil est sur la façade",
-    sun_comfort_position_hint: "La condition est vraie dès que le soleil est sur la façade.",
+    sun_comfort_position_hint: "Réponse « soleil » dès que le soleil est sur la façade.",
     sun_comfort_ignore: "Jamais (attendre que la pièce devienne trop chaude)",
-    sun_comfort_ignore_hint: "Répond « pas de soleil » : le volet ne ferme que lorsque la pièce devient trop chaude.",
+    sun_comfort_ignore_hint: "Réponse « pas de soleil » tant que la pièce n'est pas trop chaude.",
     sun_comfort_preemptive: "Seulement en cas de fort ensoleillement",
-    sun_comfort_preemptive_hint: "Répond « soleil » dès que le capteur d'ensoleillement dépasse son seuil : le volet ferme avant que la pièce ne chauffe.",
-    sun_comfort_hint: "Comportement de « Soleil sur la façade » quand la pièce est entre les consignes. Global = valeur de Paramètres › Exposition au soleil.",
-    sun_hot_note: "Pièce trop chaude (≥ {t} °C) : le soleil est toujours pris en compte dès qu'il est sur la façade.",
+    sun_comfort_preemptive_hint: "Réponse « soleil » si le capteur d'ensoleillement dépasse son seuil (bloc Ensoleillement).",
+    sun_hot_note: "Pièce trop chaude (≥ {t} °C) : toujours « soleil ».",
     solar_used_by: "Utilisé par l'option « Seulement en cas de fort ensoleillement » : {n} volet(s).",
     solar_unused: "Utilisé uniquement par l'option « Seulement en cas de fort ensoleillement » (aucun volet ne l'utilise actuellement).",
     tristate_on: "Activé",
@@ -1593,8 +1609,8 @@ const I18N = {
     cover_section_room: "Pièce",
     cover_inverted_short: "Sens inversé",
     cover_lock_hold_short: "Garder la position",
-    sun_heating_label_short: "Froide : laisser chauffer",
-    sun_comfort_label_short: "Entre les consignes",
+    sun_heating_label_short: "Consigne froide",
+    sun_comfort_label_short: "Pièce tempérée",
     settings_comfort_min_short: "Consigne froide (°C)",
     settings_comfort_max_short: "Consigne chaude (°C)",
     cover_comfort_min_short: "Consigne froide (°C)",
@@ -1624,12 +1640,6 @@ const I18N = {
     cover_sum_all_global: "valeurs par défaut",
     cover_sum_global: "global",
     cover_sum_no_indoor: "Aucun capteur intérieur",
-    cover_sum_sun_heat_on: "Froide : laisser chauffer",
-    cover_sum_sun_heat_off: "Froide : soleil pris en compte",
-    cover_sum_sun_between: "Entre : {v}",
-    cover_sum_mode_position: "dès que le soleil est là",
-    cover_sum_mode_ignore: "jamais",
-    cover_sum_mode_preemptive: "fort ensoleillement",
     cover_auto_enabled: "Automatisation activée",
     cover_temp: "Temp.",
     cover_current_pos: "Actuelle",
@@ -1652,12 +1662,12 @@ const I18N = {
     show_hint: "Afficher l'aide",
     settings_temp_color: "Couleurs de la température (liste des volets)",
     settings_temp_color_action: "Selon l'action à faire",
-    settings_temp_color_action_hint: "Pièce froide en rouge (à chauffer), pièce chaude en bleu (à refroidir).",
+    settings_temp_color_action_hint: "Pièce trop froide en rouge (à chauffer), pièce trop chaude en bleu (à refroidir).",
     settings_temp_color_thermometer: "Selon la température",
-    settings_temp_color_thermometer_hint: "Pièce froide en bleu, pièce chaude en rouge, comme un thermomètre.",
-    comfort_cooling: "Chaud – à refroidir",
-    comfort_heating: "Froid – à chauffer",
-    comfort_neutral: "Confort",
+    settings_temp_color_thermometer_hint: "Pièce trop froide en bleu, pièce trop chaude en rouge, comme un thermomètre.",
+    comfort_cooling: "Trop chaude – à refroidir",
+    comfort_heating: "Trop froide – à chauffer",
+    comfort_neutral: "Tempérée",
     cover_add: "Ajouter des volets",
     // Facades
     facade_direction: "Orientation",
@@ -1690,6 +1700,8 @@ const I18N = {
     rule_safety: "Règle de sécurité",
     rule_safety_hint: "Agit même si le volet est en pause après un mouvement manuel, en mode manuel, en protection vent ou avec l'automatisation désactivée. Ne passe pas outre le verrouillage (fenêtre ouverte). Entre règles, c'est la priorité qui décide : placez-la en haut de la liste. À réserver aux urgences, par exemple l'alarme incendie.",
     rule_safety_badge: "Sécurité",
+    rule_scen_none: "aucun scénario",
+    rule_scen_off: "Désactivée dans ce scénario (onglet Scénarios)",
     scenario_no_member_rules: "Aucune règle n'appartient à ce scénario (à cocher dans l'éditeur de règle).",
     rule_groups_operator: "Les groupes sont reliés par",
     rule_groups_hint: "ET = tous les groupes doivent être remplis. OU = un seul groupe suffit. À l'intérieur d'un groupe, c'est son propre opérateur qui s'applique.",
@@ -1784,7 +1796,7 @@ const I18N = {
     cond_preview_context: "dépend du contexte",
     day_mon: "Lun", day_tue: "Mar", day_wed: "Mer", day_thu: "Jeu", day_fri: "Ven", day_sat: "Sam", day_sun: "Dim",
     opt_on: "Activé (jour ouvré)", opt_off: "Désactivé (jour non ouvré)",
-    opt_cooling: "Chaude (≥ consigne chaude)", opt_heating: "Froide (≤ consigne froide)", opt_neutral: "Entre les consignes",
+    opt_cooling: "Trop chaude (≥ consigne chaude)", opt_heating: "Trop froide (≤ consigne froide)", opt_neutral: "Tempérée (entre les consignes)",
     // Scenarios
     scenario_add: "Ajouter un scénario",
     scenario_icon: "Icône",
@@ -1801,9 +1813,9 @@ const I18N = {
     settings_weather_hint: "Utilisée pour les conditions de règle basées sur la météo (ex. n'ombrer que par temps ensoleillé).",
     settings_comfort_min: "Consigne de température froide (°C)",
     settings_comfort_max: "Consigne de température chaude (°C)",
-    settings_comfort_hint: "Plage de température où la pièce est jugée confortable. Jusqu'à la consigne froide : pièce froide ; à partir de la consigne chaude : pièce trop chaude. Utilisée par la condition « Température de la pièce » et par « Soleil sur la façade » (onglet Exposition au soleil).",
+    settings_comfort_hint: "Jusqu'à la consigne froide : pièce trop froide ; entre les consignes : pièce tempérée ; à partir de la consigne chaude : pièce trop chaude. Utilisées par la condition « Température de la pièce » et par « Soleil sur la façade » (onglet Exposition au soleil).",
     settings_comfort_hysteresis: "Hystérésis – entre les consignes (°C)",
-    settings_comfort_hysteresis_hint: "Évite qu'une pièce proche d'une consigne change d'état à chaque mesure : elle ne redevient confortable qu'après s'être éloignée de la consigne de cette valeur.",
+    settings_comfort_hysteresis_hint: "Évite qu'une pièce proche d'une consigne change d'état à chaque mesure : elle ne redevient tempérée qu'après s'être éloignée de la consigne de cette valeur.",
     settings_threshold_hysteresis: "Hystérésis – sur température extérieure dans les règles (°C)",
     settings_threshold_hysteresis_hint: "Évite qu'une condition « température extérieure supérieure/inférieure à » ou « Air extérieur comparé à la pièce » bascule à chaque mesure quand la température reste proche du seuil. 0 = pas d'hystérésis.",
     settings_house_rotation: "Rotation de la maison (degrés)",
@@ -1841,7 +1853,7 @@ const I18N = {
     settings_command_stagger: "Délai entre commandes (s)",
     settings_command_stagger_hint: "Délai en secondes entre les commandes lorsque plusieurs volets bougent en même temps. Recommandé : 0,3-0,5 pour les systèmes radio (Z-Wave, Zigbee). 0 = aucun délai.",
     settings_logbook_enabled: "Écrire dans le journal de bord",
-    settings_logbook_enabled_hint: "Enregistre les mouvements des volets, verrouillages/déverrouillages, pauses/reprises et la protection contre le vent dans le journal de bord de Home Assistant.",
+    settings_logbook_enabled_hint: "Enregistre les mouvements des volets, verrouillages/déverrouillages, pauses/reprises, la protection contre le vent et les changements de scénario dans le journal de bord de Home Assistant.",
     settings_update_check_enabled: "Vérifier les mises à jour",
     settings_update_check_enabled_hint: "À l'ouverture du panneau, interroge une fois l'API publique GitHub pour connaître la dernière version et afficher un avis de mise à jour. Désactiver pour empêcher toute requête sortante vers GitHub.",
     settings_current_value: "Actuel",
@@ -1867,14 +1879,14 @@ const I18N = {
     hyst_comfort_intro: "{w} : consignes {a} et {b} °C, hystérésis {h} °C.",
     hyst_col_room_temp: "Température de la pièce",
     hyst_col_state: "État",
-    hyst_cold: "Froide",
-    hyst_hot: "Chaude",
-    hyst_comfortable: "Confortable",
-    hyst_stay_cold: "Reste froide si elle l'était, sinon confortable",
-    hyst_stay_hot: "Reste chaude si elle l'était, sinon confortable",
-    hyst_comfort_so1: "L'hystérésis ne déplace pas les consignes : la pièce devient froide dès {a} °C et chaude dès {b} °C.",
-    hyst_comfort_so2: "Elle n'agit qu'au retour : une pièce froide doit remonter à {ah} °C pour redevenir confortable, une pièce chaude doit redescendre à {bh} °C.",
-    hyst_comfort_so3: "Exemple : la pièce descend à {a} °C → froide. Elle remonte à {mid} °C → toujours froide. À {ah} °C → confortable. Si elle redescend à {mid} °C → elle reste confortable (elle ne redevient froide qu'à {a} °C).",
+    hyst_cold: "Trop froide",
+    hyst_hot: "Trop chaude",
+    hyst_comfortable: "Tempérée",
+    hyst_stay_cold: "Reste trop froide si elle l'était, sinon tempérée",
+    hyst_stay_hot: "Reste trop chaude si elle l'était, sinon tempérée",
+    hyst_comfort_so1: "L'hystérésis ne déplace pas les consignes : la pièce devient trop froide dès {a} °C et trop chaude dès {b} °C.",
+    hyst_comfort_so2: "Elle n'agit qu'au retour : une pièce trop froide doit remonter à {ah} °C pour redevenir tempérée, une pièce trop chaude doit redescendre à {bh} °C.",
+    hyst_comfort_so3: "Exemple : la pièce descend à {a} °C → trop froide. Elle remonte à {mid} °C → toujours trop froide. À {ah} °C → tempérée. Si elle redescend à {mid} °C → elle reste tempérée (elle ne redevient trop froide qu'à {a} °C).",
     hyst_comfort_so4: "Sans hystérésis, une pièce qui hésite autour d'une consigne changerait d'état à chaque mesure, et les volets avec elle.",
     hyst_rules_intro: "Exemple (aucune de vos règles n'a encore cette condition) : une condition « température extérieure supérieure à {t} °C », hystérésis {h} °C.",
     hyst_rules_scope: "Cette hystérésis s'applique uniquement aux conditions « Température extérieure supérieure à / inférieure à » (chacune avec son propre seuil) et « Air extérieur comparé à la pièce » (sur l'écart extérieur – pièce) de vos règles. Elle n'a aucun effet sur les consignes de température intérieure.",
@@ -1963,12 +1975,15 @@ const I18N = {
     log_type_status: "Statut",
     log_type_rule: "Règle",
     log_type_wind: "Vent",
+    log_type_scenario: "Scénario",
+    log_msg_scenario_change: "{from} → {to}",
+    cover_profile_invalid: "Consignes incohérentes : froide {min} °C ≥ chaude {max} °C (une valeur générale a changé depuis). Les consignes générales du profil s'appliquent ({gmin} / {gmax} °C) : corrigez ou videz les champs.",
     log_loading: "Chargement du journal...",
     log_empty: "Aucune entrée de journal sur les 3 derniers jours.",
     log_filter_all: "Tout",
     log_filter_cover: "Volet :",
     log_filter_all_covers: "Tous les volets",
-    log_filter_cover_note: "Les événements globaux (vent) sont aussi affichés.",
+    log_filter_cover_note: "Les événements globaux (vent, scénario) sont aussi affichés.",
     log_clear: "Vider le journal",
     log_clear_confirm: "Supprimer toutes les entrées du journal ?",
     log_clear_confirm_all: "Vider tout le journal (tous les volets) ?",
@@ -2828,6 +2843,28 @@ const PANEL_STYLES = `
   .sun-explain-so ul { margin: 4px 0 0; padding-left: 20px; }
   .sun-explain-so li { margin: 3px 0; line-height: 1.45; }
   .radio-hint { font-size: 12px; color: var(--secondary-text-color, #727272); font-weight: normal; text-transform: none; letter-spacing: normal; }
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 8px 0 4px; }
+  @media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } }
+  .profile-col { border: 1px solid var(--ca-box-border); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .profile-col-title { font-weight: 600; margin-bottom: 8px; }
+  .profile-col .profile-chips { margin-bottom: 8px; }
+  .profile-chips[data-editable="0"] .ms-item, .profile-chips[data-editable="0"] .ms-item:hover { cursor: default; }
+  .profile-free { margin-top: 6px; }
+  .rich-hint p { margin: 0 0 6px; }
+  .rich-hint p:last-child { margin-bottom: 0; }
+  .rich-hint ul { margin: 0 0 10px; padding-left: 20px; }
+  .rich-hint li { margin: 2px 0; }
+  .profile-col .profile-off-note { display: none; font-size: 12px; color: var(--ca-secondary-text); font-style: italic; margin: 4px 0 8px; }
+  .profile-col.profile-off .profile-off-note { display: block; }
+  .profile-col.profile-off .profile-fields { opacity: 0.45; }
+  .profile-col.profile-off .profile-fields * { cursor: not-allowed; }
+  .profile-col .sun-explain-table { font-size: 12px; }
+  .cover-profile { border-top: 1px solid var(--ca-border); padding-top: 10px; margin-top: 10px; }
+  .cover-profile-title { font-weight: 600; margin-bottom: 6px; }
+  .cover-profile-title .radio-hint { font-weight: 400; margin-left: 6px; }
+  .cover-profile.profile-unused { opacity: 0.7; }
+  .cover-profile-warn { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; margin: 0 0 8px; padding: 6px 8px;
+    border-radius: 6px; color: var(--ca-warning); background: color-mix(in srgb, var(--ca-warning) 12%, transparent); }
   .opt-box { border: 1px solid var(--ca-box-border); border-radius: 10px; padding: 12px 14px; margin: 0 0 14px;
     background: color-mix(in srgb, var(--primary-text-color, #212121) 2%, transparent); }
   .opt-box > .opt-box-title { padding-bottom: 8px; border-bottom: 1px solid var(--ca-box-border); }
@@ -3321,7 +3358,11 @@ const PANEL_STYLES = `
   }
   .rule-row.dragging { opacity: 0.4; }
   .rule-info { flex: 1; min-width: 0; }
-  .rule-name { font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .rule-name { font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .rule-scen { font-size: 11px; font-weight: 400; padding: 1px 7px; border-radius: 999px; color: var(--ca-secondary-text);
+    border: 1px solid var(--ca-border); white-space: nowrap; }
+  .rule-scen-off { text-decoration: line-through; opacity: 0.7; }
+  .rule-scen-none { color: var(--ca-warning); border-color: currentColor; }
   .rule-active-dot {
     width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
     background: var(--ca-divider, #e0e0e0);
@@ -3353,7 +3394,44 @@ const PANEL_STYLES = `
   }
   .rule-safety-badge svg { flex-shrink: 0; }
   .rule-safety-icon { display: inline-flex; vertical-align: middle; margin-left: 5px; color: var(--ca-danger); }
-  .rule-safety-group .toggle-row { margin-bottom: 0; }
+  .rule-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 22px; }
+  .rule-top-row > .rule-inline-label { margin-right: -6px; }
+  .form-group.rule-top-row > .rule-name-input { flex: 1 1 220px; min-width: 0; width: auto; }
+  .rule-top-field { display: flex; align-items: center; gap: 8px; }
+  .rule-top-field[hidden] { display: none; }
+  .form-group.rule-top-row .rule-top-field input { width: 90px; }
+  .rule-top-label { font-size: 13px; font-weight: 500; color: var(--ca-secondary-text); display: inline-flex;
+    align-items: center; white-space: nowrap; }
+  .rule-top-row > .hint-panel { flex: 0 0 100%; margin: 0; }
+  .rule-inline-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 12px; }
+  .rule-inline-label { flex: 0 0 110px; font-size: 13px; font-weight: 500; color: var(--ca-secondary-text);
+    display: inline-flex; align-items: center; }
+  .rule-inline-row > .multi-select { flex: 1 1 280px; margin-top: 0; }
+  .rule-inline-label-auto { flex-basis: auto; }
+  .rule-inline-select { flex: 0 1 280px; min-width: 180px; }
+  .rule-inline-select select { width: 100%; padding: 8px 12px; border: 1px solid var(--ca-border); border-radius: 8px;
+    background: var(--primary-background-color, #fafafa); color: var(--primary-text-color); font-size: 14px;
+    font-family: inherit; outline: none; }
+  .rule-inline-select select:focus { border-color: var(--ca-primary); }
+  .cond-group-add-row { gap: 4px; margin-top: 8px; }
+  .cond-group-add-row .cond-group-add { margin: 0; }
+  .rule-safety-inline { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 13px; }
+  .rule-safety-inline > span { display: inline-flex; align-items: center; }
+  .rule-inline-row > .hint-panel { flex: 0 0 100%; margin: 0; }
+  .hint-btn { background: none; border: none; padding: 2px 4px; margin-left: 2px; border-radius: 6px; cursor: pointer;
+    color: var(--ca-secondary-text); display: inline-flex; vertical-align: middle; }
+  .hint-btn:hover, .hint-btn.open { color: var(--ca-primary); }
+  .hint-panel { padding: 8px 10px; background: color-mix(in srgb, var(--primary-text-color) 4%, transparent);
+    border-left: 2px solid color-mix(in srgb, var(--ca-primary) 50%, transparent); border-radius: 4px;
+    font-size: 12px; color: var(--ca-secondary-text); line-height: 1.5; }
+  .hint-panel[hidden] { display: none; }
+  @media (max-width: 700px) {
+    .form-group.rule-top-row > .rule-name-input { flex-basis: 100%; }
+    .rule-top-field { flex: 1 1 40%; flex-direction: column; align-items: stretch; gap: 4px; }
+    .form-group.rule-top-row .rule-top-field input { width: 100%; }
+    .rule-inline-label { flex-basis: 100%; }
+    .rule-safety-inline { margin-left: 0; }
+  }
   .priority-badge {
     display: inline-flex;
     align-items: center;
@@ -4178,12 +4256,12 @@ class CoverAutomaticPanel extends HTMLElement {
     if (!cfg) return ids;
     const s = cfg.settings || {};
     for (const key of ["outdoor_temp_sensor", "indoor_temp_sensor", "weather_entity", "solar_sensor", "wind_sensor", "workday_sensor",
-      "comfort_temp_min_entity", "comfort_temp_max_entity", "solar_threshold_entity"]) {
+      "solar_threshold_entity"]) {
       if (s[key]) ids.add(s[key]);
     }
     for (const [eid, c] of Object.entries(cfg.covers || {})) {
       ids.add(eid);
-      for (const key of ["lock_sensor", "vent_sensor", "indoor_temp_sensor", "comfort_temp_min_entity", "comfort_temp_max_entity", "occupancy_sensor"]) {
+      for (const key of ["lock_sensor", "vent_sensor", "indoor_temp_sensor", "occupancy_sensor"]) {
         if (c && c[key]) ids.add(c[key]);
       }
     }
@@ -4250,6 +4328,46 @@ class CoverAutomaticPanel extends HTMLElement {
     const dict = I18N[lang] || I18N.en;
     const s = dict[section] || I18N.en[section] || {};
     return s[key] !== undefined ? s[key] : ((I18N.en[section] || {})[key] || key);
+  }
+
+  // ⓘ button placed in a label; its text is a separate panel spanning the
+  // whole row (_hintPanel), so compact rows keep their layout.
+  _hintToggle(scope, key) {
+    if (this._t(key) === key) return "";
+    const id = this._esc(scope + ":" + key);
+    const open = this._openHints && this._openHints.has(scope + ":" + key);
+    return `<button type="button" class="hint-btn${open ? " open" : ""}" data-action="hint-toggle" data-hint="${id}" title="${this._esc(this._t("show_hint"))}" aria-label="${this._esc(this._t("show_hint"))}" aria-expanded="${open ? "true" : "false"}">${this._lucideIcon("info", 14)}</button>`;
+  }
+
+  _hintPanel(scope, key) {
+    const text = this._t(key);
+    if (text === key) return "";
+    const open = this._openHints && this._openHints.has(scope + ":" + key);
+    return `<div class="hint-body hint-panel" data-hint-panel="${this._esc(scope + ":" + key)}"${open ? "" : " hidden"}>${this._esc(text)}</div>`;
+  }
+
+  // Covers targeted by a rule (all covers when it names none) that can tilt
+  _ruleUsesTilt(facadeIds, coverIds) {
+    const covers = Object.values((this._config && this._config.covers) || {});
+    const targeted = (!facadeIds.length && !coverIds.length)
+      ? covers
+      : covers.filter(c => coverIds.includes(c.entity_id) || (c.facade_id && facadeIds.includes(c.facade_id)));
+    return targeted.some(c => c.supports_tilt);
+  }
+
+  // Shows the tilt field once a cover able to tilt is targeted (chips toggled)
+  _refreshRuleTilt(ruleId) {
+    const root = this.shadowRoot;
+    const row = root && root.querySelector(`[data-rule-top="${CSS.escape(ruleId)}"]`);
+    if (!row) return;
+    const ids = (action, key) => Array.from(root.querySelectorAll(`[data-action="${action}"][data-rule="${CSS.escape(ruleId)}"].selected`))
+      .map(el => el.dataset[key]);
+    const input = row.querySelector('[data-field="target_tilt_position"]');
+    const show = this._ruleUsesTilt(ids("rule-facade-toggle", "facade"), ids("rule-cover-toggle", "cover"))
+      || (input && input.value !== "");
+    row.classList.toggle("no-tilt", !show);
+    const group = row.querySelector(".rule-tilt-group");
+    if (group) group.hidden = !show;
   }
 
   _hint(key) {
@@ -5296,11 +5414,42 @@ class CoverAutomaticPanel extends HTMLElement {
       // Section: Room (indoor temperature setpoints + occupancy)
       html += this._renderSection("room", this._t("cover_section_room"), () => {
         let s = '';
-        // Global setpoints actually used (entity from Settings when readable)
-        const globalMin = this._effectiveThreshold(cs.comfort_temp_min_entity, cs.comfort_temp_min ?? 21);
-        const globalMax = this._effectiveThreshold(cs.comfort_temp_max_entity, cs.comfort_temp_max ?? 25);
-        const globalNote = (entity, value) => `<div class="ha-help global-note">${this._esc(this._t("cover_comfort_global")
-          .replace("{v}", value).replace("{src}", entity ? this._haEntityName(entity) : this._t("cover_comfort_src_settings")))}</div>`;
+        // Own setpoints per comfort profile; empty = global value of the profile
+        const field = (p, base) => p === "b" ? base + "_b" : base;
+        const note = (v) => `<div class="ha-help">${this._esc(this._t("cover_default_note").replace("{v}", v + " °C"))}</div>`;
+        const profile = (p) => {
+          const g = this._profileValues(p, true);
+          const names = this._profileScenarioNames(p, true);
+          const input = (base, value, step, extra = "") => `<input type="number" step="${step}"${extra} value="${this._num(cover[field(p, base)], "")}" placeholder="${value}" data-action="cover-input" data-id="${cid}" data-field="${field(p, base)}">`;
+          // Own value mixed with a global one changed since: min >= max. The
+          // engine then uses the global pair of the profile.
+          const effMin = cover[field(p, "comfort_temp_min")] ?? g.min;
+          const effMax = cover[field(p, "comfort_temp_max")] ?? g.max;
+          const invalid = effMin >= effMax;
+          return `<div class="cover-profile${names ? "" : " profile-unused"}">
+            <div class="cover-profile-title">${this._esc(this._t("profile_title").replace("{p}", p.toUpperCase()))}
+              <span class="radio-hint">${this._esc(names || this._t("profile_no_scenario"))}</span></div>
+            ${invalid ? `<div class="cover-profile-warn">${this._lucideIcon("info", 14)} ${this._esc(this._t("cover_profile_invalid")
+              .replace("{min}", effMin).replace("{max}", effMax).replace("{gmin}", g.min).replace("{gmax}", g.max))}</div>` : ""}
+            <div class="form-row">
+              <div class="form-group">
+                <label>${this._L("cover_comfort_min")}</label>
+                ${input("comfort_temp_min", g.min, "0.5")}
+                ${note(g.min)}
+              </div>
+              <div class="form-group">
+                <label>${this._L("cover_comfort_max")}</label>
+                ${input("comfort_temp_max", g.max, "0.5")}
+                ${note(g.max)}
+              </div>
+            </div>
+            <div class="form-group">
+              <label>${this._L("cover_comfort_hysteresis")}</label>
+              ${input("comfort_hysteresis", g.h, "0.1", ' min="0.1" max="5"')}
+              ${note(g.h)}
+            </div>
+          </div>`;
+        };
         s += this._optBox({
           title: this._t("settings_comfort_range_title"),
           body: `<div class="form-group">
@@ -5309,20 +5458,7 @@ class CoverAutomaticPanel extends HTMLElement {
             ${this._renderSensorValue(cover.indoor_temp_sensor)}
             ${this._hint("cover_indoor_temp_hint")}
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>${this._L("cover_comfort_min")}</label>
-              <input type="number" step="0.5" value="${this._num(cover.comfort_temp_min, "")}" placeholder="${globalMin}" data-action="cover-input" data-id="${cid}" data-field="comfort_temp_min">
-              ${globalNote(cs.comfort_temp_min_entity, globalMin)}
-              ${this._renderThresholdEntity(`data-action="cover-input" data-id="${cid}" data-field="comfort_temp_min_entity"`, cover.comfort_temp_min_entity, "temperature")}
-            </div>
-            <div class="form-group">
-              <label>${this._L("cover_comfort_max")}</label>
-              <input type="number" step="0.5" value="${this._num(cover.comfort_temp_max, "")}" placeholder="${globalMax}" data-action="cover-input" data-id="${cid}" data-field="comfort_temp_max">
-              ${globalNote(cs.comfort_temp_max_entity, globalMax)}
-              ${this._renderThresholdEntity(`data-action="cover-input" data-id="${cid}" data-field="comfort_temp_max_entity"`, cover.comfort_temp_max_entity, "temperature")}
-            </div>
-          </div>
+          ${profile("a")}${profile("b")}
           ${this._hint("cover_comfort_hint")}`,
         });
         s += this._optBox({
@@ -5340,15 +5476,6 @@ class CoverAutomaticPanel extends HTMLElement {
         });
         return s;
       }, sum.room);
-
-      // Section: Sun exposure (null = follow the global setting)
-      html += this._renderSection("sun", this._t("settings_section_comfort"), () => {
-        return `<div class="settings-hint-intro">${this._esc(this._t("cover_sun_switches_hint"))}</div>`
-          + this._sepList([
-            this._renderCoverTristate(cover, "sun_heating_ignore", "sun_heating_label", "sun_heating_hint"),
-            this._renderCoverSunComfort(cover),
-          ]);
-      }, sum.sun);
 
       // Section: Automation (per-cover overrides of Settings › Automation)
       html += this._renderSection("automation", this._t("cover_section_automation"), () => {
@@ -5428,6 +5555,169 @@ class CoverAutomaticPanel extends HTMLElement {
   // input) the body is greyed out and its inputs disabled while the control
   // is off; values are kept and still saved. Modes: "checked", "unchecked",
   // "value" (non-empty), "tristate" ("" = follow `global`).
+  // Scenarios of a comfort profile ("a" or "b"): the settings form (draft)
+  // or, with saved = true, the stored configuration. A scenario is in one
+  // profile at most; without profile it has no setpoints.
+  _profileIds(p, saved = false) {
+    const field = "profile_" + p + "_scenarios";
+    const scenarios = (this._config && this._config.scenarios) || {};
+    let ids = null;
+    if (!saved) {
+      const hidden = this.shadowRoot && this.shadowRoot.querySelector(`[data-settings-field="${field}"]`);
+      const draft = this._settingsDraft && this._settingsDraft[field];
+      const raw = hidden ? hidden.value : (draft ? draft.value : undefined);
+      if (raw !== undefined) ids = String(raw).split(",").map(x => x.trim()).filter(Boolean);
+    }
+    if (ids === null) ids = (((this._config && this._config.settings) || {})[field] || []).slice();
+    return ids.filter(id => id in scenarios);
+  }
+
+  // Scenario ids of a comfort profile, in the order of the scenarios
+  _profileScenarioIds(p, saved = false) {
+    const members = new Set(this._profileIds(p, saved));
+    const other = new Set(this._profileIds(p === "a" ? "b" : "a", saved));
+    return Object.keys((this._config && this._config.scenarios) || {})
+      .filter(id => members.has(id) && (p === "b" || !other.has(id)));
+  }
+
+  // Scenarios in neither profile (no setpoints)
+  _profileFreeIds(saved = false) {
+    const used = new Set([...this._profileScenarioIds("a", saved), ...this._profileScenarioIds("b", saved)]);
+    return Object.keys((this._config && this._config.scenarios) || {}).filter(id => !used.has(id));
+  }
+
+  _scenarioNames(ids) {
+    const scenarios = (this._config && this._config.scenarios) || {};
+    return ids.map(id => (scenarios[id] && scenarios[id].name) || id).join(", ");
+  }
+
+  _profileScenarioNames(p, saved = false) {
+    return this._scenarioNames(this._profileScenarioIds(p, saved));
+  }
+
+  // Global setpoints of a comfort profile: the form values (draft) or, with
+  // saved = true, the stored ones
+  _profileValues(p, saved = false) {
+    const s = (this._config && this._config.settings) || {};
+    const sfx = p === "b" ? "_b" : "";
+    const def = p === "b" ? [22, 24, 1] : [21, 23, 1];
+    const read = (name, d) => {
+      let raw = s[name];
+      if (!saved) {
+        const el = this.shadowRoot ? this.shadowRoot.querySelector(`[data-settings-field="${name}"]`) : null;
+        const draft = this._settingsDraft && this._settingsDraft[name];
+        if (el) raw = el.value;
+        else if (draft) raw = draft.value;
+      }
+      const v = parseFloat(raw);
+      return Number.isFinite(v) ? v : d;
+    };
+    return {
+      min: read("comfort_temp_min" + sfx, def[0]),
+      max: read("comfort_temp_max" + sfx, def[1]),
+      h: read("comfort_hysteresis" + sfx, def[2]),
+    };
+  }
+
+  // Hidden fields holding the scenarios of both profiles, and the line
+  // listing the scenarios without profile
+  _renderProfileFields() {
+    const saved = !this._settingsDraft;
+    return ["a", "b"].map(p => {
+      const v = this._esc(this._profileScenarioIds(p, saved).join(","));
+      const init = this._esc(this._profileScenarioIds(p, true).join(","));
+      return `<input type="hidden" data-settings-field="profile_${p}_scenarios" value="${v}" data-initial="${init}">`;
+    }).join("");
+  }
+
+  _renderProfileFree() {
+    return `<div class="settings-hint profile-free" data-profile-free></div>`;
+  }
+
+  // Help box written with a light markup: blank line = new block, "- " =
+  // bullet, **text** = bold.
+  _renderRichHint(key) {
+    const inline = (t) => this._esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    const blocks = this._t(key).split(/\n\s*\n/).map(block => {
+      const lines = block.split("\n");
+      let html = "", items = [];
+      const flush = () => { if (items.length) { html += `<ul>${items.map(i => `<li>${inline(i)}</li>`).join("")}</ul>`; items = []; } };
+      for (const line of lines) {
+        if (line.startsWith("- ")) items.push(line.slice(2));
+        else { flush(); html += `<p>${inline(line)}</p>`; }
+      }
+      flush();
+      return html;
+    });
+    return `<div class="settings-hint-intro rich-hint">${blocks.join("")}</div>`;
+  }
+
+  // Scenario chips of a profile column. In the sensors tab a click moves the
+  // scenario to the other profile; elsewhere they are read-only.
+  _renderProfileChips(p, editable) {
+    const scenarios = (this._config && this._config.scenarios) || {};
+    const members = new Set(this._profileScenarioIds(p));
+    const chips = Object.entries(scenarios).map(([id, sc]) => {
+      const member = members.has(id);
+      if (!editable && !member) return "";
+      const tag = editable ? "button" : "span";
+      const act = editable ? ` type="button" data-action="profile-scenario" data-profile="${p}" data-scenario="${this._esc(id)}"` : "";
+      return `<${tag} class="ms-item${member ? " selected" : ""}"${act}>${this._esc(sc.name || id)}</${tag}>`;
+    }).join("");
+    return `<div class="multi-select profile-chips" data-profile-chips="${p}" data-editable="${editable ? "1" : "0"}">${chips}</div>`;
+  }
+
+  // Greys out the column of a profile without scenario and refreshes the chips
+  _refreshProfiles() {
+    const root = this.shadowRoot;
+    if (!root) return;
+    root.querySelectorAll("[data-profile-chips]").forEach(box => {
+      const html = this._renderProfileChips(box.dataset.profileChips, box.dataset.editable === "1");
+      const tmp = document.createElement("div");
+      tmp.innerHTML = html;
+      const fresh = tmp.firstElementChild.innerHTML;
+      if (box.innerHTML !== fresh) box.innerHTML = fresh;
+    });
+    const free = this._scenarioNames(this._profileFreeIds());
+    root.querySelectorAll("[data-profile-free]").forEach(el => {
+      el.hidden = !free;
+      el.textContent = free ? this._t("profile_free").replace("{list}", free) : "";
+    });
+    root.querySelectorAll(".profile-col[data-profile]").forEach(col => {
+      const used = this._profileScenarioIds(col.dataset.profile).length > 0;
+      col.classList.toggle("profile-off", !used);
+      col.querySelectorAll(".profile-fields input, .profile-fields select").forEach(el => {
+        if (!used) {
+          if (!el.disabled) { el.disabled = true; el.dataset.profileDisabled = "1"; }
+        } else if (el.dataset.profileDisabled) {
+          el.disabled = false;
+          delete el.dataset.profileDisabled;
+        }
+      });
+    });
+  }
+
+  // Click on a scenario chip: adds the scenario to this profile (it leaves
+  // the other one) or removes it (the scenario then has no setpoints)
+  _onProfileScenario(el) {
+    const root = this.shadowRoot;
+    const p = el.dataset.profile, other = p === "a" ? "b" : "a", id = el.dataset.scenario;
+    const own = root.querySelector(`[data-settings-field="profile_${p}_scenarios"]`);
+    const oth = root.querySelector(`[data-settings-field="profile_${other}_scenarios"]`);
+    if (!own || !oth) return;
+    const mine = this._profileScenarioIds(p), theirs = this._profileScenarioIds(other);
+    // Lists kept in the order of the scenarios, like the stored value, so
+    // undoing a change does not leave the form marked as modified
+    const order = Object.keys((this._config && this._config.scenarios) || {});
+    if (mine.includes(id)) {
+      own.value = mine.filter(x => x !== id).join(",");
+    } else {
+      own.value = order.filter(x => x === id || mine.includes(x)).join(",");
+      oth.value = theirs.filter(x => x !== id).join(",");
+    }
+    this._refreshDeps();
+  }
+
   _optBox({ dep = null, mode = "checked", global = null, title = "", head = "", body = "", offNote = "", cls = "", value = null, force = false } = {}) {
     const depAttrs = dep
       ? ` data-dep="${this._esc(dep)}" data-dep-mode="${mode}"${global == null ? "" : ` data-dep-global="${global ? "1" : "0"}"`}`
@@ -5445,6 +5735,7 @@ class CoverAutomaticPanel extends HTMLElement {
   _refreshDeps() {
     const root = this.shadowRoot;
     if (!root) return;
+    this._refreshProfiles();
     this._refreshSunExplain();
     this._refreshHystExplains();
     this._refreshEntityDriven();
@@ -5452,7 +5743,12 @@ class CoverAutomaticPanel extends HTMLElement {
       let ctl = null;
       try { ctl = root.querySelector(box.dataset.dep); } catch (e) { ctl = null; }
       let on = !!ctl && !ctl.disabled;
-      if (on) {
+      if (box.dataset.depMode === "anyequals") {
+        // On when one of the matching controls has the value
+        let ctls = [];
+        try { ctls = Array.from(root.querySelectorAll(box.dataset.dep)); } catch (e) { ctls = []; }
+        on = ctls.some(c => c.value === box.dataset.depValue);
+      } else if (on) {
         const mode = box.dataset.depMode || "checked";
         if (mode === "checked") on = !!ctl.checked;
         else if (mode === "unchecked") on = !ctl.checked;
@@ -5542,12 +5838,9 @@ class CoverAutomaticPanel extends HTMLElement {
       const st = id && this._hass && this._hass.states ? this._hass.states[id] : null;
       return (st && st.attributes.unit_of_measurement) || "";
     };
-    if (kind === "comfort") {
-      return {
-        a: this._effectiveThreshold(str("comfort_temp_min_entity"), num("comfort_temp_min", 21)),
-        b: this._effectiveThreshold(str("comfort_temp_max_entity"), num("comfort_temp_max", 25)),
-        h: num("comfort_hysteresis", 1),
-      };
+    if (kind === "comfort" || kind === "comfort_b") {
+      const v = this._profileValues(kind === "comfort_b" ? "b" : "a");
+      return { a: v.min, b: v.max, h: v.h };
     }
     if (kind === "rules") {
       // Real example taken from the rules when one uses the condition
@@ -5596,7 +5889,7 @@ class CoverAutomaticPanel extends HTMLElement {
         <ul>${lines.map(l => `<li>${this._esc(l)}</li>`).join("")}</ul></div>`;
     const intro = (key, map) => `<div class="settings-hint">${this._esc(tr(key, map))}</div>`;
     const w = this._t("hyst_with_values");
-    if (kind === "comfort") {
+    if (kind === "comfort" || kind === "comfort_b") {
       const { a, b, h } = v, ah = a + h, bh = b - h, deg = "°C";
       const rows = [[this._t("sun_below").replace("{t}", fmt(a)), this._t("hyst_cold")]];
       if (h > 0) rows.push([between(a, ah, deg), this._t("hyst_stay_cold")]);
@@ -5649,7 +5942,7 @@ class CoverAutomaticPanel extends HTMLElement {
     return Number.isFinite(v) ? Math.round(v * 10) / 10 : fallback;
   }
 
-  _renderSunExplain(cmin, cmax) {
+  _renderSunExplain(cmin, cmax, p = "a") {
     const t = (k) => this._esc(this._t(k));
     const sun = t("sun_explain_sun"), noSun = t("sun_explain_no_sun");
     const rows = [
@@ -5660,8 +5953,9 @@ class CoverAutomaticPanel extends HTMLElement {
       ["preemptive", "sun_explain_room_preemptive", t("sun_explain_sun_if_strong"), "sun_explain_eff_strong", this._t("sun_between").replace("{min}", cmin).replace("{max}", cmax)],
       ["hot", "sun_explain_room_hot", t("sun_explain_sun_always"), "sun_explain_eff_close", this._t("sun_above").replace("{t}", cmax)],
     ];
-    return `<details class="sun-explain"${this._sunExplainOpen ? " open" : ""}>
-      <summary data-action="sun-explain-toggle">${t("sun_explain_title")}</summary>
+    const key = "sun_" + p;
+    return `<details class="sun-explain" data-sun-explain="${p}"${this._explainOpen && this._explainOpen[key] ? " open" : ""}>
+      <summary data-action="explain-toggle" data-key="${key}">${t("sun_explain_title")}</summary>
       <div class="sun-explain-body">
         <div class="settings-hint">${t("sun_explain_intro")}</div>
         <table class="sun-explain-table">
@@ -5678,12 +5972,14 @@ class CoverAutomaticPanel extends HTMLElement {
 
   _refreshSunExplain() {
     const root = this.shadowRoot;
-    const table = root && root.querySelector(".sun-explain-table");
-    if (!table) return;
-    const heat = root.querySelector('[data-settings-field="sun_heating_ignore"]');
-    const mode = root.querySelector('[data-settings-field="sun_comfort_mode"]');
-    const on = new Set(["hot", heat && heat.checked ? "cold-on" : "cold-off", mode ? mode.value : ""]);
-    table.querySelectorAll("tr[data-sun-row]").forEach(tr => tr.classList.toggle("current", on.has(tr.dataset.sunRow)));
+    if (!root) return;
+    root.querySelectorAll("details[data-sun-explain]").forEach(d => {
+      const sfx = d.dataset.sunExplain === "b" ? "_b" : "";
+      const heat = root.querySelector(`[data-settings-field="sun_heating_ignore${sfx}"]`);
+      const mode = root.querySelector(`[data-settings-field="sun_comfort_mode${sfx}"]`);
+      const on = new Set(["hot", heat && heat.checked ? "cold-on" : "cold-off", mode ? mode.value : ""]);
+      d.querySelectorAll("tr[data-sun-row]").forEach(tr => tr.classList.toggle("current", on.has(tr.dataset.sunRow)));
+    });
   }
 
   // Behaviour of "Sun on facade" while the room is in its comfort range,
@@ -5701,15 +5997,20 @@ class CoverAutomaticPanel extends HTMLElement {
     };
   }
 
-  // Covers whose effective setting uses the sunshine sensor
+  // Covers whose effective setting uses the sunshine sensor: those with an
+  // indoor sensor, when a profile in use is set to "strong sunshine"
   _coversUsingRadiation() {
     const s = this._config.settings || {};
-    const gNeutral = s.sun_neutral_ignore !== false, gPre = s.preemptive_shading !== false;
-    return Object.values(this._config.covers || {}).filter(c => {
-      if (!(c.indoor_temp_sensor || s.indoor_temp_sensor)) return false;
-      const n = c.sun_neutral_ignore ?? gNeutral, p = c.preemptive_shading ?? gPre;
-      return n && p;
-    }).length;
+    const root = this.shadowRoot;
+    const preemptive = ["a", "b"].some(p => {
+      if (!this._profileScenarioIds(p).length) return false;
+      const sfx = p === "b" ? "_b" : "";
+      const el = root && root.querySelector(`[data-settings-field="sun_comfort_mode${sfx}"]`);
+      return el ? el.value === "preemptive"
+        : this._sunComfortMode(s["sun_neutral_ignore" + sfx] !== false, s["preemptive_shading" + sfx] !== false) === "preemptive";
+    });
+    if (!preemptive) return 0;
+    return Object.values(this._config.covers || {}).filter(c => c.indoor_temp_sensor || s.indoor_temp_sensor).length;
   }
 
   // Per-cover select: Global (follow settings) or one of the three modes
@@ -5813,52 +6114,19 @@ class CoverAutomaticPanel extends HTMLElement {
     room.push(indoor
       ? this._haEntityName(indoor) + (cover.indoor_temp_sensor ? "" : " (" + this._t("cover_sum_global") + ")")
       : this._t("cover_sum_no_indoor"));
-    const cmin = this._effectiveThreshold(cover.comfort_temp_min_entity || s.comfort_temp_min_entity,
-      cover.comfort_temp_min ?? s.comfort_temp_min ?? 21);
-    const cmax = this._effectiveThreshold(cover.comfort_temp_max_entity || s.comfort_temp_max_entity,
-      cover.comfort_temp_max ?? s.comfort_temp_max ?? 25);
-    room.push(cmin + " / " + cmax + " °C");
+    const band = (p) => {
+      const g = this._profileValues(p, true), sfx = p === "b" ? "_b" : "";
+      return p.toUpperCase() + " " + (cover["comfort_temp_min" + sfx] ?? g.min) + " / " + (cover["comfort_temp_max" + sfx] ?? g.max);
+    };
+    room.push(band("a") + " · " + band("b") + " °C");
     if (cover.occupancy_sensor) room.push(this._haEntityName(cover.occupancy_sensor));
-
-    const heat = cover.sun_heating_ignore ?? (s.sun_heating_ignore !== false);
-    const mode = this._sunComfortMode(
-      cover.sun_neutral_ignore ?? (s.sun_neutral_ignore !== false),
-      cover.preemptive_shading ?? (s.preemptive_shading !== false));
-    const followsGlobal = cover.sun_heating_ignore == null && cover.sun_neutral_ignore == null && cover.preemptive_shading == null;
-    const sun = [
-      this._t(heat ? "cover_sum_sun_heat_on" : "cover_sum_sun_heat_off"),
-      this._t("cover_sum_sun_between").replace("{v}", this._t("cover_sum_mode_" + mode)),
-    ];
-    if (followsGlobal) sun.push(this._t("cover_sum_global"));
 
     return {
       base: base.join(sep),
       window: win.length ? win.join(sep) : this._t("cover_sum_no_window"),
       automation: auto.join(sep),
       room: room.join(sep),
-      sun: sun.join(sep),
     };
-  }
-
-  _renderCoverSunComfort(cover) {
-    const s = this._config.settings || {};
-    const gMode = this._sunComfortMode(s.sun_neutral_ignore !== false, s.preemptive_shading !== false);
-    const own = (cover.sun_neutral_ignore == null && cover.preemptive_shading == null)
-      ? ""
-      : this._sunComfortMode(
-        cover.sun_neutral_ignore ?? (s.sun_neutral_ignore !== false),
-        cover.preemptive_shading ?? (s.preemptive_shading !== false));
-    const opt = (value, label) => `<option value="${value}"${own === value ? " selected" : ""}>${this._esc(label)}</option>`;
-    return `<div class="form-group">
-      <label>${this._L("sun_comfort_label")}</label>
-      <select data-action="cover-sun-comfort" data-id="${this._esc(cover.entity_id)}" data-field="sun_comfort_mode">
-        ${opt("", this._t("tristate_global").replace("{value}", this._t("sun_comfort_" + gMode)))}
-        ${opt("position", this._t("sun_comfort_position"))}
-        ${opt("ignore", this._t("sun_comfort_ignore"))}
-        ${opt("preemptive", this._t("sun_comfort_preemptive"))}
-      </select>
-      ${this._hint("sun_comfort_hint")}
-    </div>`;
   }
 
   // Select "Global (value) / On / Off" for a nullable per-cover flag
@@ -6171,9 +6439,9 @@ class CoverAutomaticPanel extends HTMLElement {
     const scenarios = Object.values(this._config.scenarios || {}).map(sc => [sc.id, sc.name]);
     const filtering = Object.values(f).some(Boolean);
     return `<div class="log-cover-filter rule-filter-bar">
+      ${select("scenario", "rule_filter_all_scenarios", scenarios)}
       ${select("facade", "rule_filter_all_facades", facades)}
       ${select("cover", "log_filter_all_covers", covers)}
-      ${select("scenario", "rule_filter_all_scenarios", scenarios)}
       ${filtering ? `<button class="btn btn-sm" data-action="rule-filter-clear">${this._esc(this._t("rule_filter_clear"))}</button>
       <span class="rule-filter-count">${shown} / ${total}</span>` : ""}
     </div>`;
@@ -6235,6 +6503,7 @@ class CoverAutomaticPanel extends HTMLElement {
       if (r.safety) {
         html += `<span class="rule-safety-badge" title="${this._esc(this._t("rule_safety"))}">${this._lucideIcon("shield", 12)}${this._esc(this._t("rule_safety_badge"))}</span>`;
       }
+      html += this._renderRuleScenarios(r);
       html += '</div>';
       html += '<div class="rule-meta">';
       // Real priority, also in a filtered list
@@ -6302,70 +6571,85 @@ class CoverAutomaticPanel extends HTMLElement {
     return html;
   }
 
+  // Scenarios a rule applies to, shown after its name. A scenario where the
+  // rule is switched off (Scenarios tab) is struck through.
+  _renderRuleScenarios(rule) {
+    const scenarios = (this._config && this._config.scenarios) || {};
+    const ids = Object.keys(scenarios);
+    const member = rule.scenario_ids == null ? ids : ids.filter(id => rule.scenario_ids.includes(id));
+    if (!member.length) {
+      return `<span class="rule-scen rule-scen-none">${this._esc(this._t("rule_scen_none"))}</span>`;
+    }
+    const off = (id) => (scenarios[id].rules_disabled || []).includes(rule.id);
+    if (member.length === ids.length && !member.some(off)) {
+      return `<span class="rule-scen">${this._esc(this._t("rule_filter_all_scenarios"))}</span>`;
+    }
+    return member.map(id => off(id)
+      ? `<span class="rule-scen rule-scen-off" title="${this._esc(this._t("rule_scen_off"))}">${this._esc(scenarios[id].name || id)}</span>`
+      : `<span class="rule-scen">${this._esc(scenarios[id].name || id)}</span>`).join("");
+  }
+
   _renderRuleEditor(rule) {
     const facades = this._config.facades || {};
     const covers = this._config.covers || {};
 
     let html = '';
 
-    // Scenarios this rule belongs to (null = all scenarios)
+    const rid = this._esc(rule.id);
+    const hasTilt = this._ruleUsesTilt(rule.facade_ids || [], rule.cover_ids || [])
+      || rule.target_tilt_position != null;
+
+    // Name, target position and tilt on one line. The tilt only shows when a
+    // cover of the rule can tilt its slats (or a tilt is already set).
+    html += `<div class="form-group rule-top-row${hasTilt ? "" : " no-tilt"}" data-rule-top="${rid}">
+      <span class="rule-inline-label">${this._t("name")}</span>
+      <input type="text" class="rule-name-input" value="${this._esc(rule.name)}" data-action="rule-field" data-id="${rid}" data-field="name" maxlength="100" aria-label="${this._esc(this._t("name"))}">
+      <span class="rule-top-field">
+        <span class="rule-top-label">${this._t("rule_target_pos")}${this._hintToggle(rule.id, "rule_target_pos_hint")}</span>
+        <input type="number" min="0" max="100" value="${this._num(rule.target_position)}" data-action="rule-field" data-id="${rid}" data-field="target_position" aria-label="${this._esc(this._t("rule_target_pos"))}">
+      </span>
+      <span class="rule-top-field rule-tilt-group"${hasTilt ? "" : " hidden"}>
+        <span class="rule-top-label">${this._t("rule_target_tilt")}</span>
+        <input type="number" min="0" max="100" value="${this._num(rule.target_tilt_position, "")}" placeholder="${this._t("none")}" data-action="rule-field" data-id="${rid}" data-field="target_tilt_position" aria-label="${this._esc(this._t("rule_target_tilt"))}">
+      </span>
+      ${this._hintPanel(rule.id, "rule_target_pos_hint")}
+    </div>`;
+
+    // Scenarios (null = all) and safety switch on one line
     const scenarios = Object.values(this._config.scenarios || {});
-    html += `<div class="form-group">
-      <label>${this._t("rule_scenarios")}</label>
-      <div class="multi-select">`;
-    for (const sc of scenarios) {
-      const member = !Array.isArray(rule.scenario_ids) || rule.scenario_ids.includes(sc.id);
-      html += `<button class="ms-item${member ? " selected" : ""}" data-action="rule-scenario-toggle" data-rule="${this._esc(rule.id)}" data-scenario="${this._esc(sc.id)}">${this._esc(sc.name)}</button>`;
-    }
-    html += `</div>
-      ${this._hint("rule_scenarios_hint")}
+    html += `<div class="rule-inline-row">
+      <span class="rule-inline-label">${this._t("rule_scenarios")}${this._hintToggle(rule.id, "rule_scenarios_hint")}</span>
+      <div class="multi-select">${scenarios.map(sc => {
+        const member = !Array.isArray(rule.scenario_ids) || rule.scenario_ids.includes(sc.id);
+        return `<button class="ms-item${member ? " selected" : ""}" data-action="rule-scenario-toggle" data-rule="${rid}" data-scenario="${this._esc(sc.id)}">${this._esc(sc.name)}</button>`;
+      }).join("")}</div>
+      <div class="rule-safety-inline">
+        <span>${this._t("rule_safety")}${this._hintToggle(rule.id, "rule_safety_hint")}</span>
+        <label class="toggle">
+          <input type="checkbox" ${rule.safety ? "checked" : ""} data-action="rule-field" data-id="${rid}" data-field="safety">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      ${this._hintPanel(rule.id, "rule_scenarios_hint")}
+      ${this._hintPanel(rule.id, "rule_safety_hint")}
     </div>`;
 
-    // Safety rule (overrides pause, manual mode, wind protection, master switch)
-    html += `<div class="form-group rule-safety-group">
-      ${this._renderToggle("rule_safety", !!rule.safety, "rule-field", rule.id, "safety")}
-      ${this._hint("rule_safety_hint")}
+    // Facades and covers the rule applies to
+    html += `<div class="rule-inline-row">
+      <span class="rule-inline-label">${this._t("rule_facades")}${this._hintToggle(rule.id, "rule_assignment_hint")}</span>
+      <div class="multi-select">${Object.values(facades).map(f => {
+        const sel = (rule.facade_ids || []).includes(f.id) ? " selected" : "";
+        return `<button class="ms-item${sel}" data-action="rule-facade-toggle" data-rule="${rid}" data-facade="${this._esc(f.id)}">${this._esc(f.name)}</button>`;
+      }).join("")}</div>
+      ${this._hintPanel(rule.id, "rule_assignment_hint")}
     </div>`;
-
-    // Name
-    html += `<div class="form-group">
-      <label>${this._t("name")}</label>
-      <input type="text" value="${this._esc(rule.name)}" data-action="rule-field" data-id="${this._esc(rule.id)}" data-field="name" maxlength="100">
+    html += `<div class="rule-inline-row">
+      <span class="rule-inline-label">${this._t("rule_covers")}</span>
+      <div class="multi-select">${Object.values(covers).map(c => {
+        const sel = (rule.cover_ids || []).includes(c.entity_id) ? " selected" : "";
+        return `<button class="ms-item${sel}" data-action="rule-cover-toggle" data-rule="${rid}" data-cover="${this._esc(c.entity_id)}">${this._esc(c.name)}</button>`;
+      }).join("")}</div>
     </div>`;
-
-    // Target position + tilt
-    html += '<div class="form-row">';
-    html += `<div class="form-group">
-      <label>${this._t("rule_target_pos")}</label>
-      <input type="number" min="0" max="100" value="${this._num(rule.target_position)}" data-action="rule-field" data-id="${this._esc(rule.id)}" data-field="target_position">
-      ${this._hint("rule_target_pos_hint")}
-    </div>`;
-    html += `<div class="form-group">
-      <label>${this._t("rule_target_tilt")}</label>
-      <input type="number" min="0" max="100" value="${this._num(rule.target_tilt_position, "")}" placeholder="${this._t("none")}" data-action="rule-field" data-id="${this._esc(rule.id)}" data-field="target_tilt_position">
-    </div>`;
-    html += '</div>';
-
-    // Facades multi-select
-    html += `<div class="form-group">
-      <label>${this._t("rule_facades")}</label>
-      <div class="multi-select">`;
-    for (const f of Object.values(facades)) {
-      const sel = (rule.facade_ids || []).includes(f.id) ? " selected" : "";
-      html += `<button class="ms-item${sel}" data-action="rule-facade-toggle" data-rule="${this._esc(rule.id)}" data-facade="${this._esc(f.id)}">${this._esc(f.name)}</button>`;
-    }
-    html += '</div></div>';
-
-    // Covers multi-select
-    html += `<div class="form-group">
-      <label>${this._t("rule_covers")}</label>
-      <div class="multi-select">`;
-    for (const c of Object.values(covers)) {
-      const sel = (rule.cover_ids || []).includes(c.entity_id) ? " selected" : "";
-      html += `<button class="ms-item${sel}" data-action="rule-cover-toggle" data-rule="${this._esc(rule.id)}" data-cover="${this._esc(c.entity_id)}">${this._esc(c.name)}</button>`;
-    }
-    html += '</div></div>';
-    html += this._hint("rule_assignment_hint");
 
     // Conditions, organised in groups
     const condCount = (rule.conditions || []).length;
@@ -6429,10 +6713,10 @@ class CoverAutomaticPanel extends HTMLElement {
     const conds = rule.conditions || [];
     let html = "";
     if (n === 1) {
-      html += `<div class="form-group">
-        <label>${this._t("rule_operator")}</label>
-        ${this._opSelect(`data-action="rule-group-op" data-rule="${rid}" data-group="0"`, ops[0])}
-        ${this._hint("rule_operator_hint")}
+      html += `<div class="rule-inline-row">
+        <span class="rule-inline-label rule-inline-label-auto">${this._t("rule_operator")}${this._hintToggle(rule.id, "rule_operator_hint")}</span>
+        <div class="rule-inline-select">${this._opSelect(`data-action="rule-group-op" data-rule="${rid}" data-group="0"`, ops[0])}</div>
+        ${this._hintPanel(rule.id, "rule_operator_hint")}
       </div>`;
       if (conds.length > 0) {
         for (const [i] of conds.entries()) html += this._renderConditionCard(rule, i, 1);
@@ -6441,10 +6725,10 @@ class CoverAutomaticPanel extends HTMLElement {
       }
       html += this._renderConditionAdd(rule, 0);
     } else {
-      html += `<div class="form-group">
-        <label>${this._t("rule_groups_operator")}</label>
-        ${this._opSelect(`data-action="rule-field" data-id="${rid}" data-field="condition_operator"`, between)}
-        ${this._hint("rule_groups_hint")}
+      html += `<div class="rule-inline-row">
+        <span class="rule-inline-label rule-inline-label-auto">${this._t("rule_groups_operator")}${this._hintToggle(rule.id, "rule_groups_hint")}</span>
+        <div class="rule-inline-select">${this._opSelect(`data-action="rule-field" data-id="${rid}" data-field="condition_operator"`, between)}</div>
+        ${this._hintPanel(rule.id, "rule_groups_hint")}
       </div>`;
       for (let g = 0; g < n; g++) {
         if (g > 0) html += `<div class="cond-group-sep" data-group-sep="${rid}">${this._t(between === "or" ? "rule_op_short_or" : "rule_op_short_and")}</div>`;
@@ -6469,8 +6753,10 @@ class CoverAutomaticPanel extends HTMLElement {
       }
     }
     if (n < MAX_CONDITION_GROUPS) {
-      html += `<button class="btn btn-secondary btn-sm cond-group-add" data-action="rule-group-add" data-rule="${rid}">+ ${this._t("rule_group_add")}</button>
-        ${n === 1 ? this._hint("rule_group_add_hint") : ""}`;
+      html += `<div class="rule-inline-row cond-group-add-row">
+        <button class="btn btn-secondary btn-sm cond-group-add" data-action="rule-group-add" data-rule="${rid}">+ ${this._t("rule_group_add")}</button>
+        ${n === 1 ? this._hintToggle(rule.id, "rule_group_add_hint") + this._hintPanel(rule.id, "rule_group_add_hint") : ""}
+      </div>`;
     }
     return html;
   }
@@ -7835,24 +8121,37 @@ class CoverAutomaticPanel extends HTMLElement {
             ${hint(this._t("settings_indoor_temp_hint"))}
           </div>`,
           body: `${hintIntro(this._t("settings_comfort_hint"))}
-          <div class="form-row">
-            <div class="form-group">
-              <label>${this._L("settings_comfort_min")}</label>
-              <input type="number" step="0.5" value="${this._num(s.comfort_temp_min, 21)}" data-settings-field="comfort_temp_min">
-              ${this._renderThresholdEntity('data-settings-field="comfort_temp_min_entity"', s.comfort_temp_min_entity, "temperature")}
-            </div>
-            <div class="form-group">
-              <label>${this._L("settings_comfort_max")}</label>
-              <input type="number" step="0.5" value="${this._num(s.comfort_temp_max, 25)}" data-settings-field="comfort_temp_max">
-              ${this._renderThresholdEntity('data-settings-field="comfort_temp_max_entity"', s.comfort_temp_max_entity, "temperature")}
-            </div>
-          </div>
-          <div class="form-group">
-            <label>${this._L("settings_comfort_hysteresis")}</label>
-            <input type="number" step="0.1" min="0.1" max="5" value="${this._num(s.comfort_hysteresis, 1)}" data-settings-field="comfort_hysteresis">
-            ${hint(this._t("settings_comfort_hysteresis_hint"))}
-          </div>
-          ${this._renderHystExplain("comfort")}
+          ${hintIntro(this._esc(this._t("profile_intro")))}
+          ${this._renderProfileFields()}
+          <div class="profile-grid">${["a", "b"].map(p => {
+            const sfx = p === "b" ? "_b" : "";
+            const def = p === "b" ? [22, 24] : [21, 23];
+            return `<div class="profile-col" data-profile="${p}">
+              <div class="profile-col-title">${this._esc(this._t("profile_title").replace("{p}", p.toUpperCase()))}</div>
+              <label>${this._esc(this._t("profile_scenarios"))}</label>
+              ${this._renderProfileChips(p, true)}
+              <div class="profile-off-note">${this._esc(this._t("profile_off_note"))}</div>
+              <div class="profile-fields">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>${this._L("settings_comfort_min")}</label>
+                    <input type="number" step="0.5" value="${this._num(s["comfort_temp_min" + sfx], def[0])}" data-settings-field="comfort_temp_min${sfx}">
+                  </div>
+                  <div class="form-group">
+                    <label>${this._L("settings_comfort_max")}</label>
+                    <input type="number" step="0.5" value="${this._num(s["comfort_temp_max" + sfx], def[1])}" data-settings-field="comfort_temp_max${sfx}">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>${this._L("settings_comfort_hysteresis")}</label>
+                  <input type="number" step="0.1" min="0.1" max="5" value="${this._num(s["comfort_hysteresis" + sfx], 1)}" data-settings-field="comfort_hysteresis${sfx}">
+                  ${hint(this._t("settings_comfort_hysteresis_hint"))}
+                </div>
+                ${this._renderHystExplain(p === "b" ? "comfort_b" : "comfort")}
+              </div>
+            </div>`;
+          }).join("")}</div>
+          ${this._renderProfileFree()}
           <div class="form-group" style="margin-top:16px">
             <label>${this._t("settings_temp_color")}</label>
             <input type="hidden" data-settings-field="temp_color_mode" value="${s.temp_color_thermometer === true ? "thermometer" : "action"}" data-initial="${s.temp_color_thermometer === true ? "thermometer" : "action"}">
@@ -7938,21 +8237,11 @@ class CoverAutomaticPanel extends HTMLElement {
     </div>`;
     }
 
-    // Solar cards (shown in the comfort & sun tab)
+    // Sun exposure tab: the behaviour of "Sun on facade" per comfort profile
     if (active === "comfort") {
-      const mode = this._sunComfortMode(s.sun_neutral_ignore !== false, s.preemptive_shading !== false);
-      // Values actually used by the engine: a readable entity wins over the number
-      const cmin = this._effectiveThreshold(s.comfort_temp_min_entity, this._num(s.comfort_temp_min, 21));
-      const cmax = this._effectiveThreshold(s.comfort_temp_max_entity, this._num(s.comfort_temp_max, 25));
-      const radio = (value) => `<label class="radio-row">
-          <input type="radio" name="sun_comfort_mode" value="${value}" data-settings-radio="sun_comfort_mode" ${mode === value ? "checked" : ""}>
-          <span><b>${this._esc(this._t("sun_comfort_" + value))}</b><br><span class="radio-hint">${this._esc(this._t("sun_comfort_" + value + "_hint"))}</span></span>
-        </label>`;
       const used = this._coversUsingRadiation();
       const solarSt = s.solar_sensor && this._hass?.states ? this._hass.states[s.solar_sensor] : null;
       const solarUnit = (solarSt && solarSt.attributes.unit_of_measurement) || "";
-      // Sunshine sensor, nested under the option that uses it. Enabled when
-      // the global choice is "strong sunshine" or a cover uses it on its own.
       const solarInner = this._optBox({
           cls: "opt-box-flat",
           dep: '[data-settings-field="solar_sensor"]', mode: "value",
@@ -7982,38 +8271,57 @@ class CoverAutomaticPanel extends HTMLElement {
           ${this._renderHystExplain("solar")}`,
         });
       const solarBox = this._optBox({
-        cls: "opt-box-nested",
         title: this._t("settings_section_solar"),
-        dep: '[data-settings-field="sun_comfort_mode"]', mode: "equals", value: "preemptive", force: used > 0,
+        dep: '[data-settings-field^="sun_comfort_mode"]', mode: "anyequals", value: "preemptive", force: used > 0,
         offNote: this._t("settings_solar_nested_off"),
         body: solarInner,
       });
+      const column = (p) => {
+        const sfx = p === "b" ? "_b" : "";
+        const v = this._profileValues(p, !this._settingsDraft);
+        const cmin = v.min, cmax = v.max;
+        const mode = this._sunComfortMode(s["sun_neutral_ignore" + sfx] !== false, s["preemptive_shading" + sfx] !== false);
+        const radio = (value) => `<label class="radio-row">
+          <input type="radio" name="sun_comfort_mode${sfx}" value="${value}" data-settings-radio="sun_comfort_mode${sfx}" ${mode === value ? "checked" : ""}>
+          <span><b>${this._esc(this._t("sun_comfort_" + value))}</b><br><span class="radio-hint">${this._esc(this._t("sun_comfort_" + value + "_hint"))}</span></span>
+        </label>`;
+        return `<div class="profile-col" data-profile="${p}">
+          <div class="profile-col-title">${this._esc(this._t("profile_title").replace("{p}", p.toUpperCase()))}</div>
+          ${this._renderProfileChips(p, false)}
+          <div class="settings-hint">${this._esc(this._t("profile_sun_scenarios_note"))}</div>
+          <div class="profile-off-note">${this._esc(this._t("profile_off_note"))}</div>
+          <div class="profile-fields">
+            <div class="settings-hint" style="margin:8px 0 10px"><b>${this._esc(this._t("profile_sun_reminder")
+              .replace("{name}", s.indoor_temp_sensor ? this._haEntityName(s.indoor_temp_sensor) : this._t("settings_indoor_none"))
+              .replace("{min}", cmin).replace("{max}", cmax))}</b></div>
+            <div class="form-group">
+              <label class="checkbox-row">
+                <input type="checkbox" data-settings-field="sun_heating_ignore${sfx}" ${s["sun_heating_ignore" + sfx] !== false ? "checked" : ""}>
+                <span>${this._L("sun_heating_label")} <span class="radio-hint">(${this._esc(this._t("sun_below").replace("{t}", cmin))})</span></span>
+              </label>
+              ${hint(this._esc(this._t("sun_heating_hint")))}
+            </div>
+            <div class="form-group">
+              <label>${this._L("sun_comfort_label")} <span class="radio-hint">(${this._esc(this._t("sun_between").replace("{min}", cmin).replace("{max}", cmax))})</span></label>
+              <input type="hidden" data-settings-field="sun_comfort_mode${sfx}" value="${mode}" data-initial="${mode}">
+              <div class="radio-group">${radio("position")}${radio("ignore")}${radio("preemptive")}</div>
+            </div>
+            <div class="settings-hint">${this._esc(this._t("sun_hot_note").replace("{t}", cmax))}</div>
+            ${this._renderSunExplain(cmin, cmax, p)}
+          </div>
+        </div>`;
+      };
       html += `<div class="card">
       <div class="card-header">${this._lucideIcon("sun", 18)} ${this._t("settings_section_comfort")}</div>
       <div class="card-body">
         <div class="opt-box">
         <div class="opt-box-title">${this._L("settings_sun_facade_title")}</div>
-        <div class="settings-hint" style="margin-bottom:10px"><b>${this._esc(this._t("settings_indoor_reminder")
-          .replace("{name}", s.indoor_temp_sensor ? this._haEntityName(s.indoor_temp_sensor) : this._t("settings_indoor_none"))
-          .replace("{min}", cmin).replace("{max}", cmax))}</b></div>
-        ${hintIntro(this._esc(this._t("settings_sun_facade_hint")))}
-        <div class="form-group">
-          <label class="checkbox-row">
-            <input type="checkbox" data-settings-field="sun_heating_ignore" ${s.sun_heating_ignore !== false ? "checked" : ""}>
-            <span>${this._L("sun_heating_label")} <span class="radio-hint">(${this._esc(this._t("sun_below").replace("{t}", cmin))})</span></span>
-          </label>
-          ${hint(this._esc(this._t("sun_heating_hint")))}
+        ${this._renderRichHint("settings_sun_facade_hint")}
+        ${this._renderProfileFields()}
+        <div class="profile-grid">${column("a")}${column("b")}</div>
+        ${this._renderProfileFree()}
         </div>
-        <div class="form-group">
-          <label>${this._L("sun_comfort_label")} <span class="radio-hint">(${this._esc(this._t("sun_between").replace("{min}", cmin).replace("{max}", cmax))})</span></label>
-          <input type="hidden" data-settings-field="sun_comfort_mode" value="${mode}" data-initial="${mode}">
-          <div class="radio-group">${radio("position")}${radio("ignore")}${radio("preemptive")}</div>
-          ${solarBox}
-        </div>
-        <div class="settings-hint">${this._esc(this._t("sun_hot_note").replace("{t}", cmax))}</div>
-        ${this._renderSunExplain(cmin, cmax)}
-        </div>
-
+        ${solarBox}
       </div>
     </div>`;
     }
@@ -8153,7 +8461,7 @@ class CoverAutomaticPanel extends HTMLElement {
     let html = '';
 
     // Filter buttons
-    const filters = [null, "position", "status", "rule", "wind"];
+    const filters = [null, "position", "status", "rule", "wind", "scenario"];
     html += '<div class="log-filter-bar">';
     for (const f of filters) {
       const active = this._logFilter === f ? " active" : "";
@@ -8196,7 +8504,8 @@ class CoverAutomaticPanel extends HTMLElement {
       const time = new Date(e.ts * 1000).toLocaleString(this._hass?.language || undefined);
       const typeLabel = this._t("log_type_" + e.type) || e.type;
       const coverName = e.entity_id ? this._getCoverName(e.entity_id) : "–";
-      const typeClass = e.type === "wind" ? "status-wind_protected" : e.type === "status" ? "status-paused" : "";
+      const typeClass = e.type === "wind" ? "status-wind_protected" : e.type === "status" ? "status-paused"
+        : e.type === "scenario" ? "status-manual" : "";
       html += '<tr>';
       html += '<td class="nowrap">' + this._esc(time) + '</td>';
       html += '<td><span class="status-badge ' + typeClass + '">' + this._esc(typeLabel) + '</span></td>';
@@ -8229,6 +8538,12 @@ class CoverAutomaticPanel extends HTMLElement {
       if (d.status) values.status = status(d.status);
     }
     if (Array.isArray(d.sensor)) values.sensor = d.sensor.join(", ");
+    if (key === "scenario_change") {
+      // Current names when the scenarios still exist, else the logged ones
+      const sc = this._config?.scenarios || {};
+      if (sc[d.from_id]) values.from = sc[d.from_id].name || d.from_id;
+      if (sc[d.to_id]) values.to = sc[d.to_id].name || d.to_id;
+    }
     if (key === "rule" || key === "safety_takeover" || key === "safety_release") {
       const rule = this._config?.rules?.[d.rule_id];
       values.rule = rule ? rule.name : (d.rule_name || d.rule_id || "");
@@ -8684,6 +8999,7 @@ class CoverAutomaticPanel extends HTMLElement {
         this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
         break;
       case "retry": this._loadConfig(); break;
+      case "profile-scenario": this._onProfileScenario(actionEl); break;
       case "explain-toggle": {
         const d = actionEl.closest("details");
         this._explainOpen = this._explainOpen || {};
@@ -8860,7 +9176,20 @@ class CoverAutomaticPanel extends HTMLElement {
       case "rule-cover-toggle":
         actionEl.classList.toggle("selected");
         this._syncRuleDraftFromDom();
+        if (action !== "rule-scenario-toggle") this._refreshRuleTilt(actionEl.dataset.rule);
         break;
+      case "hint-toggle": {
+        // Panel of the same row: shown or hidden, remembered across renders
+        const key = actionEl.dataset.hint;
+        this._openHints = this._openHints || new Set();
+        const panel = this.shadowRoot.querySelector(`[data-hint-panel="${CSS.escape(key)}"]`);
+        const open = !this._openHints.has(key);
+        if (open) this._openHints.add(key); else this._openHints.delete(key);
+        if (panel) panel.hidden = !open;
+        actionEl.classList.toggle("open", open);
+        actionEl.setAttribute("aria-expanded", open ? "true" : "false");
+        break;
+      }
       case "rule-add-start": this._addingRule = true; this._render(); break;
       case "rule-filter-clear":
         this._ruleFilter = { facade: "", cover: "", scenario: "" };
@@ -8936,15 +9265,6 @@ class CoverAutomaticPanel extends HTMLElement {
     // Cover select (dropdown) changes
     if (el.matches('[data-action="cover-select"]')) {
       this._debouncedCoverSave(el.dataset.id, el.dataset.field, el.value || null);
-      return;
-    }
-
-    // Cover comfort-range behaviour: two flags saved together
-    if (el.matches('[data-action="cover-sun-comfort"]')) {
-      const flags = el.value === ""
-        ? { sun_neutral_ignore: null, preemptive_shading: null }
-        : this._sunComfortFlags(el.value);
-      this._debouncedCoverSave(el.dataset.id, flags);
       return;
     }
 
@@ -9993,10 +10313,23 @@ class CoverAutomaticPanel extends HTMLElement {
         data[field] = String(d.value ?? "").trim() || null;
       }
     }
-    // Comfort-range behaviour: one choice stored as two flags
+    // Comfort-range behaviour: one choice stored as two flags (per profile)
     if (data.sun_comfort_mode !== undefined) {
       if (data.sun_comfort_mode) Object.assign(data, this._sunComfortFlags(data.sun_comfort_mode));
       delete data.sun_comfort_mode;
+    }
+    if (data.sun_comfort_mode_b !== undefined) {
+      if (data.sun_comfort_mode_b) {
+        const f = this._sunComfortFlags(data.sun_comfort_mode_b);
+        data.sun_neutral_ignore_b = f.sun_neutral_ignore;
+        data.preemptive_shading_b = f.preemptive_shading;
+      }
+      delete data.sun_comfort_mode_b;
+    }
+    // Scenarios of the comfort profiles: comma-separated in the form. Both
+    // lists are sent together so a scenario never ends up in both.
+    if ("profile_a_scenarios" in data || "profile_b_scenarios" in data) {
+      for (const p of ["a", "b"]) data["profile_" + p + "_scenarios"] = this._profileScenarioIds(p);
     }
     // Temperature colours: radio choice stored as one flag
     if (data.temp_color_mode !== undefined) {
@@ -10018,14 +10351,15 @@ class CoverAutomaticPanel extends HTMLElement {
       alert(label + this._colon() + this._t("input_not_integer"));
       return false;
     }
-    // Validate comfort range: the static numbers only (entities are resolved
-    // by the backend, the numbers stay the fallback)
+    // Validate the comfort range of each profile
     const cur = this._config.settings || {};
-    const cmin = data.comfort_temp_min ?? cur.comfort_temp_min;
-    const cmax = data.comfort_temp_max ?? cur.comfort_temp_max;
-    if (cmin != null && cmax != null && cmin >= cmax) {
-      alert(this._t("settings_validation_min_max"));
-      return false;
+    for (const sfx of ["", "_b"]) {
+      const cmin = data["comfort_temp_min" + sfx] ?? cur["comfort_temp_min" + sfx];
+      const cmax = data["comfort_temp_max" + sfx] ?? cur["comfort_temp_max" + sfx];
+      if (cmin != null && cmax != null && cmin >= cmax) {
+        alert(this._t("profile_title").replace("{p}", sfx ? "B" : "A") + this._colon() + this._t("settings_validation_min_max"));
+        return false;
+      }
     }
     try {
       const result = await this._ws("cover_automatic/settings/update", data);

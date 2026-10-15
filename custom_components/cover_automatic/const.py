@@ -36,6 +36,7 @@ LOG_EVENT_POSITION: Final = "position"
 LOG_EVENT_STATUS: Final = "status"
 LOG_EVENT_RULE: Final = "rule"
 LOG_EVENT_WIND: Final = "wind"
+LOG_EVENT_SCENARIO: Final = "scenario"
 
 # Panel push signal (dispatched when coordinator data changes). A dispatcher
 # signal instead of a bus event: bus events are written to the recorder

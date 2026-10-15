@@ -45,6 +45,7 @@ PLATFORMS_LIST: list[Platform] = [
     Platform.SWITCH,
     Platform.SENSOR,
     Platform.SELECT,
+    Platform.NUMBER,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

@@ -67,7 +67,7 @@ In no event shall the authors be liable for any claim, damages or other liabilit
 - **Inverted covers** – supported (100 % = closed)
 - **Dashboard card and sensors** – follow each cover (active rule, target position, pause end) and the
   covers that are paused, in manual mode or locked
-- **Activity log** – history of moves and status changes, filterable per cover
+- **Activity log** – history of moves, status and scenario changes, filterable per cover
 - **Backup / restore** – of the whole configuration, from the panel or with a service
 - **Fully graphical configuration** – everything is done in the Home Assistant interface, no YAML
 - **Hardware independent** – works with any `cover` entity (Somfy, Velux, Shelly, Zigbee, Z-Wave…)
@@ -88,7 +88,9 @@ V2 gathers all changes made since the original version 1.61.1.
   entered with a form or in YAML, validated live (see [below](#conditions-on-any-entity-home-assistant-conditions)).
 - **Condition groups and NOT**: for example (A OR B) AND (C OR D). A condition negated with NOT is never met
   while its sensor is unavailable, to avoid an unwanted move.
-- **Scenarios per rule**: each rule selects the scenarios it applies in.
+- **Scenarios per rule**: each rule selects the scenarios it applies in; they are shown after its name in the rules list.
+- **Compact rule editor**: labels beside the fields, foldable ⓘ help, tilt field shown only when a cover of the rule can
+  tilt its slats.
 - **Dawn and dusk** (civil twilight), with an offset in minutes. The pairs "after sunrise / before sunset"
   and "after dawn / before dusk" are complementary: no gap and no overlap, even with offsets.
 - **Outdoor air compared to the room**: "outdoor air cooler / warmer than the room", with a minimum difference.
@@ -114,10 +116,11 @@ V2 gathers all changes made since the original version 1.61.1.
 
 ### Settings
 - Configurable **wind protection position** (instead of always opening fully).
-- **Thresholds driven by an entity**: temperature setpoints and the sunshine threshold can follow an entity
-  (`input_number`, sensor…), with the typed value as fallback.
-- Configurable **"sun on the facade" behaviour**, globally then per cover (cold room, room within the
-  comfort range, strong sunshine).
+- **Comfort profiles A and B**: each scenario uses profile A, profile B or none, for example one profile for summer
+  and one for winter. Each profile has its own cold / hot setpoints, hysteresis and "sun on the facade" behaviour
+  (room too cold, mild, strong sunshine). The setpoints and hysteresis of each profile are also `number` entities,
+  and each cover can have its own for A and for B.
+- **Sunshine threshold driven by an entity** (`input_number`, sensor…), with the typed value as fallback.
 - **Temperature colours** of your choice: by action needed or like a thermometer.
 - Settings reorganised (House, Sensors, Sun exposure, Wind, Automation, Backup) with
   "How does it work?" blocks and options greyed out when they have no effect.
@@ -133,10 +136,10 @@ V2 gathers all changes made since the original version 1.61.1.
 - Devices and entities are created and removed automatically when a cover or a facade is added or removed.
 
 ### Interface
-- **Cover sheet** in collapsible sections: General, Window, Room, Sun exposure, Automation.
+- **Cover sheet** in collapsible sections: General, Window, Room, Automation.
 - **Rule editor**: collapsible conditions, draft kept, warning before losing unsaved changes.
 - **Scenarios tab**: rules listed by priority, disabled rules greyed out, "Safety" badge.
-- **Log** filterable per cover, with a button on the cover sheet.
+- **Log** filterable per cover and per type (scenario changes included), with a button on the cover sheet.
 - **Mobile**: cover sheet header reachable below the notch, short labels, scroll position and input kept.
 
 ### Reliability and safety
@@ -192,7 +195,7 @@ Click a thumbnail to enlarge it. *(The screenshots come from a French installati
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/log-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/log-desktop.png" alt="Log" /></a>
-      <p align="center"><sub><b>Log</b> – moves and status changes</sub></p>
+      <p align="center"><sub><b>Log</b> – moves, status and scenario changes</sub></p>
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/cover-editor.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/cover-editor.png" alt="Cover sheet" /></a>
@@ -202,7 +205,7 @@ Click a thumbnail to enlarge it. *(The screenshots come from a French installati
   <tr>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/rules-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/rules-desktop.png" alt="Rules" /></a>
-      <p align="center"><sub><b>Rules</b> – filter, priorities, Safety badge, conditions</sub></p>
+      <p align="center"><sub><b>Rules</b> – filters, priorities, scenarios, Safety badge, conditions</sub></p>
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/settings-sun.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/settings-sun.png" alt="Settings – Sun exposure" /></a>
@@ -304,13 +307,13 @@ The [wiki](https://github.com/slemeur91/CoverAutomatic/wiki) (in French) describ
    start / end are prefilled with the widest sun window of the chosen direction (90° on each side, house rotation
    applied, without the sector the sun never reaches at your latitude) and stay editable
 3. **Rules** – create the automation rules from conditions (sun, temperature, time, weather, entities…).
-   The list can be filtered by facade, cover and scenario.
+   The list can be filtered by scenario, facade and cover.
    Conditions can be negated (NOT) and organised in groups, for example (A OR B) AND (C OR D);
    an existing rule can be duplicated as a starting point
 4. **Scenarios** – define modes such as "Everyday", "Summer", "Holiday". Each rule selects its scenarios
    (all by default); within a scenario, a rule can also be temporarily disabled
 5. **Settings** – sensors, temperature setpoints, sun exposure, wind protection, backup…
-6. **Log** – history of moves and status changes, filterable per cover and per type
+6. **Log** – history of moves, status and scenario changes, filterable per cover and per type
 
 ### Cover sheet
 
@@ -321,8 +324,7 @@ uses the default value from the **Settings**.
 |---------|---------|
 | **General** | Automation enabled, facade, invert the open/close direction, inverted tilt |
 | **Window** | *Open window*: sensor, **keep the current position** or move to the lock position (and its tilt). *Tilted window*: sensor, venting position (and its tilt) |
-| **Room** | Indoor temperature sensor and cold / warm setpoints (number or entity), occupancy sensor and "room occupied" states |
-| **Sun exposure** | "Sun on the facade" settings specific to this cover (or the global setting) |
+| **Room** | Indoor temperature sensor; own cold / hot setpoints and hysteresis for profile A and for profile B; occupancy sensor and "room occupied" states |
 | **Automation** | Pause duration, resume when the position matches the rule, minimum position change, minimum delay between changes, **cover travel time** (entered or measured) |
 
 The "Show this cover's log" button opens the log filtered on this cover.
@@ -332,14 +334,15 @@ The "Show this cover's log" button opens the log filtered on this cover.
 | Tab | Content |
 |-----|---------|
 | **House** | House rotation, with compass (south at the top; position of the sun, sunshine sector in the colours of the four house sides, with their azimuths in a legend); choice to rotate the existing facades or not when the rotation changes |
-| **Sensors** | Global indoor temperature sensor and cold / warm setpoints with their hysteresis; outdoor temperature sensor and hysteresis used by the rules; weather; workday |
-| **Sun exposure** | Behaviour of "Sun on the facade" depending on the room temperature; sunshine sensor, strong-sunshine threshold and hysteresis |
+| **Sensors** | Global indoor temperature sensor; profiles A and B (scenarios of each profile, cold / hot setpoints and hysteresis), in two columns; outdoor temperature sensor and hysteresis used by the rules; weather; workday |
+| **Sun exposure** | Behaviour of "Sun on the facade" depending on the room temperature, for each profile (two columns); sunshine sensor, strong-sunshine threshold and hysteresis |
 | **Wind protection** | Wind sensor, threshold, hysteresis and **protection position** |
 | **Automation** | *Pause after a manual command* (duration, resume when the position matches the rule); default *window positions*; *Moves* (minimum change, minimum delay, delay between commands, default travel time); *Log and updates* |
 | **Backup** | Export / import of the whole configuration (JSON file) |
 
-Temperature setpoints and the sunshine threshold can follow an **entity** (`input_number`, sensor…):
-its value is then used, and the typed number is the fallback if the entity is unavailable.
+The sunshine threshold can follow an **entity** (`input_number`, sensor…): its value is then used, and the typed
+number is the fallback if the entity is unavailable. The temperature setpoints are set in the panel or through the
+`number` entities of profiles A and B.
 
 ### Available conditions
 
@@ -348,7 +351,7 @@ The *Add condition* menu groups them by theme (✨ = new in V2):
 | Group | Conditions |
 |-------|------------|
 | **Sun** | Sun on the facade; sun elevation above / below |
-| **Temperature** | Outdoor temperature above / below; room temperature (cold, between the setpoints, warm); ✨ outdoor air compared to the room (cooler / warmer, minimum difference) |
+| **Temperature** | Outdoor temperature above / below; room temperature (too cold, mild, too hot); ✨ outdoor air compared to the room (cooler / warmer, minimum difference) |
 | **Occupancy** | ✨ Room occupied (based on the cover's occupancy sensor) |
 | **Schedules** | Time between; before / after sunrise; before / after sunset; ✨ before / after dawn; ✨ before / after dusk (with an offset in minutes); day of the week; workday |
 | **Weather** | The weather is (all Home Assistant weather states) |
@@ -419,7 +422,7 @@ For each managed cover, a "CoverAutomatic *cover name*" device groups:
 | `sensor` Active rule | Name of the rule controlling the cover |
 | `sensor` Target position | Position requested by the active rule (%) |
 | `sensor` Position (rule scale) | Current position, inverted for inverted covers (%) |
-| `sensor` Comfort mode | Cold / comfort / warm depending on the room temperature |
+| `sensor` Comfort mode | Too cold / mild / too hot depending on the room temperature and the setpoints of the active profile |
 | `sensor` Pause end | End time of the current pause |
 
 For each facade, a "CoverAutomatic Facade *name*" device groups:
@@ -436,6 +439,7 @@ Global entities ("CoverAutomatic" device):
 |--------|-------------|
 | `switch` CoverAutomatic | Master switch of the automation. When off, the open-window lock, venting and safety rules stay active. Attributes: the global sensors chosen in the Settings (outdoor temperature, weather, sunshine and its threshold), used by the card |
 | `select` Scenario | Active scenario (`scenario_names` attribute: display names of the scenarios) |
+| `number` Cold / hot setpoint A and B, Setpoint hysteresis A and B | Setpoints and hysteresis of both profiles, editable from Home Assistant (the cold setpoint must stay below the hot one) |
 | `binary_sensor` Wind protection | On when the wind exceeds the threshold (attributes: wind speed, threshold, hysteresis) |
 | `sensor` Covers paused / manual / locked | Number of covers in this status (names as attributes) |
 
@@ -513,16 +517,19 @@ Check in this order:
 ### A sun rule does not shade
 
 For a cover that has an indoor temperature sensor (its own or the global one), the "Sun on the facade" condition
-takes the room temperature into account, according to the settings in **Settings > Sun exposure** (which can be changed per
-cover in the "Sun exposure" section of its sheet):
+takes the room temperature into account, according to the settings in **Settings > Sun exposure** for the profile of the
+active scenario:
 
-- **cold** room (at most the cold setpoint): with the "let the sun heat the room" option (on by default), the condition
-  answers "no sun" to let the sun heat the room;
-- room **between the setpoints**: depending on the choice "as soon as the sun is on the facade", "never (wait until the room gets
-  too warm)" or "only in strong sunshine" (sunshine sensor above its threshold);
-- **warm** room (at least the warm setpoint): the condition answers "sun" as soon as the sun is on the facade.
+- room **too cold** (at most the cold setpoint): with the "Action at the cold setpoint" box checked (default), the
+  condition answers "no sun";
+- **mild** room (between the setpoints): depending on the choice "as soon as the sun is on the facade", "never (wait until
+  the room gets too hot)" or "only with strong sunshine" (sunshine sensor above its threshold);
+- room **too hot** (at least the hot setpoint): the condition answers "sun" as soon as the sun is on the facade;
+- scenario **without profile**: only the sun position counts.
 
-The "How does it work?" block of these settings shows the result for your own values.
+These settings never move a cover: they only change the answer of the condition. For a rule that **opens** in the sun
+(in winter for example), leave the cold box unchecked. The "How does it work?" block of each profile shows the result
+for your own values.
 
 ### A cover stays LOCKED or VENTING
 
@@ -563,13 +570,13 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.0.8
+2.1.0
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.0.8 (2026-10-09), based on the original version
+Latest version: v2.1.0 (2026-10-15), based on the original version
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler.
 
 ## License

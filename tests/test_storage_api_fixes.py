@@ -58,7 +58,8 @@ class TestSettingsCrossChecks:
         assert storage.solar_hysteresis == 20
 
     def test_helper_without_changed_runs_all_checks(self) -> None:
-        values = {"comfort_temp_min": 21, "comfort_temp_max": 25, "wind_speed_threshold": 0,
+        values = {"comfort_temp_min": 21, "comfort_temp_max": 25, "comfort_temp_min_b": 22,
+                  "comfort_temp_max_b": 24, "wind_speed_threshold": 0,
                   "wind_speed_hysteresis": 0, "solar_threshold": 100, "solar_hysteresis": 150}
         assert settings_cross_error(values.get)[0] == "invalid_solar_hysteresis"
         assert settings_cross_error(values.get, {"enabled"}) is None

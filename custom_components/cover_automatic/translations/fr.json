@@ -75,9 +75,9 @@
       "comfort_mode": {
         "name": "Mode confort",
         "state": {
-          "heating": "Froid",
-          "neutral": "Confort",
-          "cooling": "Chaud"
+          "heating": "Trop froide",
+          "neutral": "Tempérée",
+          "cooling": "Trop chaude"
         }
       },
       "pause_end": {
@@ -109,6 +109,26 @@
     "binary_sensor": {
       "wind_protection": {
         "name": "Protection vent"
+      }
+    },
+    "number": {
+      "comfort_temp_min_a": {
+        "name": "Consigne froide A"
+      },
+      "comfort_temp_max_a": {
+        "name": "Consigne chaude A"
+      },
+      "comfort_hysteresis_a": {
+        "name": "Hystérésis des consignes A"
+      },
+      "comfort_temp_min_b": {
+        "name": "Consigne froide B"
+      },
+      "comfort_temp_max_b": {
+        "name": "Consigne chaude B"
+      },
+      "comfort_hysteresis_b": {
+        "name": "Hystérésis des consignes B"
       }
     }
   },
@@ -180,6 +200,9 @@
   "exceptions": {
     "admin_required": {
       "message": "Ce service nécessite les droits administrateur."
+    },
+    "invalid_comfort_range": {
+      "message": "La consigne froide doit être inférieure à la consigne chaude."
     }
   }
 }

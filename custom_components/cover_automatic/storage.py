@@ -71,11 +71,17 @@ GLOBAL_SETTING_KEYS = (
         "default_travel_time",
         "wind_position",
         "solar_threshold_entity",
-        "comfort_temp_min_entity",
-        "comfort_temp_max_entity",
         "sun_heating_ignore",
         "sun_neutral_ignore",
         "preemptive_shading",
+        "comfort_temp_min_b",
+        "comfort_temp_max_b",
+        "comfort_hysteresis_b",
+        "sun_heating_ignore_b",
+        "sun_neutral_ignore_b",
+        "preemptive_shading_b",
+        "profile_a_scenarios",
+        "profile_b_scenarios",
         "temp_color_thermometer",
         "pause_resume_on_match",
         "rotate_facades_with_house",
@@ -85,6 +91,7 @@ GLOBAL_SETTING_KEYS = (
 _BOOL_SETTINGS = frozenset({
     "enabled", "logbook_enabled", "update_check_enabled",
     "sun_heating_ignore", "sun_neutral_ignore", "preemptive_shading",
+    "sun_heating_ignore_b", "sun_neutral_ignore_b", "preemptive_shading_b",
     "temp_color_thermometer", "pause_resume_on_match",
     "rotate_facades_with_house",
 })
@@ -95,9 +102,38 @@ _INT_SETTINGS = frozenset({
 })
 _FLOAT_SETTINGS = frozenset({
     "comfort_temp_min", "comfort_temp_max", "comfort_hysteresis",
+    "comfort_temp_min_b", "comfort_temp_max_b", "comfort_hysteresis_b",
     "threshold_hysteresis", "house_rotation", "wind_speed_threshold",
     "wind_speed_hysteresis", "solar_threshold", "solar_hysteresis", "command_stagger",
 })
+_LIST_SETTINGS = frozenset({"profile_a_scenarios", "profile_b_scenarios"})
+
+# Comfort profiles: each scenario uses profile A, profile B or none (no
+# setpoints). profile_a_scenarios unset (installations before the explicit
+# list) means every scenario not in profile B. Defaults of a new installation.
+PROFILE_A = "a"
+PROFILE_B = "b"
+DEFAULT_COMFORT = {
+    PROFILE_A: (21.0, 23.0, 1.0),
+    PROFILE_B: (22.0, 24.0, 1.0),
+}
+# Storage keys of each profile: (min, max, hysteresis)
+COMFORT_KEYS = {
+    PROFILE_A: ("comfort_temp_min", "comfort_temp_max", "comfort_hysteresis"),
+    PROFILE_B: ("comfort_temp_min_b", "comfort_temp_max_b", "comfort_hysteresis_b"),
+}
+# Storage keys of each profile: (heating_ignore, neutral_ignore, preemptive)
+SUN_KEYS = {
+    PROFILE_A: ("sun_heating_ignore", "sun_neutral_ignore", "preemptive_shading"),
+    PROFILE_B: ("sun_heating_ignore_b", "sun_neutral_ignore_b", "preemptive_shading_b"),
+}
+
+
+def _scenario_id_list(value: Any) -> list[str]:
+    """Validate a list of scenario ids (duplicates dropped, order kept)."""
+    if not isinstance(value, list) or not all(isinstance(v, str) and v for v in value):
+        raise vol.Invalid("expected a list of scenario ids")
+    return list(dict.fromkeys(value))
 
 # Accepted values of every global setting: shared by the settings/update
 # WebSocket command and the import, so both apply the same bounds.
@@ -110,6 +146,9 @@ SETTING_VALIDATORS: dict[str, Any] = {
     "comfort_temp_min": _COMFORT_TEMP,
     "comfort_temp_max": _COMFORT_TEMP,
     "comfort_hysteresis": finite_range(0.1, 5.0),
+    "comfort_temp_min_b": _COMFORT_TEMP,
+    "comfort_temp_max_b": _COMFORT_TEMP,
+    "comfort_hysteresis_b": finite_range(0.1, 5.0),
     "threshold_hysteresis": finite_range(0, 5.0),
     "pause_duration": int_range(1, 480),
     "lock_position": int_range(0, 100),
@@ -132,11 +171,14 @@ SETTING_VALIDATORS: dict[str, Any] = {
     "default_travel_time": vol.Any(None, int_range(1, 300)),
     "wind_position": int_range(0, 100),
     "solar_threshold_entity": optional_entity_id,
-    "comfort_temp_min_entity": optional_entity_id,
-    "comfort_temp_max_entity": optional_entity_id,
     "sun_heating_ignore": bool,
     "sun_neutral_ignore": bool,
     "preemptive_shading": bool,
+    "sun_heating_ignore_b": bool,
+    "sun_neutral_ignore_b": bool,
+    "preemptive_shading_b": bool,
+    "profile_a_scenarios": _scenario_id_list,
+    "profile_b_scenarios": _scenario_id_list,
     "temp_color_thermometer": bool,
     "pause_resume_on_match": bool,
     "rotate_facades_with_house": bool,
@@ -148,6 +190,13 @@ def _check_comfort(get: Callable[[str], Any]) -> str | None:
     low, high = get("comfort_temp_min"), get("comfort_temp_max")
     if low >= high:
         return f"comfort_temp_min ({low}) must be lower than comfort_temp_max ({high})"
+    return None
+
+
+def _check_comfort_b(get: Callable[[str], Any]) -> str | None:
+    low, high = get("comfort_temp_min_b"), get("comfort_temp_max_b")
+    if low >= high:
+        return f"comfort_temp_min_b ({low}) must be lower than comfort_temp_max_b ({high})"
     return None
 
 
@@ -177,6 +226,7 @@ def _check_solar(get: Callable[[str], Any]) -> str | None:
 # (error code, settings involved, check) -- the code is the WS error code
 SETTINGS_CROSS_CHECKS: tuple[tuple[str, tuple[str, str], Callable[..., str | None]], ...] = (
     ("invalid_comfort_range", ("comfort_temp_min", "comfort_temp_max"), _check_comfort),
+    ("invalid_comfort_range", ("comfort_temp_min_b", "comfort_temp_max_b"), _check_comfort_b),
     ("invalid_wind_hysteresis", ("wind_speed_threshold", "wind_speed_hysteresis"), _check_wind),
     ("invalid_solar_hysteresis", ("solar_threshold", "solar_hysteresis"), _check_solar),
 )
@@ -228,7 +278,9 @@ def _coerce_setting(key: str, value: Any) -> Any:
     """
     if value is None:
         return None
-    if key in _BOOL_SETTINGS:
+    if key in _LIST_SETTINGS:
+        result = value if isinstance(value, list) else None
+    elif key in _BOOL_SETTINGS:
         result = _opt_bool(value)
     elif key in _INT_SETTINGS:
         result = _to_int(value, None)
@@ -257,19 +309,31 @@ NULLABLE_SETTING_KEYS = frozenset({
         "outdoor_temp_sensor", "indoor_temp_sensor", "weather_entity",
         "workday_sensor", "wind_sensor", "solar_sensor",
         "lock_tilt_position", "vent_tilt_position", "default_travel_time",
-        "solar_threshold_entity", "comfort_temp_min_entity", "comfort_temp_max_entity",
+        "solar_threshold_entity",
 })
 
 # One-shot data migrations; applied ids are persisted in _data["migrations"]
 MIGRATION_PAUSE_DURATION_120 = "pause_duration_120"
 MIGRATION_PREEMPTIVE_TRISTATE = "preemptive_tristate"
-_ALL_MIGRATIONS = (MIGRATION_PAUSE_DURATION_120, MIGRATION_PREEMPTIVE_TRISTATE)
+MIGRATION_COMFORT_PROFILES = "comfort_profiles"
+_ALL_MIGRATIONS = (
+    MIGRATION_PAUSE_DURATION_120, MIGRATION_PREEMPTIVE_TRISTATE, MIGRATION_COMFORT_PROFILES,
+)
+
+# Settings of older versions, read only by the migrations (an older export
+# may still hold them).
+_LEGACY_SETTING_KEYS = ("comfort_temp_min_entity", "comfort_temp_max_entity")
+# Per-cover fields of older versions, removed by the comfort profiles migration
+_LEGACY_COVER_FIELDS = (
+    "comfort_temp_min_entity", "comfort_temp_max_entity",
+    "preemptive_shading", "sun_heating_ignore", "sun_neutral_ignore",
+)
 
 # Top-level keys of a configuration: everything else in an imported file is
 # dropped, and only these are exported.
 _CONFIG_TOP_KEYS = frozenset({
     "facades", "covers", "rules", "scenarios", "active_scenario", "migrations",
-    *GLOBAL_SETTING_KEYS,
+    *GLOBAL_SETTING_KEYS, *_LEGACY_SETTING_KEYS,
 })
 
 
@@ -294,6 +358,49 @@ def _migrate_preemptive_tristate(covers: Any) -> None:
             cover_data["preemptive_shading"] = None
 
 
+def _migrate_comfort_profiles(data: dict[str, Any]) -> None:
+    """Comfort profiles A/B replace the comfort entities and per-cover sun switches.
+
+    - The global comfort band can no longer follow an entity: a value that
+      came from an entity is replaced by the profile A default (the stored
+      number was only its fallback).
+    - Per-cover comfort entities and sun switches are removed: the sun
+      behaviour is now global, per profile. A switch overridden with the
+      same value on every cover becomes the global value, so the behaviour
+      actually in use is kept.
+    - Profile B starts with its defaults; its hysteresis and sun switches
+      copy profile A so behaviour is unchanged until B gets scenarios.
+    """
+    min_a, max_a, _ = DEFAULT_COMFORT[PROFILE_A]
+    if data.pop("comfort_temp_min_entity", None):
+        data["comfort_temp_min"] = min_a
+    if data.pop("comfort_temp_max_entity", None):
+        data["comfort_temp_max"] = max_a
+    low = _to_float(data.get("comfort_temp_min"), None)
+    high = _to_float(data.get("comfort_temp_max"), None)
+    if low is not None and high is not None and low >= high:
+        data["comfort_temp_min"], data["comfort_temp_max"] = min_a, max_a
+    covers = data.get("covers")
+    cover_list = [c for c in covers.values() if isinstance(c, dict)] if isinstance(covers, dict) else []
+    for key in SUN_KEYS[PROFILE_A]:
+        values = {_opt_bool(c.get(key)) for c in cover_list}
+        if len(values) == 1 and (value := values.pop()) is not None:
+            data[key] = value
+    min_b, max_b, _ = DEFAULT_COMFORT[PROFILE_B]
+    data.setdefault("comfort_temp_min_b", min_b)
+    data.setdefault("comfort_temp_max_b", max_b)
+    for key_a, key_b in (
+        ("comfort_hysteresis", "comfort_hysteresis_b"),
+        *zip(SUN_KEYS[PROFILE_A], SUN_KEYS[PROFILE_B], strict=True),
+    ):
+        if data.get(key_b) is None and data.get(key_a) is not None:
+            data[key_b] = data[key_a]
+    data.setdefault("profile_b_scenarios", [])
+    for cover_data in cover_list:
+        for legacy in _LEGACY_COVER_FIELDS:
+            cover_data.pop(legacy, None)
+
+
 def _apply_migrations(data: dict[str, Any], done: list[str]) -> bool:
     """Run on data every one-shot migration missing from done (in place).
 
@@ -301,17 +408,24 @@ def _apply_migrations(data: dict[str, Any], done: list[str]) -> bool:
     """
     steps = (
         # Runs once only: a deliberate 120 set later must survive.
-        (MIGRATION_PAUSE_DURATION_120, _migrate_pause_duration_120),
+        (MIGRATION_PAUSE_DURATION_120, lambda d: _migrate_pause_duration_120(d.get("covers"))),
         # Per-cover preemptive_shading became tri-state (None = global)
-        (MIGRATION_PREEMPTIVE_TRISTATE, _migrate_preemptive_tristate),
+        (MIGRATION_PREEMPTIVE_TRISTATE, lambda d: _migrate_preemptive_tristate(d.get("covers"))),
+        # Comfort profiles A/B (global settings and covers)
+        (MIGRATION_COMFORT_PROFILES, _migrate_comfort_profiles),
     )
     changed = False
     for migration_id, step in steps:
         if migration_id in done:
             continue
-        step(data.get("covers"))
+        step(data)
         done.append(migration_id)
         changed = True
+    # Legacy settings are never kept, even when the file claims to be migrated
+    for legacy in _LEGACY_SETTING_KEYS:
+        if legacy in data:
+            data.pop(legacy)
+            changed = True
     return changed
 
 
@@ -432,8 +546,10 @@ class CoverAutomaticStorage:
                 "outdoor_temp_sensor": None,
                 "indoor_temp_sensor": None,
                 "weather_entity": None,
-                "comfort_temp_min": 21.0,
-                "comfort_temp_max": 25.0,
+                "comfort_temp_min": DEFAULT_COMFORT[PROFILE_A][0],
+                "comfort_temp_max": DEFAULT_COMFORT[PROFILE_A][1],
+                "comfort_temp_min_b": DEFAULT_COMFORT[PROFILE_B][0],
+                "comfort_temp_max_b": DEFAULT_COMFORT[PROFILE_B][1],
                 "workday_sensor": None,
                 "wind_sensor": None,
                 "wind_speed_threshold": 0.0,
@@ -583,8 +699,8 @@ class CoverAutomaticStorage:
 
     @property
     def comfort_temp_min(self) -> float:
-        """Get minimum comfort temperature."""
-        return self._setting("comfort_temp_min", 21.0)
+        """Get minimum comfort temperature (profile A)."""
+        return self._setting("comfort_temp_min", DEFAULT_COMFORT[PROFILE_A][0])
 
     @comfort_temp_min.setter
     def comfort_temp_min(self, value: float) -> None:
@@ -593,8 +709,8 @@ class CoverAutomaticStorage:
 
     @property
     def comfort_temp_max(self) -> float:
-        """Get maximum comfort temperature."""
-        return self._setting("comfort_temp_max", 25.0)
+        """Get maximum comfort temperature (profile A)."""
+        return self._setting("comfort_temp_max", DEFAULT_COMFORT[PROFILE_A][1])
 
     @comfort_temp_max.setter
     def comfort_temp_max(self, value: float) -> None:
@@ -603,13 +719,106 @@ class CoverAutomaticStorage:
 
     @property
     def comfort_hysteresis(self) -> float:
-        """Get comfort temperature hysteresis."""
-        return self._setting("comfort_hysteresis", 1.0)
+        """Get comfort temperature hysteresis (profile A)."""
+        return self._setting("comfort_hysteresis", DEFAULT_COMFORT[PROFILE_A][2])
 
     @comfort_hysteresis.setter
     def comfort_hysteresis(self, value: float) -> None:
-        """Set comfort temperature hysteresis."""
+        """Set comfort temperature hysteresis (profile A)."""
         self._data["comfort_hysteresis"] = float(value)
+
+    @property
+    def comfort_temp_min_b(self) -> float:
+        """Get minimum comfort temperature of profile B."""
+        return self._setting("comfort_temp_min_b", DEFAULT_COMFORT[PROFILE_B][0])
+
+    @comfort_temp_min_b.setter
+    def comfort_temp_min_b(self, value: float) -> None:
+        """Set minimum comfort temperature of profile B."""
+        self._data["comfort_temp_min_b"] = value
+
+    @property
+    def comfort_temp_max_b(self) -> float:
+        """Get maximum comfort temperature of profile B."""
+        return self._setting("comfort_temp_max_b", DEFAULT_COMFORT[PROFILE_B][1])
+
+    @comfort_temp_max_b.setter
+    def comfort_temp_max_b(self, value: float) -> None:
+        """Set maximum comfort temperature of profile B."""
+        self._data["comfort_temp_max_b"] = value
+
+    @property
+    def comfort_hysteresis_b(self) -> float:
+        """Get comfort temperature hysteresis of profile B."""
+        return self._setting("comfort_hysteresis_b", DEFAULT_COMFORT[PROFILE_B][2])
+
+    @comfort_hysteresis_b.setter
+    def comfort_hysteresis_b(self, value: float) -> None:
+        """Set comfort temperature hysteresis of profile B."""
+        self._data["comfort_hysteresis_b"] = float(value)
+
+    @property
+    def profile_b_scenarios(self) -> list[str]:
+        """Scenarios using comfort profile B."""
+        value = self._data.get("profile_b_scenarios")
+        if not isinstance(value, list):
+            return []
+        known = self._data.get("scenarios", {})
+        return [s for s in value if isinstance(s, str) and s in known]
+
+    @profile_b_scenarios.setter
+    def profile_b_scenarios(self, value: list[str]) -> None:
+        """Set the scenarios using comfort profile B (they leave profile A)."""
+        ids = list(dict.fromkeys(value))
+        self._data["profile_b_scenarios"] = ids
+        if isinstance(self._data.get("profile_a_scenarios"), list):
+            self._data["profile_a_scenarios"] = [
+                s for s in self._data["profile_a_scenarios"] if s not in ids
+            ]
+
+    @property
+    def profile_a_scenarios(self) -> list[str]:
+        """Scenarios using comfort profile A.
+
+        Unset (older configuration): every scenario not in profile B.
+        """
+        known = self._data.get("scenarios", {})
+        b = set(self.profile_b_scenarios)
+        value = self._data.get("profile_a_scenarios")
+        if not isinstance(value, list):
+            return [s for s in known if s not in b]
+        return [s for s in value if isinstance(s, str) and s in known and s not in b]
+
+    @profile_a_scenarios.setter
+    def profile_a_scenarios(self, value: list[str]) -> None:
+        """Set the scenarios using comfort profile A (they leave profile B)."""
+        ids = list(dict.fromkeys(value))
+        self._data["profile_a_scenarios"] = ids
+        if isinstance(self._data.get("profile_b_scenarios"), list):
+            self._data["profile_b_scenarios"] = [
+                s for s in self._data["profile_b_scenarios"] if s not in ids
+            ]
+
+    def scenario_profile(self, scenario_id: str) -> str | None:
+        """Comfort profile ('a', 'b') of a scenario, None when it uses none."""
+        if scenario_id in self.profile_b_scenarios:
+            return PROFILE_B
+        if scenario_id in self.profile_a_scenarios:
+            return PROFILE_A
+        return None
+
+    @property
+    def active_profile(self) -> str | None:
+        """Comfort profile of the active scenario, None without setpoints."""
+        return self.scenario_profile(self.effective_active_scenario)
+
+    def comfort_settings(self, profile: str) -> tuple[float, float, float]:
+        """Global (min, max, hysteresis) of a comfort profile."""
+        return tuple(getattr(self, key) for key in COMFORT_KEYS[profile])  # type: ignore[return-value]
+
+    def sun_settings(self, profile: str) -> tuple[bool, bool, bool]:
+        """Global (heating_ignore, neutral_ignore, preemptive) of a comfort profile."""
+        return tuple(getattr(self, key) for key in SUN_KEYS[profile])  # type: ignore[return-value]
 
     @property
     def threshold_hysteresis(self) -> float:
@@ -793,13 +1002,43 @@ class CoverAutomaticStorage:
 
     @property
     def preemptive_shading(self) -> bool:
-        """Global default for preemptive shading (per-cover override wins)."""
+        """Preemptive shading in neutral mode (profile A)."""
         return bool(self._setting("preemptive_shading", True))
 
     @preemptive_shading.setter
     def preemptive_shading(self, value: bool) -> None:
-        """Set the global preemptive shading default."""
+        """Set preemptive shading (profile A)."""
         self._data["preemptive_shading"] = bool(value)
+
+    @property
+    def sun_heating_ignore_b(self) -> bool:
+        """Sun on facade: answer 'no sun' in heating mode (profile B)."""
+        return bool(self._setting("sun_heating_ignore_b", True))
+
+    @sun_heating_ignore_b.setter
+    def sun_heating_ignore_b(self, value: bool) -> None:
+        """Set the heating-mode sun switch of profile B."""
+        self._data["sun_heating_ignore_b"] = bool(value)
+
+    @property
+    def sun_neutral_ignore_b(self) -> bool:
+        """Sun on facade: answer 'no sun' in neutral mode (profile B)."""
+        return bool(self._setting("sun_neutral_ignore_b", True))
+
+    @sun_neutral_ignore_b.setter
+    def sun_neutral_ignore_b(self, value: bool) -> None:
+        """Set the neutral-mode sun switch of profile B."""
+        self._data["sun_neutral_ignore_b"] = bool(value)
+
+    @property
+    def preemptive_shading_b(self) -> bool:
+        """Preemptive shading in neutral mode (profile B)."""
+        return bool(self._setting("preemptive_shading_b", True))
+
+    @preemptive_shading_b.setter
+    def preemptive_shading_b(self, value: bool) -> None:
+        """Set preemptive shading (profile B)."""
+        self._data["preemptive_shading_b"] = bool(value)
 
     @property
     def temp_color_thermometer(self) -> bool:
@@ -840,26 +1079,6 @@ class CoverAutomaticStorage:
     def solar_threshold_entity(self, value: str | None) -> None:
         """Set the entity holding the solar threshold."""
         self._data["solar_threshold_entity"] = value or None
-
-    @property
-    def comfort_temp_min_entity(self) -> str | None:
-        """Entity holding the minimum comfort temperature."""
-        return self._entity_setting("comfort_temp_min_entity")
-
-    @comfort_temp_min_entity.setter
-    def comfort_temp_min_entity(self, value: str | None) -> None:
-        """Set the entity holding the minimum comfort temperature."""
-        self._data["comfort_temp_min_entity"] = value or None
-
-    @property
-    def comfort_temp_max_entity(self) -> str | None:
-        """Entity holding the maximum comfort temperature."""
-        return self._entity_setting("comfort_temp_max_entity")
-
-    @comfort_temp_max_entity.setter
-    def comfort_temp_max_entity(self, value: str | None) -> None:
-        """Set the entity holding the maximum comfort temperature."""
-        self._data["comfort_temp_max_entity"] = value or None
 
     @property
     def wind_position(self) -> int:
@@ -1119,6 +1338,9 @@ class CoverAutomaticStorage:
         is_new = scenario.id not in self._data["scenarios"]
         self._data["scenarios"][scenario.id] = scenario.to_dict()
         self._cache_scenarios = None
+        if is_new and isinstance(self._data.get("profile_a_scenarios"), list):
+            # A new scenario uses comfort profile A
+            self._data["profile_a_scenarios"].append(scenario.id)
         if is_new:
             for rule_data in self._data.get("rules", {}).values():
                 ids = rule_data.get("scenario_ids")
@@ -1142,6 +1364,10 @@ class CoverAutomaticStorage:
             if self._data.get("active_scenario") == scenario_id:
                 remaining = self._data.get("scenarios", {})
                 self._data["active_scenario"] = next(iter(remaining), "everyday")
+            for key in ("profile_a_scenarios", "profile_b_scenarios"):
+                profile = self._data.get(key)
+                if isinstance(profile, list) and scenario_id in profile:
+                    profile.remove(scenario_id)
             await self.async_save()
 
     def get_raw_data(self) -> dict[str, Any]:
@@ -1327,6 +1553,17 @@ class CoverAutomaticStorage:
         )
         _apply_migrations(data, done)
         data["migrations"] = list(dict.fromkeys(done))
+
+        # Comfort profiles only list imported scenarios, each in one profile
+        if isinstance(data.get("profile_b_scenarios"), list):
+            data["profile_b_scenarios"] = [
+                s for s in data["profile_b_scenarios"] if s in data["scenarios"]
+            ]
+        if isinstance(data.get("profile_a_scenarios"), list):
+            in_b = set(data.get("profile_b_scenarios") or ())
+            data["profile_a_scenarios"] = [
+                s for s in data["profile_a_scenarios"] if s in data["scenarios"] and s not in in_b
+            ]
 
         # Internal runtime keys stay the ones of this installation
         for key in _RUNTIME_TOP_KEYS:
