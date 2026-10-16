@@ -175,7 +175,7 @@ class TestStartupSkipIntegration:
         coordinator._startup_skip = True
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             # 10s after startup -> within grace period
             mock_time.monotonic.return_value = coordinator._startup_time + 10
@@ -192,7 +192,7 @@ class TestStartupSkipIntegration:
         coordinator._startup_skip = False
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             # 90s after startup -> still within 120s grace period
             mock_time.monotonic.return_value = coordinator._startup_time + 90
@@ -207,7 +207,7 @@ class TestStartupSkipIntegration:
         coordinator._startup_skip = False
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             mock_time.monotonic.return_value = coordinator._startup_time + 200
             with patch("homeassistant.util.dt.now") as mock_now:
@@ -386,7 +386,7 @@ class TestStateTransitionIntegration:
         new_state = MockState("open", {"current_position": 80})  # Manual change
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             mock_time.monotonic.return_value = 9999.0  # Well past SETTLE_TIME
             coordinator._handle_cover_state_change("cover.test", old_state, new_state)
@@ -416,7 +416,7 @@ class TestStateTransitionIntegration:
 
         coordinator._cover_states["cover.test"] = CoverStatus.PAUSED
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0  # After pause_until
             coordinator._sync_cover_statuses()
             status = coordinator.get_cover_status("cover.test")
@@ -447,7 +447,7 @@ class TestStateTransitionIntegration:
         old_state = MockState("off")
         new_state = MockState("on")  # Window opened
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0
             coordinator._handle_contact_sensor_change(
                 "binary_sensor.window",
@@ -524,7 +524,7 @@ class TestStateTransitionIntegration:
         old_state = MockState("off")
         new_state = MockState("on")
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0
             coordinator._handle_contact_sensor_change(
                 "binary_sensor.vent",
@@ -674,7 +674,7 @@ class TestHysteresisIntegration:
 
         mock_hass.states.get.return_value = MockState("open", {"current_position": 100})
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0  # Only 100s since last change
             await coordinator._async_update_data()
 
@@ -723,7 +723,7 @@ class TestHysteresisIntegration:
 
         mock_hass.states.get.return_value = MockState("open", {"current_position": 100})
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0  # 500s since last change
             await coordinator._async_update_data()
 
@@ -1154,14 +1154,14 @@ class TestSetupEntryVersionResolution:
 class TestSetupEntryReload:
     """Reloading the config entry must not re-register the panel's static path.
 
-    aiohttp routes cannot be removed, so registering /cover_automatic/panel.js
+    aiohttp routes cannot be removed, so registering the panel route
     in every async_setup_entry made the second setup (a reload) fail with
     "RuntimeError: Added route will never be executed" -- GitHub issue #3.
     The router here is a real aiohttp one driven by Home Assistant's own
     registration code, so a duplicate registration fails exactly as in HA.
     """
 
-    PANEL_URL = "/cover_automatic/panel.js"
+    PANEL_PREFIX = "/cover_automatic/panel/1.0.0"
 
     @staticmethod
     def _make_hass(app):
@@ -1242,6 +1242,6 @@ class TestSetupEntryReload:
         panel_routes = [
             route
             for route in app.router.routes()
-            if route.method == "GET" and route.resource.canonical == self.PANEL_URL
+            if route.method == "GET" and route.resource.canonical == self.PANEL_PREFIX
         ]
         assert len(panel_routes) == 1

@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from custom_components.cover_automatic.coordinator import (
+from custom_components.cover_automatic.coordinator_common import (
     MAX_MEASURED_TRAVEL,
     SETTLE_TIME,
     TRAVEL_TIME_MARGIN,
@@ -20,7 +20,7 @@ from tests.test_coordinator import (  # noqa: F401 -- pytest fixtures
 )
 from tests.test_storage import mock_store, storage  # noqa: F401
 
-MOD = "custom_components.cover_automatic.coordinator"
+MOD = "custom_components.cover_automatic.coordinator_common"
 
 
 def _raw(**extra):

@@ -9,7 +9,6 @@ from unittest.mock import MagicMock
 
 import pytest
 import pytest_asyncio
-
 from homeassistant import loader
 from homeassistant.core import HomeAssistant
 
@@ -293,7 +292,7 @@ class TestCoordinatorTracking:
         coord._unsub_state_change = []
         from unittest.mock import patch
 
-        with patch("custom_components.cover_automatic.coordinator.async_track_state_change_event") as track:
+        with patch("custom_components.cover_automatic.tracking.async_track_state_change_event") as track:
             coord._setup_state_tracking()
         assert "person.sylvain" in track.call_args.args[1]
         assert coord._is_rule_entity("person.sylvain") is True

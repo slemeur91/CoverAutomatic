@@ -1,8 +1,11 @@
 """Coordinator edge cases: unavailable sensors, stagger, tilt, wind exit, cover attributes."""
 # ruff: noqa: F811 -- pytest fixtures are imported from sibling test modules
 from __future__ import annotations
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from custom_components.cover_automatic.models import CoverStatus
 from tests.test_coordinator import MockState, coordinator, mock_hass, mock_storage  # noqa: F401
 

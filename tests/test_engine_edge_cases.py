@@ -1,14 +1,18 @@
 """Engine edge cases: unknown states, negation, caches, night spans, sun event gaps."""
 # ruff: noqa: F811 -- pytest fixtures are imported from sibling test modules
 from __future__ import annotations
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-from custom_components.cover_automatic.models import ComfortMode, Condition, ConditionType, CoverConfig, Facade, Rule
-from tests.test_engine import engine, mock_hass, mock_storage, test_cover, MockState  # noqa: F401
+
 from datetime import time
-from custom_components.cover_automatic import engine as engine_mod, ha_condition as hac
-from tests.test_storage import mock_store, storage  # noqa: F401
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from custom_components.cover_automatic import engine as engine_mod
+from custom_components.cover_automatic import ha_condition as hac
+from custom_components.cover_automatic.models import ComfortMode, Condition, ConditionType, CoverConfig, Facade, Rule
+from tests.test_engine import MockState, engine, mock_hass, mock_storage, test_cover  # noqa: F401
 from tests.test_engine_robustness import DAWN, DUSK, MIDNIGHT, SUNRISE, SUNSET, H, _sun_eval
+from tests.test_storage import mock_store, storage  # noqa: F401
 
 
 class TestEngineCaches:

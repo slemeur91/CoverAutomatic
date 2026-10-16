@@ -244,7 +244,7 @@ class TestThresholdTracking:
         coordinator.engine = MagicMock()
         coordinator.engine.ha_condition_entities.return_value = set()
         with patch(
-            "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+            "custom_components.cover_automatic.tracking.async_track_state_change_event"
         ) as track:
             coordinator._setup_state_tracking()
         tracked = set(track.call_args.args[1])

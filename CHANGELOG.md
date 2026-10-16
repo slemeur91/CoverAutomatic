@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.1.2] - 2026-10-16
+
+### Changed
+
+- Panel split into ES modules (core, one module per tab or area, translations, styles, constants) instead of a single 10,600-line file. The panel is now loaded as a module from a folder whose URL contains the version and the newest file time, so an update never mixes cached and new modules. No visible change.
+- Coordinator split into mixin modules (state tracking, wind, window sensors, cover movements, positions, statuses); shared constants in `coordinator_common.py`. Log messages keep the coordinator's logger name. No behaviour change.
+- Frontend tests: the panel and the card run in headless Chromium (Playwright) against the configuration fixtures: every tab and settings section renders in French and English, rule and cover edits and profile assignment send the expected WebSocket messages, filters work, and names containing HTML are escaped. Separate CI job.
+
 ## [2.1.1] - 2026-10-16
 
 ### Added

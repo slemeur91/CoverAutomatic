@@ -50,7 +50,13 @@ PLATFORMS_LIST: list[Platform] = [
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PANEL_JS_URL = "/cover_automatic/panel.js"
+# Panel modules, served from a folder whose URL contains the version and the
+# newest file time: the relative imports between the modules then change URL
+# with every update, so the browser never mixes cached and new modules.
+PANEL_URL_BASE = "/cover_automatic/panel"
+PANEL_MODULE = "cover-automatic-panel.js"
+# hass.data[DOMAIN] key: versioned panel folders registered this HA run
+_PANEL_PREFIXES = "panel_prefixes"
 # Dashboard card, loaded on every frontend page (custom:cover-automatic-card)
 CARD_JS_URL = "/cover_automatic/cover-automatic-card.js"
 # hass.data[DOMAIN] flag: static panel route already registered this HA run
@@ -191,19 +197,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoverAutomaticConfigEntr
     # Setup WebSocket API for config panel
     async_setup_api(hass, storage, coordinator, version=panel_version)
 
-    # Register custom panel (version query for cache busting). aiohttp routes
-    # cannot be removed, and registering the same GET route twice raises
-    # RuntimeError -- so the static path is registered once per HA run and
-    # survives config entry reloads.
+    # Register the custom panel (versioned folder, see PANEL_URL_BASE) and the
+    # card. aiohttp routes cannot be removed, and registering the same GET
+    # route twice raises RuntimeError -- so each route is registered once per
+    # HA run and survives config entry reloads.
     domain_data: dict = hass.data.setdefault(DOMAIN, {})
     panel_dir = pathlib.Path(__file__).parent / "panel"
-    panel_stamp = await _async_asset_stamp(hass, panel_dir / "cover-automatic-panel.js")
+    panel_stamp = await _async_asset_stamp(hass, panel_dir)
+    panel_prefix = f"{PANEL_URL_BASE}/{panel_version}{panel_stamp}"
+    prefixes: set[str] = domain_data.setdefault(_PANEL_PREFIXES, set())
+    if panel_prefix not in prefixes:
+        # A reload with unchanged files reuses the folder already registered
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(panel_prefix, str(panel_dir), False)]
+        )
+        prefixes.add(panel_prefix)
     if not domain_data.get(_STATIC_PATH_REGISTERED):
         await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(PANEL_JS_URL, str(panel_dir / "cover-automatic-panel.js"), False),
-                StaticPathConfig(CARD_JS_URL, str(panel_dir / "cover-automatic-card.js"), False),
-            ]
+            [StaticPathConfig(CARD_JS_URL, str(panel_dir / "cover-automatic-card.js"), False)]
         )
         domain_data[_STATIC_PATH_REGISTERED] = True
         card_stamp = await _async_asset_stamp(hass, panel_dir / "cover-automatic-card.js")
@@ -224,7 +235,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoverAutomaticConfigEntr
         config={
             "_panel_custom": {
                 "name": "cover-automatic-panel",
-                "js_url": f"{PANEL_JS_URL}?v={panel_version}{panel_stamp}",
+                "module_url": f"{panel_prefix}/{PANEL_MODULE}",
                 "embed_iframe": False,
             }
         },
@@ -251,7 +262,9 @@ async def _async_asset_stamp(hass: HomeAssistant, path: pathlib.Path) -> str:
 
 
 def _asset_mtime(path: pathlib.Path) -> int:
-    """Integer mtime of a file (executor)."""
+    """Integer mtime of a file, or of the newest .js file of a folder (executor)."""
+    if path.is_dir():
+        return max(int(f.stat().st_mtime) for f in path.glob("*.js"))
     return int(path.stat().st_mtime)
 
 

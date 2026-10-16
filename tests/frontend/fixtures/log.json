@@ -1,0 +1,215 @@
+[
+ {
+  "ts": 1792091954.6,
+  "type": "status",
+  "entity_id": "cover.volet_du_cellier_nodeid_31_position",
+  "message": "auto -> paused",
+  "data": {
+   "key": "status_change",
+   "from": "auto",
+   "to": "paused"
+  }
+ },
+ {
+  "ts": 1792091740.6,
+  "type": "position",
+  "entity_id": "cover.volet_du_cellier_nodeid_31_position",
+  "message": "100% -> 0%",
+  "data": {
+   "key": "position",
+   "from": 100,
+   "to": 0,
+   "rule_id": "fermer_la_nuit"
+  }
+ },
+ {
+  "ts": 1792091473.5,
+  "type": "rule",
+  "entity_id": "cover.velux_de_la_chambre",
+  "message": "",
+  "data": {
+   "key": "rule",
+   "rule_id": "velux_aeration_ete",
+   "rule_name": "Velux – Aération Eté",
+   "position": 100
+  }
+ },
+ {
+  "ts": 1792091459.7,
+  "type": "rule",
+  "entity_id": "cover.store_pergola",
+  "message": "",
+  "data": {
+   "key": "rule",
+   "rule_id": "fermer_la_nuit",
+   "rule_name": "Fermer la Nuit",
+   "position": 0
+  }
+ },
+ {
+  "ts": 1792091459.68,
+  "type": "rule",
+  "entity_id": "cover.volet_de_la_chambre",
+  "message": "",
+  "data": {
+   "key": "rule",
+   "rule_id": "fermer_la_nuit",
+   "rule_name": "Fermer la Nuit",
+   "position": 0
+  }
+ },
+ {
+  "ts": 1792091459.675,
+  "type": "status",
+  "entity_id": "cover.volet_de_la_chambre",
+  "message": "",
+  "data": {
+   "key": "sensor_unavailable",
+   "status": "venting",
+   "sensor": "binary_sensor.velux_chambre_ferme",
+   "position": null
+  }
+ },
+ {
+  "ts": 1792091420.0,
+  "type": "scenario",
+  "entity_id": null,
+  "message": "winter -> summer",
+  "data": {
+   "key": "scenario_change",
+   "from": "Hiver",
+   "to": "Été",
+   "from_id": "winter",
+   "to_id": "summer"
+  }
+ },
+ {
+  "ts": 1792091405.69,
+  "type": "position",
+  "entity_id": "cover.volet_du_cellier_nodeid_31_position",
+  "message": "",
+  "data": {
+   "key": "position",
+   "from": 100,
+   "to": 0,
+   "rule_id": "fermer_la_nuit"
+  }
+ },
+ {
+  "ts": 1792091405.68,
+  "type": "status",
+  "entity_id": "cover.volet_du_cellier_nodeid_31_position",
+  "message": "",
+  "data": {
+   "key": "status_change",
+   "from": "paused",
+   "to": "auto"
+  }
+ },
+ {
+  "ts": 1792091275.7,
+  "type": "position",
+  "entity_id": "cover.volet_de_la_suite_parentale_nodeid_35_position",
+  "message": "",
+  "data": {
+   "key": "position",
+   "from": 83,
+   "to": 0,
+   "rule_id": "fermer_la_nuit"
+  }
+ },
+ {
+  "ts": 1792091275.19,
+  "type": "position",
+  "entity_id": "cover.volet_du_bureau_nodeid_36_position",
+  "message": "",
+  "data": {
+   "key": "position",
+   "from": 71,
+   "to": 0,
+   "rule_id": "fermer_la_nuit"
+  }
+ },
+ {
+  "ts": 1792091274.69,
+  "type": "position",
+  "entity_id": "cover.volet_du_salon_nodeid_32_position",
+  "message": "",
+  "data": {
+   "key": "position",
+   "from": 83,
+   "to": 0,
+   "rule_id": "fermer_la_nuit"
+  }
+ },
+ {
+  "ts": 1792091274.19,
+  "type": "position",
+  "entity_id": "cover.volet_du_sejour_nodeid_33_position",
+  "message": "",
+  "data": {
+   "key": "position",
+   "from": 80,
+   "to": 0,
+   "rule_id": "fermer_la_nuit"
+  }
+ },
+ {
+  "ts": 1792091273.69,
+  "type": "position",
+  "entity_id": "cover.volet_de_la_cuisine_nodeid_34_position",
+  "message": "",
+  "data": {
+   "key": "position",
+   "from": 83,
+   "to": 0,
+   "rule_id": "fermer_la_nuit"
+  }
+ },
+ {
+  "ts": 1792091273.68,
+  "type": "rule",
+  "entity_id": "cover.volet_du_salon_nodeid_32_position",
+  "message": "",
+  "data": {
+   "key": "rule",
+   "rule_id": "fermer_la_nuit",
+   "rule_name": "Fermer la Nuit",
+   "position": 0
+  }
+ },
+ {
+  "ts": 1792091273.678,
+  "type": "status",
+  "entity_id": "cover.volet_du_salon_nodeid_32_position",
+  "message": "",
+  "data": {
+   "key": "status_change",
+   "from": "paused",
+   "to": "auto"
+  }
+ },
+ {
+  "ts": 1792088941.1,
+  "type": "rule",
+  "entity_id": "cover.velux_de_la_chambre",
+  "message": "",
+  "data": {
+   "key": "rule",
+   "rule_id": "velux_aeration_ete",
+   "rule_name": "Velux – Aération Eté",
+   "position": 100
+  }
+ },
+ {
+  "ts": 1792085983.2,
+  "type": "status",
+  "entity_id": "cover.volet_du_cellier_nodeid_31_position",
+  "message": "",
+  "data": {
+   "key": "status_change",
+   "from": "auto",
+   "to": "paused"
+  }
+ }
+]

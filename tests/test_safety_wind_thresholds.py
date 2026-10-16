@@ -8,9 +8,9 @@ import pytest
 import voluptuous as vol
 
 from custom_components.cover_automatic.api import (
+    _build_config_response,
     _optional_entity_id,
     _rule_id_for_name,
-    _build_config_response,
     ws_rule_add,
     ws_rule_update,
 )

@@ -1,0 +1,491 @@
+{
+ "sun.sun": {
+  "state": "above_horizon",
+  "attributes": {
+   "friendly_name": "Sun",
+   "elevation": 21.26,
+   "azimuth": 133.75
+  },
+  "entity_id": "sun.sun"
+ },
+ "binary_sensor.cellier_fumee": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Détecteur de fumée État de l'alarme"
+  },
+  "entity_id": "binary_sensor.cellier_fumee"
+ },
+ "binary_sensor.etage_fumee": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Détecteur de fumée État de l'alarme"
+  },
+  "entity_id": "binary_sensor.etage_fumee"
+ },
+ "binary_sensor.sejour_fumee": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Détecteur de fumée État de l'alarme"
+  },
+  "entity_id": "binary_sensor.sejour_fumee"
+ },
+ "binary_sensor.do_bureau": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Somfy Protexial DO - Bureau",
+   "device_class": "window"
+  },
+  "entity_id": "binary_sensor.do_bureau"
+ },
+ "binary_sensor.do_cuisine": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Somfy Protexial DO - Cuisine",
+   "device_class": "door"
+  },
+  "entity_id": "binary_sensor.do_cuisine"
+ },
+ "binary_sensor.do_salon": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Somfy Protexial DO - Salon",
+   "device_class": "door"
+  },
+  "entity_id": "binary_sensor.do_salon"
+ },
+ "binary_sensor.do_sejour": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Somfy Protexial DO - Sejour",
+   "device_class": "door"
+  },
+  "entity_id": "binary_sensor.do_sejour"
+ },
+ "binary_sensor.do_suite_parental": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Somfy Protexial DO - Suite parental",
+   "device_class": "window"
+  },
+  "entity_id": "binary_sensor.do_suite_parental"
+ },
+ "binary_sensor.do_vitre_cellier": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Somfy Protexial DO vitre - Cellier",
+   "device_class": "door"
+  },
+  "entity_id": "binary_sensor.do_vitre_cellier"
+ },
+ "binary_sensor.velux_chambre_ferme": {
+  "state": "on",
+  "attributes": {
+   "friendly_name": "MoteurChambre Velux Chambre Fermé",
+   "device_class": "opening"
+  },
+  "entity_id": "binary_sensor.velux_chambre_ferme"
+ },
+ "binary_sensor.velux_de_la_chambre_pluie": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Velux de la Chambre pluie",
+   "device_class": "moisture"
+  },
+  "entity_id": "binary_sensor.velux_de_la_chambre_pluie"
+ },
+ "binary_sensor.velux_de_la_salle_d_eau_ferme": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "MoteurSalleDEau Velux de la Salle d'eau Fermé",
+   "device_class": "opening"
+  },
+  "entity_id": "binary_sensor.velux_de_la_salle_d_eau_ferme"
+ },
+ "binary_sensor.velux_de_la_salle_d_eau_pluie": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Velux de la Salle d'eau pluie",
+   "device_class": "moisture"
+  },
+  "entity_id": "binary_sensor.velux_de_la_salle_d_eau_pluie"
+ },
+ "binary_sensor.velux_de_la_salle_de_bain_ferme": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "MoteurSalleDeBain Velux de la Salle de bain Fermé",
+   "device_class": "opening"
+  },
+  "entity_id": "binary_sensor.velux_de_la_salle_de_bain_ferme"
+ },
+ "binary_sensor.velux_de_la_salle_de_bain_pluie": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Velux de la Salle de bain pluie",
+   "device_class": "moisture"
+  },
+  "entity_id": "binary_sensor.velux_de_la_salle_de_bain_pluie"
+ },
+ "binary_sensor.volet_chambre_ferme": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "VoletChambre Volet Chambre Fermé",
+   "device_class": "opening"
+  },
+  "entity_id": "binary_sensor.volet_chambre_ferme"
+ },
+ "binary_sensor.volet_de_la_salle_d_eau_ferme": {
+  "state": "on",
+  "attributes": {
+   "friendly_name": "VoletSalleDEau Volet de la Salle d'eau Fermé",
+   "device_class": "opening"
+  },
+  "entity_id": "binary_sensor.volet_de_la_salle_d_eau_ferme"
+ },
+ "binary_sensor.volet_de_la_salle_de_bain_ferme": {
+  "state": "on",
+  "attributes": {
+   "friendly_name": "VoletSalleDeBain Volet de la Salle de bain Fermé",
+   "device_class": "opening"
+  },
+  "entity_id": "binary_sensor.volet_de_la_salle_de_bain_ferme"
+ },
+ "binary_sensor.workday_sensor": {
+  "state": "on",
+  "attributes": {
+   "friendly_name": "Workday Sensor"
+  },
+  "entity_id": "binary_sensor.workday_sensor"
+ },
+ "input_boolean.seul_a_la_maison": {
+  "state": "on",
+  "attributes": {
+   "friendly_name": "Seul à la Maison"
+  },
+  "entity_id": "input_boolean.seul_a_la_maison"
+ },
+ "input_boolean.volets_soleil": {
+  "state": "off",
+  "attributes": {
+   "friendly_name": "Volets Soleil"
+  },
+  "entity_id": "input_boolean.volets_soleil"
+ },
+ "input_select.calendrier": {
+  "state": "TéléTravail",
+  "attributes": {
+   "friendly_name": "Calendrier",
+   "options": [
+    "Absent",
+    "TéléTravail",
+    "Travail",
+    "Repos"
+   ]
+  },
+  "entity_id": "input_select.calendrier"
+ },
+ "input_select.domicile": {
+  "state": "Présent",
+  "attributes": {
+   "friendly_name": "Domicile",
+   "options": [
+    "Absent",
+    "Présent",
+    "Nuit",
+    "Vacances"
+   ]
+  },
+  "entity_id": "input_select.domicile"
+ },
+ "input_select.presence_bureau": {
+  "state": "Absent",
+  "attributes": {
+   "friendly_name": "Présence Bureau",
+   "options": [
+    "Présent",
+    "Absent"
+   ]
+  },
+  "entity_id": "input_select.presence_bureau"
+ },
+ "input_select.presence_chambre": {
+  "state": "Absent",
+  "attributes": {
+   "friendly_name": "Présence Chambre",
+   "options": [
+    "Présent",
+    "Absent"
+   ]
+  },
+  "entity_id": "input_select.presence_chambre"
+ },
+ "input_select.presence_salon": {
+  "state": "Absent",
+  "attributes": {
+   "friendly_name": "Présence Salon",
+   "options": [
+    "Présent",
+    "Absent"
+   ]
+  },
+  "entity_id": "input_select.presence_salon"
+ },
+ "input_select.presence_suite_parentale": {
+  "state": "Absent",
+  "attributes": {
+   "friendly_name": "Présence Suite parentale",
+   "options": [
+    "Présent",
+    "Absent"
+   ]
+  },
+  "entity_id": "input_select.presence_suite_parentale"
+ },
+ "sensor.91_weather_alert": {
+  "state": "Vert",
+  "attributes": {
+   "friendly_name": "Météo-France forecast for city Cheptainville - Île-de-France (91) - FR 91 Weather alert"
+  },
+  "entity_id": "sensor.91_weather_alert"
+ },
+ "sensor.cheptainville_original_condition": {
+  "state": "Ciel clair",
+  "attributes": {
+   "friendly_name": "Météo-France forecast for city Cheptainville - Île-de-France (91) - FR Cheptainville Original condition"
+  },
+  "entity_id": "sensor.cheptainville_original_condition"
+ },
+ "sensor.cheptainville_uv": {
+  "state": "2",
+  "attributes": {
+   "friendly_name": "Météo-France forecast for city Cheptainville - Île-de-France (91) - FR Cheptainville UV",
+   "unit_of_measurement": "UV index"
+  },
+  "entity_id": "sensor.cheptainville_uv"
+ },
+ "sensor.cheptainville_wind_speed": {
+  "state": "7",
+  "attributes": {
+   "friendly_name": "Météo-France forecast for city Cheptainville - Île-de-France (91) - FR Cheptainville Wind speed",
+   "unit_of_measurement": "km/h",
+   "device_class": "wind_speed"
+  },
+  "entity_id": "sensor.cheptainville_wind_speed"
+ },
+ "sensor.detecteur_du_cellier_nodeid_29_temperature_air": {
+  "state": "22.77",
+  "attributes": {
+   "friendly_name": "Température",
+   "unit_of_measurement": "°C",
+   "device_class": "temperature",
+   "state_class": "measurement"
+  },
+  "entity_id": "sensor.detecteur_du_cellier_nodeid_29_temperature_air"
+ },
+ "sensor.netatmo_bureau_temperature": {
+  "state": "22.9",
+  "attributes": {
+   "friendly_name": "Netatmo Bureau Température",
+   "unit_of_measurement": "°C",
+   "device_class": "temperature",
+   "state_class": "measurement"
+  },
+  "entity_id": "sensor.netatmo_bureau_temperature"
+ },
+ "sensor.netatmo_exterieur_temperature": {
+  "state": "15.6",
+  "attributes": {
+   "friendly_name": "Netatmo Extérieur Température",
+   "unit_of_measurement": "°C",
+   "device_class": "temperature",
+   "state_class": "measurement"
+  },
+  "entity_id": "sensor.netatmo_exterieur_temperature"
+ },
+ "sensor.netatmo_salon_temperature": {
+  "state": "23.6",
+  "attributes": {
+   "friendly_name": "Netatmo Salon Température",
+   "unit_of_measurement": "°C",
+   "device_class": "temperature",
+   "state_class": "measurement"
+  },
+  "entity_id": "sensor.netatmo_salon_temperature"
+ },
+ "sensor.netatmo_suite_parentale_temperature": {
+  "state": "22.9",
+  "attributes": {
+   "friendly_name": "Netatmo Suite parentale Température",
+   "unit_of_measurement": "°C",
+   "device_class": "temperature",
+   "state_class": "measurement"
+  },
+  "entity_id": "sensor.netatmo_suite_parentale_temperature"
+ },
+ "sensor.temperature_chambre_max": {
+  "state": "23.5",
+  "attributes": {
+   "friendly_name": "Température chambre (max)",
+   "unit_of_measurement": "°C",
+   "device_class": "temperature",
+   "state_class": "measurement"
+  },
+  "entity_id": "sensor.temperature_chambre_max"
+ },
+ "sensor.temperature_de_la_salle_d_eau": {
+  "state": "22.6",
+  "attributes": {
+   "friendly_name": "Chauffage de la Salle d'eau Température de la Salle d'eau",
+   "unit_of_measurement": "°C",
+   "device_class": "temperature",
+   "state_class": "measurement"
+  },
+  "entity_id": "sensor.temperature_de_la_salle_d_eau"
+ },
+ "sensor.temperature_de_la_salle_de_bain": {
+  "state": "22.8",
+  "attributes": {
+   "friendly_name": "Chauffage de la Salle de bain Température de la Salle de bain",
+   "unit_of_measurement": "°C",
+   "device_class": "temperature",
+   "state_class": "measurement"
+  },
+  "entity_id": "sensor.temperature_de_la_salle_de_bain"
+ },
+ "weather.cheptainville": {
+  "state": "cloudy",
+  "attributes": {
+   "friendly_name": "Météo-France forecast for city Cheptainville - Île-de-France (91) - FR Cheptainville"
+  },
+  "entity_id": "weather.cheptainville"
+ },
+ "cover.velux_de_la_chambre": {
+  "state": "open",
+  "attributes": {
+   "friendly_name": "Velux de la Chambre",
+   "current_position": 100,
+   "device_class": "window",
+   "supported_features": 15
+  },
+  "entity_id": "cover.velux_de_la_chambre"
+ },
+ "cover.volet_de_la_chambre": {
+  "state": "open",
+  "attributes": {
+   "friendly_name": "Volet de la Chambre",
+   "current_position": 55,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_de_la_chambre"
+ },
+ "cover.volet_de_la_cuisine_nodeid_34_position": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Volet de la Cuisine",
+   "current_position": 0,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_de_la_cuisine_nodeid_34_position"
+ },
+ "cover.volet_de_la_salle_d_eau": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Volet de la Salle d'eau",
+   "current_position": 0,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_de_la_salle_d_eau"
+ },
+ "cover.volet_de_la_salle_de_bain": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Volet de la Salle de bain",
+   "current_position": 0,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_de_la_salle_de_bain"
+ },
+ "cover.volet_de_la_suite_parentale_nodeid_35_position": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Volet de la Suite parentale",
+   "current_position": 0,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_de_la_suite_parentale_nodeid_35_position"
+ },
+ "cover.volet_du_cellier_nodeid_31_position": {
+  "state": "open",
+  "attributes": {
+   "friendly_name": "Volet du Cellier",
+   "current_position": 100,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_du_cellier_nodeid_31_position"
+ },
+ "cover.volet_du_salon_nodeid_32_position": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Volet du Salon",
+   "current_position": 0,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_du_salon_nodeid_32_position"
+ },
+ "cover.volet_du_sejour_nodeid_33_position": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Volet du Séjour",
+   "current_position": 0,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_du_sejour_nodeid_33_position"
+ },
+ "cover.store_pergola": {
+  "state": "open",
+  "attributes": {
+   "friendly_name": "Store Pergola",
+   "current_position": 100,
+   "device_class": "shade",
+   "supported_features": 15
+  },
+  "entity_id": "cover.store_pergola"
+ },
+ "cover.velux_de_la_salle_d_eau": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Velux de la Salle d'eau",
+   "current_position": 0,
+   "device_class": "window",
+   "supported_features": 15
+  },
+  "entity_id": "cover.velux_de_la_salle_d_eau"
+ },
+ "cover.velux_de_la_salle_de_bain": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Velux de la Salle de bain",
+   "current_position": 0,
+   "device_class": "window",
+   "supported_features": 15
+  },
+  "entity_id": "cover.velux_de_la_salle_de_bain"
+ },
+ "cover.volet_du_bureau_nodeid_36_position": {
+  "state": "closed",
+  "attributes": {
+   "friendly_name": "Volet du Bureau",
+   "current_position": 0,
+   "device_class": "shutter",
+   "supported_features": 15
+  },
+  "entity_id": "cover.volet_du_bureau_nodeid_36_position"
+ }
+}

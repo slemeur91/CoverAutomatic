@@ -72,7 +72,7 @@ def coordinator(mock_hass, mock_storage):
     from custom_components.cover_automatic.coordinator import CoverAutomaticCoordinator
 
     with patch(
-        "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+        "custom_components.cover_automatic.tracking.async_track_state_change_event"
     ), patch(
         "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.__init__",
         return_value=None,
@@ -214,7 +214,7 @@ class TestCoverStatus:
         mock_hass.states.get.return_value = MockState("on")
         mock_hass.async_create_task = MagicMock()
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0
             coordinator._sync_cover_statuses()
 
@@ -241,7 +241,7 @@ class TestCoverStatus:
         mock_hass.states.get.return_value = MockState("on")
         mock_hass.async_create_task = MagicMock()
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0
             coordinator._sync_cover_statuses()
 
@@ -280,7 +280,7 @@ class TestCoverStatus:
         }
         mock_storage.get_cover_raw.return_value = mock_storage._data["covers"]["cover.test"]
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000
 
             coordinator._sync_cover_statuses()
@@ -354,7 +354,7 @@ class TestContactSensorHandling:
         mock_hass.async_create_task = MagicMock()
         mock_storage.get_cover_raw.return_value = {"inverted": False}
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._lock_cover("cover.test", 100)
 
         assert coordinator._cover_states["cover.test"] == CoverStatus.LOCKED
@@ -683,7 +683,7 @@ class TestStateTracking:
         mock_storage._data = {"covers": {}, "rules": {}}
 
         with patch(
-            "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+            "custom_components.cover_automatic.tracking.async_track_state_change_event"
         ) as mock_track:
             coordinator._setup_state_tracking()
 
@@ -721,7 +721,7 @@ class TestStateTracking:
         coordinator._post_protective_exit.update({orphan, keep})
 
         with patch(
-            "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+            "custom_components.cover_automatic.tracking.async_track_state_change_event"
         ):
             coordinator.refresh_state_tracking()
 
@@ -751,7 +751,7 @@ class TestStateTracking:
         mock_storage.weather_entity = "weather.home"
 
         with patch(
-            "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+            "custom_components.cover_automatic.tracking.async_track_state_change_event"
         ) as mock_track:
             coordinator._setup_state_tracking()
 
@@ -779,7 +779,7 @@ class TestStateTracking:
         mock_storage.indoor_temp_sensor = None
 
         with patch(
-            "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+            "custom_components.cover_automatic.tracking.async_track_state_change_event"
         ) as mock_track:
             coordinator._setup_state_tracking()
 
@@ -804,7 +804,7 @@ class TestStateTracking:
         coordinator._tracked_entities = {"sun.sun", "cover.old"}
 
         with patch(
-            "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+            "custom_components.cover_automatic.tracking.async_track_state_change_event"
         ) as mock_track:
             mock_track.return_value = MagicMock()
             coordinator._setup_state_tracking(full_refresh=True)
@@ -829,7 +829,7 @@ class TestStateTracking:
         coordinator._tracked_entities = {"sun.sun"}
 
         with patch(
-            "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+            "custom_components.cover_automatic.tracking.async_track_state_change_event"
         ) as mock_track:
             mock_track.return_value = MagicMock()
             coordinator._setup_state_tracking(full_refresh=False)
@@ -949,7 +949,7 @@ class TestUnlockCoverRestore:
             "open", {"current_position": 45}
         )
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0
             coordinator._unlock_cover("cover.test")
 
@@ -972,7 +972,7 @@ class TestUnlockCoverRestore:
             "open", {"current_position": 45}
         )
 
-        with patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+        with patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0
             coordinator._unlock_cover("cover.test")
 
@@ -1069,7 +1069,7 @@ class TestManualOverrideDetection:
             new_state = MockState(bad_state, {"current_position": 0})
             with patch.object(coordinator, "pause_cover") as mock_pause:
                 with patch(
-                    "custom_components.cover_automatic.coordinator.time_mod"
+                    "custom_components.cover_automatic.coordinator_common.time_mod"
                 ) as mock_time:
                     mock_time.monotonic.return_value = 9999.0
                     coordinator._handle_cover_state_change(
@@ -1090,7 +1090,7 @@ class TestManualOverrideDetection:
             new_state = MockState(moving_state, {"current_position": 40})
             with patch.object(coordinator, "pause_cover") as mock_pause:
                 with patch(
-                    "custom_components.cover_automatic.coordinator.time_mod"
+                    "custom_components.cover_automatic.coordinator_common.time_mod"
                 ) as mock_time:
                     mock_time.monotonic.return_value = 9999.0
                     coordinator._handle_cover_state_change(
@@ -1110,7 +1110,7 @@ class TestManualOverrideDetection:
 
         with patch.object(coordinator, "pause_cover") as mock_pause:
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 # Only 5 seconds elapsed, well within SETTLE_TIME (30)
                 mock_time.monotonic.return_value = 1005.0
@@ -1130,7 +1130,7 @@ class TestManualOverrideDetection:
 
         with patch.object(coordinator, "pause_cover") as mock_pause:
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 coordinator._handle_cover_state_change("cover.test", None, new_state)
@@ -1177,7 +1177,7 @@ class TestManualOverrideInApplyCycle:
         )
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             mock_time.monotonic.return_value = 9999.0
             with patch.object(coordinator, "pause_cover") as mock_pause:
@@ -1216,7 +1216,7 @@ class TestManualOverrideInApplyCycle:
         )
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             mock_time.monotonic.return_value = 9995.0  # 5s after command, within settle
             with patch.object(coordinator, "pause_cover") as mock_pause:
@@ -1262,7 +1262,7 @@ class TestManualOverrideInApplyCycle:
                 moving_state, {"current_position": 33}
             )
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0  # well beyond settle
                 with patch.object(coordinator, "pause_cover") as mock_pause:
@@ -1302,7 +1302,7 @@ class TestManualOverrideInApplyCycle:
         )
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             mock_time.monotonic.return_value = 9999.0
             with patch.object(coordinator, "pause_cover") as mock_pause:
@@ -1340,7 +1340,7 @@ class TestPendingSettleSync:
 
         with patch.object(coordinator, "pause_cover") as mock_pause:
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 coordinator._handle_cover_state_change(
@@ -1368,7 +1368,7 @@ class TestPendingSettleSync:
 
         with patch.object(coordinator, "pause_cover") as mock_pause:
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 coordinator._handle_cover_state_change(
@@ -1406,7 +1406,7 @@ class TestPendingSettleSync:
         )
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             mock_time.monotonic.return_value = 9999.0
             with patch.object(coordinator, "pause_cover") as mock_pause:
@@ -1493,7 +1493,7 @@ class TestLockCoverInverted:
         mock_storage.get_cover_raw.return_value = {"inverted": True}
         mock_hass.async_create_task = MagicMock()
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._lock_cover("cover.test", 100)
 
         assert coordinator._last_positions["cover.test"] == 0  # 100 - 100
@@ -1526,7 +1526,7 @@ class TestOrphanCleanup:
         coordinator._last_command_time["cover.active"] = 456.0
 
         with patch(
-            "custom_components.cover_automatic.coordinator.async_track_state_change_event"
+            "custom_components.cover_automatic.tracking.async_track_state_change_event"
         ) as mock_track:
             mock_track.return_value = MagicMock()
             coordinator._setup_state_tracking(full_refresh=True)
@@ -1880,7 +1880,7 @@ class TestTiltHandling:
         }
         mock_hass.async_create_task = MagicMock()
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._lock_cover("cover.test", 100, lock_tilt=0)
 
         assert coordinator._last_tilt_positions["cover.test"] == 0
@@ -1898,7 +1898,7 @@ class TestTiltHandling:
         }
         mock_hass.async_create_task = MagicMock()
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._lock_cover("cover.test", 100, lock_tilt=None)
 
         assert "cover.test" not in coordinator._last_tilt_positions
@@ -1916,7 +1916,7 @@ class TestTiltHandling:
         }
         mock_hass.async_create_task = MagicMock()
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._lock_cover("cover.test", 100, lock_tilt=30)
 
         # 100 - 30 = 70
@@ -1962,7 +1962,7 @@ class TestTiltHandling:
 
         with patch.object(coordinator, "pause_cover") as mock_pause:
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 coordinator._handle_cover_state_change("cover.test", None, new_state)
@@ -2231,7 +2231,7 @@ class TestVentSensorWithTilt:
 
         coordinator._cover_states["cover.test"] = CoverStatus.AUTO
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._handle_contact_sensor_change(
                 "binary_sensor.vent",
                 [],
@@ -2260,7 +2260,7 @@ class TestVentSensorWithTilt:
 
         coordinator._cover_states["cover.test"] = CoverStatus.AUTO
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._handle_contact_sensor_change(
                 "binary_sensor.vent",
                 [],
@@ -2293,7 +2293,7 @@ class TestVentSensorWithTilt:
         mock_hass.async_create_task = MagicMock()
         coordinator._cover_states["cover.test"] = CoverStatus.VENTING
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._handle_contact_sensor_change(
                 "binary_sensor.vent",
                 [],
@@ -2320,7 +2320,7 @@ class TestVentSensorWithTilt:
         mock_hass.async_create_task = MagicMock()
         coordinator._cover_states["cover.test"] = CoverStatus.VENTING
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._handle_contact_sensor_change(
                 "binary_sensor.vent",
                 [],
@@ -2382,7 +2382,7 @@ class TestVentSensorWithTilt:
         }.get(eid)
         mock_hass.async_create_task = MagicMock()
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._handle_contact_sensor_change(
                 "binary_sensor.window",
                 ["cover.test"],
@@ -2777,7 +2777,7 @@ class TestManualOverrideDuringVenting:
 
         with patch.object(coordinator, "pause_cover") as mock_pause:
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 coordinator._handle_cover_state_change("cover.test", None, new_state)
@@ -2812,7 +2812,7 @@ class TestManualOverrideDuringVenting:
         )
 
         with patch(
-            "custom_components.cover_automatic.coordinator.time_mod"
+            "custom_components.cover_automatic.coordinator_common.time_mod"
         ) as mock_time:
             mock_time.monotonic.return_value = 9999.0
             with patch.object(coordinator, "pause_cover") as mock_pause:
@@ -2886,7 +2886,7 @@ class TestManualOverrideDuringVenting:
         mock_storage.get_cover_raw.return_value = cover_raw
         mock_hass.states.get.return_value = MockState("open", {"current_position": 80})
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             coordinator._handle_contact_sensor_change(
                 "binary_sensor.vent",
                 [],
@@ -2916,7 +2916,7 @@ class TestManualOverrideDuringVenting:
         # Cover at 80% (user's manual position, above vent_min)
         mock_hass.states.get.return_value = MockState("open", {"current_position": 80})
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             with patch.object(coordinator, "_cover_val", return_value=30):
                 coordinator._handle_contact_sensor_change(
                     "binary_sensor.vent",
@@ -3018,7 +3018,7 @@ class TestManualOverrideDuringVenting:
         # Cover at 60% (user moved during LOCKED, above vent_min)
         mock_hass.states.get.return_value = MockState("on", {"current_position": 60})
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod"):
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod"):
             with patch.object(coordinator, "_cover_val", return_value=30):
                 with patch.object(coordinator, "_get_current_position", return_value=60):
                     coordinator._handle_contact_sensor_change(
@@ -3060,7 +3060,7 @@ class TestSettleDuringVenting:
         mock_hass.async_create_task = MagicMock()
         coordinator._cover_states["cover.test"] = CoverStatus.AUTO
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = 100.0
             with patch.object(coordinator, "_cover_val", return_value=30):
                 coordinator._handle_contact_sensor_change(
@@ -3098,7 +3098,7 @@ class TestSettleDuringVenting:
         # User manually moved to 80% during settle
         mock_hass.states.get.return_value = MockState("open", {"current_position": 80})
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = 9995.0  # within settle
             await coordinator.async_apply_positions()
 
@@ -3135,7 +3135,7 @@ class TestSettleDuringVenting:
         # User at 80% (large deviation from vent target 30%)
         mock_hass.states.get.return_value = MockState("open", {"current_position": 80})
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = 9995.0  # settle passed (35s)
             with patch.object(coordinator, "pause_cover") as mock_pause:
                 await coordinator.async_apply_positions()
@@ -3169,7 +3169,7 @@ class TestSettleDuringVenting:
         # Actuator settled at 29% (small deviation, normal)
         mock_hass.states.get.return_value = MockState("open", {"current_position": 29})
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = 9995.0  # settle passed
             await coordinator.async_apply_positions()
 
@@ -3194,7 +3194,7 @@ class TestStartupGraceOverrideProtection:
         coordinator._last_positions["cover.test"] = 60
 
         # Simulate being within startup grace period
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = coordinator._startup_time + 10
             coordinator._handle_cover_state_change(
                 "cover.test",
@@ -3221,7 +3221,7 @@ class TestStartupGraceOverrideProtection:
         coordinator._last_command_time["cover.test"] = 0.0
 
         # Simulate being past startup grace period and settle time
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = 200.0
             coordinator._handle_cover_state_change(
                 "cover.test",
@@ -3254,7 +3254,7 @@ class TestTiltSyncOnPositionSync:
         coordinator._pending_settle.add("cover.test")
         coordinator._last_command_time["cover.test"] = 100.0
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = 135.0  # past settle
             coordinator._handle_cover_state_change(
                 "cover.test",
@@ -3298,7 +3298,7 @@ class TestTiltSyncOnPositionSync:
             "open", {"current_position": 50, "current_tilt_position": 70}
         )
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = 9999.0
             await coordinator.async_apply_positions()
 
@@ -3336,7 +3336,7 @@ class TestTiltSyncOnPositionSync:
             "open", {"current_position": 50, "current_tilt_position": 80}
         )
 
-        with patch("custom_components.cover_automatic.coordinator.time_mod") as mock_time:
+        with patch("custom_components.cover_automatic.coordinator_common.time_mod") as mock_time:
             mock_time.monotonic.return_value = 9999.0
             await coordinator.async_apply_positions()
 
@@ -3540,11 +3540,11 @@ class TestProtectiveStatusExitFreshApply:
         )
 
         with patch(
-            "custom_components.cover_automatic.coordinator.dt_util"
+            "custom_components.cover_automatic.coordinator_common.dt_util"
         ) as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = now_wall
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 await coordinator.async_apply_positions()
@@ -3605,11 +3605,11 @@ class TestProtectiveStatusExitFreshApply:
         )
 
         with patch(
-            "custom_components.cover_automatic.coordinator.dt_util"
+            "custom_components.cover_automatic.coordinator_common.dt_util"
         ) as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = now_wall
             with patch(
-                "custom_components.cover_automatic.coordinator.time_mod"
+                "custom_components.cover_automatic.coordinator_common.time_mod"
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 await coordinator.async_apply_positions()

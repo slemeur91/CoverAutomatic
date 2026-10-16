@@ -14,8 +14,8 @@ from custom_components.cover_automatic.sensor import (
     CoverPauseEndSensor,
     CoverPositionSensor,
     CoverRuleSensor,
-    CoverTargetPositionSensor,
     CoversInStatusSensor,
+    CoverTargetPositionSensor,
 )
 
 EID = "cover.salon"

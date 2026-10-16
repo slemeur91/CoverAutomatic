@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  Test page for the panel and the card. Served over HTTP from the repository
+  root (ES modules do not load from file://). Query string:
+    ?lang=fr|en        language of the fake hass object
+    &mode=panel|card   element to mount
+  A test can set window.__patchConfig(cfg) / window.__patchStates(states)
+  in an init script to change the fixtures before the element is created.
+-->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoverAutomatic tests</title>
+<style>
+  html, body { margin: 0; background: #fafafa; font-family: Roboto, "Helvetica Neue", Arial, sans-serif; }
+  cover-automatic-panel, cover-automatic-card { --primary-color: #03a9f4; --primary-background-color: #fafafa;
+    --card-background-color: #fff; --primary-text-color: #212121; --secondary-text-color: #727272; --divider-color: #e0e0e0; }
+</style>
+</head><body>
+<script>
+  window.__errors = [];
+  window.__ws = [];
+  window.__services = [];
+  window.addEventListener("error", (e) => window.__errors.push(String(e.message)));
+  window.addEventListener("unhandledrejection", (e) => window.__errors.push("unhandled: " + String(e.reason)));
+  // Stand-ins for the Home Assistant elements used by the panel and the card
+  customElements.define("ha-icon", class extends HTMLElement {
+    connectedCallback() { this.style.display = "inline-flex"; }
+  });
+  customElements.define("ha-card", class extends HTMLElement {
+    connectedCallback() { this.style.display = "block"; }
+  });
+</script>
+<script type="module">
+  const params = new URLSearchParams(location.search);
+  const lang = params.get("lang") || "fr";
+  const mode = params.get("mode") || "panel";
+  const load = async (name) => (await fetch(`./fixtures/${name}.json`)).json();
+  let [cfg, states, log] = await Promise.all([load("config"), load("states"), load("log")]);
+  for (const [id, st] of Object.entries(states)) st.entity_id = st.entity_id || id;
+  if (window.__patchConfig) cfg = window.__patchConfig(cfg) || cfg;
+  if (window.__patchStates) states = window.__patchStates(states) || states;
+  const copy = (v) => JSON.parse(JSON.stringify(v));
+
+  const hass = {
+    language: lang, locale: { language: lang, number_format: "language" }, states,
+    themes: { darkMode: false }, user: { is_admin: true }, entities: window.__entities || undefined,
+    async callWS(msg) {
+      window.__ws.push(copy(msg));
+      if (msg.type === "cover_automatic/log") return { entries: copy(log) };
+      if (msg.type === "cover_automatic/condition/validate") return { valid: true, errors: [] };
+      if (msg.type === "cover_automatic/rule/preview_conditions") return { conditions: [] };
+      return copy(cfg);
+    },
+    formatEntityState(stateObj, value) {
+      const v = value !== undefined ? value : stateObj.state;
+      const unit = stateObj.attributes.unit_of_measurement;
+      return unit ? `${v} ${unit}` : String(v);
+    },
+    connection: { subscribeMessage: async () => () => {} },
+    async callService(domain, service, data) { window.__services.push({ domain, service, data: copy(data || {}) }); },
+  };
+  window.__hass = hass;
+
+  try {
+    if (mode === "card") {
+      await import("/custom_components/cover_automatic/panel/cover-automatic-card.js");
+      const el = document.createElement("cover-automatic-card");
+      el.setConfig(window.__cardConfig || {});
+      el.hass = hass;
+      document.body.appendChild(el);
+      window.__el = el;
+    } else {
+      await import("/custom_components/cover_automatic/panel/cover-automatic-panel.js");
+      const el = document.createElement("cover-automatic-panel");
+      el.hass = hass;
+      el.panel = { config: {} };
+      el.narrow = false;
+      document.body.appendChild(el);
+      window.__el = el;
+    }
+  } catch (err) {
+    window.__errors.push("load: " + String(err && err.stack || err));
+  }
+  window.__ready = true;
+</script>
+</body></html>

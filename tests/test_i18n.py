@@ -141,7 +141,7 @@ class TestTranslationFiles:
 
     def test_french_panel_dictionary_complete(self) -> None:
         """Every panel i18n key exists in French and German (no English fallback)."""
-        src = (COMPONENT / "panel" / "cover-automatic-panel.js").read_text(encoding="utf-8")
+        src = (COMPONENT / "panel" / "i18n.js").read_text(encoding="utf-8")
         start = src.index("const I18N = {")
         end = src.index("\n};", start)
         body = src[start:end]
@@ -166,8 +166,8 @@ class TestWeatherConditions:
         "snowy-rainy", "sunny", "windy", "windy-variant",
     }
 
-    def _panel(self) -> str:
-        return (COMPONENT / "panel" / "cover-automatic-panel.js").read_text(encoding="utf-8")
+    def _panel(self, module: str = "constants.js") -> str:
+        return (COMPONENT / "panel" / module).read_text(encoding="utf-8")
 
     def test_ha_condition_list_is_current(self) -> None:
         from homeassistant.components import weather
@@ -185,7 +185,7 @@ class TestWeatherConditions:
         assert offered == self.HA_CONDITIONS
 
     def test_every_condition_translated(self) -> None:
-        src = self._panel()
+        src = self._panel("i18n.js")
         for lang in LANGS:
             block = re.search(rf"\n  {lang}: {{\n(.*?)\n  }},?\n", src + "\n", re.S).group(1)
             for cond in self.HA_CONDITIONS:

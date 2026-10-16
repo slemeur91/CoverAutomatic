@@ -65,12 +65,18 @@ class TestReloadStaticPath:
             await async_setup_entry(hass, entry)
             await async_setup_entry(hass, entry)  # reload
 
-        hass.http.async_register_static_paths.assert_awaited_once()
+        # Panel folder and card file: registered by the first setup only
+        assert hass.http.async_register_static_paths.await_count == 2
+        paths = [c.args[0][0].url_path for c in hass.http.async_register_static_paths.await_args_list]
+        assert paths == ["/cover_automatic/panel/1.62.0", "/cover_automatic/cover-automatic-card.js"]
         # Dashboard card module added once, with the version for cache busting
         add_js.assert_called_once()
         assert add_js.call_args[0][1] == "/cover_automatic/cover-automatic-card.js?v=1.62.0"
         assert register_panel.call_count == 2
         assert register_panel.call_args.kwargs["update"] is True
+        custom = register_panel.call_args.kwargs["config"]["_panel_custom"]
+        assert custom["module_url"] == "/cover_automatic/panel/1.62.0/cover-automatic-panel.js"
+        assert "js_url" not in custom
 
 
 # ---------------------------------------------------------------------------
@@ -286,7 +292,7 @@ class TestStateTracking:
                 {"type": "numeric_state", "params": {"entity_id": "sensor.lux"}},
             ]}
         }
-        with patch(f"{MOD}.coordinator.async_track_state_change_event") as track:
+        with patch(f"{MOD}.tracking.async_track_state_change_event") as track:
             coordinator._setup_state_tracking(full_refresh=True)
         tracked = set(track.call_args.args[1])
         assert {"input_boolean.guest", "sensor.lux", "binary_sensor.workday"} <= tracked
@@ -438,7 +444,7 @@ class TestSlowCoverSettle:
         coordinator._last_command_time["cover.t"] = 0.0  # > SETTLE_TIME ago
         coordinator._pending_settle.add("cover.t")
 
-        with patch(f"{MOD}.coordinator.time_mod") as mock_time, \
+        with patch(f"{MOD}.coordinator_common.time_mod") as mock_time, \
                 patch.object(coordinator, "pause_cover") as pause:
             mock_time.monotonic.return_value = 9999.0
             coordinator._handle_cover_state_change(

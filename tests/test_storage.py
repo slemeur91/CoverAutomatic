@@ -14,9 +14,9 @@ from custom_components.cover_automatic.models import (
     Scenario,
 )
 from custom_components.cover_automatic.storage import (
+    SAVE_DEBOUNCE_DELAY,
     ActivityLogStorage,
     CoverAutomaticStorage,
-    SAVE_DEBOUNCE_DELAY,
 )
 
 

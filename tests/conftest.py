@@ -15,6 +15,11 @@ from custom_components.cover_automatic.models import (
 )
 from custom_components.cover_automatic.storage import CoverAutomaticStorage
 
+# The browser tests run in their own pytest call: sync Playwright keeps an event
+# loop running, which breaks the asyncio tests of the same session.
+#   pytest tests/frontend --confcutdir=tests/frontend
+collect_ignore = ["frontend"]
+
 
 def bind_profile_settings(storage: Any) -> Any:
     """Give a mock storage the real per-profile accessors.

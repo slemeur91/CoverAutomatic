@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from custom_components.cover_automatic.const import SET_POSITION_FEATURE_FLAG, TILT_FEATURE_FLAG
-from custom_components.cover_automatic.coordinator import (
+from custom_components.cover_automatic.coordinator_common import (
     MAX_LOST_COMMAND_RETRIES,
     PRE_LOCK_STATES_KEY,
     WIND_STATE_KEY,
@@ -16,7 +16,7 @@ from custom_components.cover_automatic.coordinator import (
 from custom_components.cover_automatic.models import CoverConfig, CoverStatus
 from tests.test_coordinator import MockState, coordinator, mock_hass, mock_storage  # noqa: F401
 
-TIME = "custom_components.cover_automatic.coordinator.time_mod"
+TIME = "custom_components.cover_automatic.coordinator_common.time_mod"
 
 
 def _states(mapping: dict[str, MockState]):

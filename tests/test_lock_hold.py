@@ -69,7 +69,7 @@ class TestSync:
         mock_hass.states.get.side_effect = lambda eid: MockState("on") if eid.startswith("binary_sensor") else _Cover(20)
         mock_hass.async_create_task = MagicMock()
         with patch.object(coordinator, "_lock_cover", wraps=coordinator._lock_cover) as lock, \
-                patch("custom_components.cover_automatic.coordinator.dt_util") as mock_dt:
+                patch("custom_components.cover_automatic.coordinator_common.dt_util") as mock_dt:
             mock_dt.now.return_value.timestamp.return_value = 1000.0
             coordinator._sync_cover_statuses()
         assert coordinator._cover_states["cover.t"] == CoverStatus.LOCKED

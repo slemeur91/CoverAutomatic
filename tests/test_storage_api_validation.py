@@ -1,17 +1,25 @@
 """Storage and API validation: cross checks, invalid data, migrations, import, rule ordering."""
 # ruff: noqa: F811 -- pytest fixtures are imported from sibling test modules
 from __future__ import annotations
+
 import logging
+from unittest.mock import MagicMock, patch
+
 import pytest
+
 from custom_components.cover_automatic.api import ws_settings_update
 from custom_components.cover_automatic.models import ConditionType, CoverConfig, Rule, Scenario
-from custom_components.cover_automatic.storage import _ALL_MIGRATIONS, settings_cross_error, MIGRATION_PAUSE_DURATION_120, resolve_active_scenario
+from custom_components.cover_automatic.storage import (
+    _ALL_MIGRATIONS,
+    MIGRATION_PAUSE_DURATION_120,
+    resolve_active_scenario,
+    settings_cross_error,
+)
 from tests.test_api import _make_connection, _make_coordinator, _make_hass, _make_storage
-from tests.test_engine import engine, mock_hass, mock_storage, MockState  # noqa: F401
+from tests.test_coordinator import MockState, coordinator, mock_hass, mock_storage  # noqa: F401
+from tests.test_engine import MockState, engine, mock_hass, mock_storage  # noqa: F401
 from tests.test_storage import mock_store, storage  # noqa: F401
 from tests.test_storage_api_robustness import _base_config, _invalid, _valid
-from unittest.mock import MagicMock, patch
-from tests.test_coordinator import MockState, coordinator, mock_hass, mock_storage  # noqa: F401
 
 
 class TestSettingsCrossChecks:

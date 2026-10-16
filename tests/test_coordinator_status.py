@@ -8,14 +8,14 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from homeassistant.util import dt as dt_util
 
-from custom_components.cover_automatic.coordinator import (
+from custom_components.cover_automatic.coordinator_common import (
     PRE_LOCK_STATES_KEY,
     SETTLE_TIME,
     WIND_STATE_KEY,
 )
 from custom_components.cover_automatic.models import CoverConfig, CoverStatus
-from homeassistant.util import dt as dt_util
 from tests.test_coordinator import MockState, coordinator, mock_hass, mock_storage  # noqa: F401
 from tests.test_coordinator_robustness import TIME, _cover, _raw, _states, _use_covers
 

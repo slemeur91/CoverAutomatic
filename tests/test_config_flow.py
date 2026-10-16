@@ -10,7 +10,6 @@ from custom_components.cover_automatic.config_flow import (
     CoverAutomaticOptionsFlow,
 )
 
-
 # ---------------------------------------------------------------------------
 # ConfigFlow tests
 # ---------------------------------------------------------------------------

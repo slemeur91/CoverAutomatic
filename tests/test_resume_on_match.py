@@ -7,13 +7,13 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from custom_components.cover_automatic.coordinator import RESUME_MATCH_GRACE
-from custom_components.cover_automatic.models import CoverConfig, CoverStatus
 from homeassistant.util import dt as dt_util
+
+from custom_components.cover_automatic.coordinator_common import RESUME_MATCH_GRACE
+from custom_components.cover_automatic.models import CoverConfig, CoverStatus
 from tests.test_coordinator import MockState, coordinator, mock_hass, mock_storage  # noqa: F401
-from tests.test_storage import mock_store, storage  # noqa: F401
 from tests.test_coordinator_robustness import TIME, _raw, _states, _use_covers
+from tests.test_storage import mock_store, storage  # noqa: F401
 
 LOGBOOK = "custom_components.cover_automatic.coordinator.i18n.text"
 

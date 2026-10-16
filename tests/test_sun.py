@@ -8,8 +8,8 @@ from zoneinfo import ZoneInfo
 import pytest
 from homeassistant.util import dt as dt_util
 
-from custom_components.cover_automatic.models import Facade
 from custom_components.cover_automatic import sun as sun_module
+from custom_components.cover_automatic.models import Facade
 from custom_components.cover_automatic.sun import (
     get_facade_sun_times,
     get_sun_position,

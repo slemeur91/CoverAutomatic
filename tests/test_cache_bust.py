@@ -1,4 +1,4 @@
-"""Cache busting of the panel/card files also follows their modification time."""
+"""Cache busting of the panel folder and card file also follows their modification time."""
 from __future__ import annotations
 
 import pathlib
@@ -27,3 +27,16 @@ def test_asset_mtime_reads_file(tmp_path: pathlib.Path) -> None:
     f = tmp_path / "a.js"
     f.write_text("x")
     assert _asset_mtime(f) == int(f.stat().st_mtime)
+
+
+def test_asset_mtime_folder_uses_newest_module(tmp_path: pathlib.Path) -> None:
+    """The panel folder stamp follows its most recently changed module."""
+    import os
+
+    old, new = tmp_path / "core.js", tmp_path / "rules.js"
+    old.write_text("x")
+    new.write_text("y")
+    (tmp_path / "notes.txt").write_text("ignored")
+    os.utime(old, (1_000_000, 1_000_000))
+    os.utime(new, (2_000_000, 2_000_000))
+    assert _asset_mtime(tmp_path) == 2_000_000
