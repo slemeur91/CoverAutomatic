@@ -119,8 +119,8 @@ def _render_entities(hass: HomeAssistant, templates: list[Template]) -> set[str]
             if template.hass is None:
                 template.hass = hass
             entities |= set(template.async_render_to_info().entities)
-        except Exception:  # noqa: BLE001 -- best effort, rendering may fail
-            pass
+        except Exception as err:  # noqa: BLE001 -- best effort, rendering may fail
+            _LOGGER.debug("Cannot extract entities from template %s: %s", template, err)
     return entities
 
 

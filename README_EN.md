@@ -167,7 +167,7 @@ Click a thumbnail to enlarge it. *(The screenshots come from a French installati
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/facades-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/facades-desktop.png" alt="Facades" /></a>
-      <p align="center"><sub><b>Facades</b> – azimuths and assigned covers</sub></p>
+      <p align="center"><sub><b>Facades</b> – azimuths, today's sun times and assigned covers</sub></p>
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/en/scenarios-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/en/scenarios-desktop.png" alt="Scenarios" /></a>
@@ -570,13 +570,13 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.1.0
+2.1.1
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.1.0 (2026-10-15), based on the original version
+Latest version: v2.1.1 (2026-10-16), based on the original version
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler.
 
 ## License

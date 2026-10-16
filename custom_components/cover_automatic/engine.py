@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from datetime import time
 from time import monotonic
 from typing import TYPE_CHECKING, Any
@@ -120,7 +121,7 @@ class RuleEngine:
         if len(self._condition_errors_logged) > 200:
             self._condition_errors_logged.clear()
         self._condition_errors_logged.add(key)
-        _LOGGER.error("Error evaluating condition %s: %s", condition.type, err, exc_info=True)
+        _LOGGER.error("Error evaluating condition %s: %s", condition.type, err, exc_info=err)
 
     def forget_covers_except(self, keep: set[str]) -> None:
         """Drop per-cover caches of covers that no longer exist."""
@@ -530,16 +531,7 @@ class RuleEngine:
         profile = self._profile()
         if profile is None:
             return (False, False, False)
-        if profile == "b":
-            storage = self.storage
-            return (
-                storage.sun_heating_ignore_b, storage.sun_neutral_ignore_b,
-                storage.preemptive_shading_b,
-            )
-        return (
-            self.storage.sun_heating_ignore, self.storage.sun_neutral_ignore,
-            self.storage.preemptive_shading,
-        )
+        return self.storage.sun_settings(profile)
 
     def _profile(self) -> str | None:
         """Comfort profile ('a', 'b') of the active scenario, None without setpoints."""
@@ -932,7 +924,7 @@ class RuleEngine:
                 value = float(state.state)
             except (ValueError, TypeError):
                 value = None
-            if value is not None and (value != value or abs(value) == float("inf")):
+            if value is not None and not math.isfinite(value):
                 value = None
         if value is None:
             if entity_id not in self._threshold_entity_failed:
@@ -964,9 +956,8 @@ class RuleEngine:
 
     def _global_comfort_range(self, profile: str | None = None) -> tuple[float, float]:
         """Global comfort range of a profile (default: the active one)."""
-        if (profile or self._profile()) == "b":
-            return self.storage.comfort_temp_min_b, self.storage.comfort_temp_max_b
-        return self.storage.comfort_temp_min, self.storage.comfort_temp_max
+        comfort_min, comfort_max, _ = self.storage.comfort_settings(profile or self._profile() or "a")
+        return comfort_min, comfort_max
 
     def _comfort_range(self, cover: CoverConfig) -> tuple[float, float]:
         """Effective comfort range of a cover for the active profile.
@@ -998,11 +989,9 @@ class RuleEngine:
 
     def _comfort_hysteresis(self, cover: CoverConfig) -> float:
         """Comfort hysteresis of a cover for the active profile (own value wins)."""
-        if self._profile() == "b":
-            own, default = cover.comfort_hysteresis_b, self.storage.comfort_hysteresis_b
-        else:
-            own, default = cover.comfort_hysteresis, self.storage.comfort_hysteresis
-        return own if own is not None else default
+        profile = self._profile() or "a"
+        own = cover.comfort_hysteresis_b if profile == "b" else cover.comfort_hysteresis
+        return own if own is not None else self.storage.comfort_settings(profile)[2]
 
     def _check_solar_intensity(self, *, update_state: bool = True) -> bool:
         """Check if solar intensity exceeds threshold for preemptive shading.

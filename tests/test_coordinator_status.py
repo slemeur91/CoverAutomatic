@@ -1,4 +1,4 @@
-"""Coordinator fixes (lost commands, pause origin, missing sensors, statuses)."""
+"""Coordinator statuses: lost commands, pause origin, missing sensors, travel learning."""
 # ruff: noqa: F811 -- pytest fixtures are imported from sibling test modules
 from __future__ import annotations
 

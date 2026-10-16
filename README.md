@@ -168,7 +168,7 @@ Cliquez sur une vignette pour l'agrandir.
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/facades-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/facades-desktop.png" alt="Façades" /></a>
-      <p align="center"><sub><b>Façades</b> – azimuts et volets associés</sub></p>
+      <p align="center"><sub><b>Façades</b> – azimuts, heures du soleil du jour et volets associés</sub></p>
     </td>
     <td width="33%" valign="top">
       <a href="https://github.com/slemeur91/CoverAutomatic/blob/main/.github/screenshots/fr/scenarios-desktop.png"><img src="https://raw.githubusercontent.com/slemeur91/CoverAutomatic/main/.github/screenshots/fr/scenarios-desktop.png" alt="Scénarios" /></a>
@@ -573,13 +573,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.1.0
+2.1.1
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.1.0 (2026-10-15), basée sur la version d'origine
+Dernière version : v2.1.1 (2026-10-16), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
 
 ## Licence

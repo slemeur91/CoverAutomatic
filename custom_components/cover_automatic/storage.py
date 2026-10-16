@@ -800,10 +800,18 @@ class CoverAutomaticStorage:
             ]
 
     def scenario_profile(self, scenario_id: str) -> str | None:
-        """Comfort profile ('a', 'b') of a scenario, None when it uses none."""
-        if scenario_id in self.profile_b_scenarios:
+        """Comfort profile ('a', 'b') of a scenario, None when it uses none.
+
+        Same result as looking in profile_b/a_scenarios, without building the
+        lists: called for every cover and condition at each evaluation.
+        """
+        if scenario_id not in self._data.get("scenarios", {}):
+            return None
+        b = self._data.get("profile_b_scenarios")
+        if isinstance(b, list) and scenario_id in b:
             return PROFILE_B
-        if scenario_id in self.profile_a_scenarios:
+        a = self._data.get("profile_a_scenarios")
+        if not isinstance(a, list) or scenario_id in a:
             return PROFILE_A
         return None
 
@@ -1658,6 +1666,10 @@ class CoverAutomaticStorage:
         the next async_save() and flushed by HA itself on shutdown
         (EVENT_HOMEASSISTANT_FINAL_WRITE), so nothing needs cancelling here.
         """
+
+    def schedule_save(self) -> None:
+        """Debounced save, for values changed in bursts (number entities)."""
+        self._schedule_save()
 
     def _schedule_save(self) -> None:
         """Schedule a debounced save through the HA Store.

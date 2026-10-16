@@ -5,7 +5,31 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [2.1.0] - Unreleased
+## [2.1.1] - 2026-10-16
+
+### Added
+
+- Facades tab: each facade card shows today's sun entry and exit times next to its start and end azimuths ("no sun today" when the sun does not reach it).
+
+### Changed
+
+- Facades tab: the covers of a facade follow the "Associated covers" label on the same line.
+- README, wiki and screenshots updated (facades tab).
+- Comfort `number` entities: a new value is saved after a short delay, so a slider or an automation sending several values in a row causes a single write.
+- Comfort profile of the active scenario computed without building the profile lists (evaluated for every cover and condition).
+- Refreshes requested by state changes belong to the config entry and are cancelled on unload.
+- The integration version shown in the panel is kept per config entry instead of a module global.
+- The rule engine reads the setpoints and sun settings of a profile through the storage accessors.
+- Unexpected errors (tilt command, export path validation) are logged with their traceback; a native condition whose template cannot be inspected is logged at debug level.
+- Tests regrouped by functional area (engine, storage/API validation, coordinator statuses and edge cases).
+
+### Fixed
+
+- Rules tab: changing a filter so that the open rule no longer matches it now closes that rule instead of leaving it displayed. With unsaved changes, a confirmation is asked first; cancelling keeps the previous filter.
+- Wind protection: an infinite wind speed reading is ignored like an invalid one, instead of triggering the protection.
+- The traceback of a failing condition is attached to its log entry.
+
+## [2.1.0] - 2026-10-15
 
 ### Added
 
@@ -25,6 +49,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - When the scenario switches to the other profile, the comfort mode of each room is recomputed from the new setpoints (the hysteresis memory of the previous profile is dropped).
 - Room states renamed everywhere: "too cold", "mild" (between the setpoints) and "too hot" — sun exposure settings, "How does it work?" tables, the "Room temperature" condition and the states of the "Comfort mode" sensor. "Action between the setpoints" becomes "Action in a mild room"; "Action at the cold setpoint: let the sun warm the room" becomes "Action at the cold setpoint".
 - Sun exposure tab: the introduction is now a structured help box (what the settings change, the three inputs, the two profiles, the answer by room state, advice for closing and opening rules); the hints under each setting are short summaries.
+- README (FR / EN), wiki and screenshots updated for the comfort profiles, the new sun exposure tab, the compact rule editor and the scenario log.
 
 ### Removed
 

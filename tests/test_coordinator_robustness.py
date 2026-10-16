@@ -336,7 +336,7 @@ class TestWindPersistence:
         mock_storage.wind_sensor = "sensor.wind"
         mock_storage.wind_speed_threshold = 50.0
         # Kept during the startup grace period (dropped at its end
-        # when the sensor never reported, see test_coordinator_fixes)
+        # when the sensor never reported, see test_coordinator_status)
         import time
         coordinator._startup_time = time.monotonic()
         coordinator._restore_cover_states()

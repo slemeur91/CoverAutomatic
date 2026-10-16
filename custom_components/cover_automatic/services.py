@@ -65,7 +65,7 @@ def _validate_export_path(path: str, config_dir: str) -> Path | None:
         return resolved
 
     except Exception as err:
-        _LOGGER.error("Export path validation error for %s: %s", path, err)
+        _LOGGER.exception("Export path validation error for %s: %s", path, err)
         return None
 
 
@@ -92,7 +92,7 @@ def _validate_config_path(path: str, config_dir: str) -> Path | None:
             return None
 
     except Exception as err:
-        _LOGGER.error("Path validation error for %s: %s", path, err)
+        _LOGGER.exception("Path validation error for %s: %s", path, err)
         return None
 
 

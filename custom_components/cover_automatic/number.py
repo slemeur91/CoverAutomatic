@@ -106,6 +106,7 @@ class CoverAutomaticComfortNumber(CoordinatorEntity[CoverAutomaticCoordinator], 
                 translation_key="invalid_comfort_range",
             )
         setattr(storage, self._key, value)
-        await storage.async_save()
+        # A slider or an automation can send many values in a row: one write
+        storage.schedule_save()
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()

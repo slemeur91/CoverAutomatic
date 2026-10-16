@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import time as time_mod
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
@@ -32,7 +33,7 @@ from . import i18n
 from .engine import RuleEngine
 from .models import CoverConfig, CoverStatus
 from .storage import ActivityLogStorage, CoverAutomaticStorage
-from .sun import SUN_ENTITY_ID, is_sun_on_facade
+from .sun import SUN_ENTITY_ID, get_facade_sun_times, is_sun_on_facade
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -133,6 +134,8 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.storage = storage
         self.engine = RuleEngine(hass, storage)
+        # Integration version shown in the panel, set by async_setup_api()
+        self.version: str = "0"
         self._tracked_entities: set[str] = set()
         self._unsub_state_change: list[Any] = []
         self._cover_states: dict[str, CoverStatus] = {}
@@ -523,7 +526,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             speed = float(state.state)
         except (ValueError, TypeError):
             return None
-        if speed != speed:  # NaN is no valid reading
+        if not math.isfinite(speed):  # NaN or inf is no valid reading
             return None
         self._wind_value_seen = True
         return speed
@@ -866,7 +869,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Wind sensor unavailable, keeping current protection state")
             return
         self._check_wind_protection()
-        self.hass.async_create_task(self.async_request_refresh())
+        self._schedule_refresh()
 
     @callback
     def _async_on_state_change(self, event: Event) -> None:
@@ -879,7 +882,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._handle_cover_state_change(entity_id, old_state, new_state)
             # A managed cover may also feed a rule condition
             if self._is_rule_entity(entity_id):
-                self.hass.async_create_task(self.async_request_refresh())
+                self._schedule_refresh()
         elif entity_id == self.storage.wind_sensor:
             self._handle_wind_sensor_change(new_state)
         else:
@@ -890,9 +893,9 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
                 # The same entity may also feed a rule condition
                 if self._is_rule_entity(entity_id):
-                    self.hass.async_create_task(self.async_request_refresh())
+                    self._schedule_refresh()
             else:
-                self.hass.async_create_task(self.async_request_refresh())
+                self._schedule_refresh()
 
     def _is_rule_entity(self, entity_id: str) -> bool:
         """Return True if a rule condition references this entity."""
@@ -1112,7 +1115,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._post_protective_exit.add(cover_id)
                 if self.data is not None:
                     self.async_set_updated_data(self.data)
-                self.hass.async_create_task(self.async_request_refresh())
+                self._schedule_refresh()
 
         # Pre-lock statuses may have changed (lock/unlock): persist them now
         # rather than at the next sync cycle.
@@ -1381,7 +1384,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         # One-shot time-hysteresis bypass for the next apply cycle.
         self._post_protective_exit.add(entity_id)
-        self.hass.async_create_task(self.async_request_refresh())
+        self._schedule_refresh()
 
     @staticmethod
     def _status_for_automation(
@@ -2098,6 +2101,24 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "last_change": cover_raw.get("last_position_change"),
         }
 
+    def _facade_live(self, facade_id: str, facade: Any) -> dict[str, Any]:
+        """Live data of a facade: sun on it now, today's sun entry/exit times.
+
+        The times (local HH:MM, None when the sun does not reach the facade)
+        are computed once per day and facade. They are only displayed: a
+        failure leaves them empty instead of blocking the update cycle.
+        """
+        try:
+            sun_entry, sun_exit = get_facade_sun_times(self.hass, facade)
+        except Exception:  # noqa: BLE001 -- display only
+            _LOGGER.debug("Sun times unavailable for facade %s", facade_id, exc_info=True)
+            sun_entry = sun_exit = None
+        return {
+            "sun_on_facade": is_sun_on_facade(self.hass, facade),
+            "sun_entry": sun_entry,
+            "sun_exit": sun_exit,
+        }
+
     def get_live_facade_data(self) -> dict[str, dict[str, Any]]:
         """Get live runtime data for facades (sun on facade)."""
         if self.data:
@@ -2121,7 +2142,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         current = self.storage.effective_active_scenario
         # getattr: coordinators built without __init__ in tests
-        previous, self._last_scenario = getattr(self, "_last_scenario", None), current
+        previous, self._last_scenario = self._last_scenario, current
         if previous is None or previous == current:
             return
         scenarios = self.storage.scenarios
@@ -2148,6 +2169,21 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             entity_id=entity_id,
         )
 
+    @callback
+    def _schedule_refresh(self) -> None:
+        """Request a debounced refresh from a callback.
+
+        The task belongs to the config entry, so it is cancelled on unload
+        instead of outliving the coordinator.
+        """
+        entry = self.config_entry
+        if entry is None:
+            self.hass.async_create_task(self.async_request_refresh())
+            return
+        entry.async_create_background_task(
+            self.hass, self.async_request_refresh(), f"{DOMAIN}_refresh"
+        )
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data and evaluate rules."""
         # Compile native Home Assistant conditions (async) so the rule
@@ -2171,9 +2207,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         active_rules: dict[str, list[str]] = {}
 
         for facade_id, facade in self.storage.facades.items():
-            result["facades"][facade_id] = {
-                "sun_on_facade": is_sun_on_facade(self.hass, facade),
-            }
+            result["facades"][facade_id] = self._facade_live(facade_id, facade)
 
         # Safety takeovers/releases only act once commands may be sent
         in_grace = (time_mod.monotonic() - self._startup_time) < STARTUP_GRACE_PERIOD
@@ -2766,7 +2800,7 @@ class CoverAutomaticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 blocking=False,
             )
         except Exception as err:
-            _LOGGER.error("Failed to send tilt to %s: %s", entity_id, err)
+            _LOGGER.exception("Failed to send tilt to %s: %s", entity_id, err)
         finally:
             # Clean up task reference (guard against cancelled task clearing new ref)
             if self._tilt_tasks.get(entity_id) is asyncio.current_task():

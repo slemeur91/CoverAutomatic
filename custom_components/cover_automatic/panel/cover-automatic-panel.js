@@ -372,6 +372,9 @@ const I18N = {
     facade_add: "Add facade",
     facade_no_covers: "No covers assigned",
     facade_sun_active: "Sun on facade",
+    facade_sun_entry_tip: "Sun reaches the facade today",
+    facade_sun_exit_tip: "Sun leaves the facade today",
+    facade_no_sun_today: "no sun today",
     facade_dir_north: "North",
     facade_dir_east: "East",
     facade_dir_south: "South",
@@ -1028,6 +1031,9 @@ const I18N = {
     facade_add: "Fassade hinzufügen",
     facade_no_covers: "Keine Behänge zugewiesen",
     facade_sun_active: "Sonne auf Fassade",
+    facade_sun_entry_tip: "Sonne erreicht die Fassade heute",
+    facade_sun_exit_tip: "Sonne verlässt die Fassade heute",
+    facade_no_sun_today: "heute keine Sonne",
     facade_dir_north: "Norden",
     facade_dir_east: "Osten",
     facade_dir_south: "Süden",
@@ -1681,6 +1687,9 @@ const I18N = {
     facade_add: "Ajouter une façade",
     facade_no_covers: "Aucun volet associé",
     facade_sun_active: "Soleil sur la façade",
+    facade_sun_entry_tip: "Arrivée du soleil sur la façade aujourd'hui",
+    facade_sun_exit_tip: "Départ du soleil de la façade aujourd'hui",
+    facade_no_sun_today: "pas de soleil aujourd'hui",
     facade_dir_north: "Nord",
     facade_dir_east: "Est",
     facade_dir_south: "Sud",
@@ -3800,12 +3809,18 @@ const PANEL_STYLES = `
   }
   .facade-covers-list-wrap {
     margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
   }
   .facade-covers-label {
     font-size: 12px;
     color: var(--ca-secondary-text);
-    margin-bottom: 4px;
   }
+  .facade-covers-list-wrap > .chip-group { margin: 0; }
+  .facade-sun-time { color: var(--primary-text-color); }
+  .facade-no-sun { font-style: italic; }
   .facade-no-covers {
     font-size: 12px;
     color: var(--ca-secondary-text);
@@ -6216,6 +6231,10 @@ class CoverAutomaticPanel extends HTMLElement {
     const sunBadge = sunOn
       ? '<span class="live-icon-sun" title="' + this._esc(this._t("facade_sun_active")) + '">' + this._sunIconSvg(14) + '</span>'
       : '';
+    // Today's sun entry/exit times next to the azimuths (sent by the backend)
+    const hasTimes = !!(liveFacade.sun_entry || liveFacade.sun_exit);
+    const sunTime = (time, tipKey) => time
+      ? ` <span class="facade-sun-time" title="${this._esc(this._t(tipKey))}">· ${this._esc(time)}</span>` : "";
     let html = `<div class="card">
       <div class="card-header">
         <span>${this._esc(f.name)}${sunBadge}</span>
@@ -6223,14 +6242,15 @@ class CoverAutomaticPanel extends HTMLElement {
       </div>
       <div class="card-body">
         <div class="facade-meta-row">
-          <span>${this._t("facade_azimuth_start")}${this._colon()}${f.azimuth_start}&#176;</span>
-          <span>${this._t("facade_azimuth_end")}${this._colon()}${f.azimuth_end}&#176;</span>
+          <span>${this._t("facade_azimuth_start")}${this._colon()}${f.azimuth_start}&#176;${sunTime(liveFacade.sun_entry, "facade_sun_entry_tip")}</span>
+          <span>${this._t("facade_azimuth_end")}${this._colon()}${f.azimuth_end}&#176;${sunTime(liveFacade.sun_exit, "facade_sun_exit_tip")}</span>
+          ${hasTimes || !("sun_entry" in liveFacade) ? "" : `<span class="facade-no-sun">${this._esc(this._t("facade_no_sun_today"))}</span>`}
         </div>
         <div class="facade-covers-intro">
           ${this._t("facade_min_elevation")}${this._colon()}${f.min_elevation}&#176;
         </div>
         <div class="facade-covers-list-wrap">
-          <div class="facade-covers-label">${this._t("facade_covers")}</div>
+          <span class="facade-covers-label">${this._t("facade_covers")}</span>
           <div class="chip-group">`;
     if (covers.length === 0) {
       html += `<span class="facade-no-covers">${this._t("facade_no_covers")}</span>`;
@@ -9273,9 +9293,27 @@ class CoverAutomaticPanel extends HTMLElement {
     // Rules tab filter
     if (el.matches('[data-action="rule-filter"]')) {
       const key = el.dataset.filterKey;
-      if (key in this._ruleFilter) this._ruleFilter[key] = el.value || "";
-      this._render();
-      this.shadowRoot.querySelector('[data-action="rule-filter"][data-filter-key="' + key + '"]')?.focus();
+      if (!(key in this._ruleFilter)) return;
+      const value = el.value || "";
+      const apply = () => {
+        this._ruleFilter[key] = value;
+        // The open rule is closed when the new filter no longer shows it
+        const open = this._expandedRule && (this._config.rules || {})[this._expandedRule];
+        const f = this._effectiveRuleFilter();
+        if (open && Object.values(f).some(Boolean) && !this._ruleMatchesFilter(open, f)) {
+          this._setExpandedRule(null);
+          this._stopCondPreview();
+        }
+        this._render();
+        this.shadowRoot.querySelector('[data-action="rule-filter"][data-filter-key="' + key + '"]')?.focus();
+      };
+      const next = { ...this._ruleFilter, [key]: value };
+      const open = this._expandedRule && (this._config.rules || {})[this._expandedRule];
+      const hides = open && Object.values(next).some(Boolean) && !this._ruleMatchesFilter(open, next);
+      // Unsaved edits of a rule the filter would hide: confirm first (the
+      // select goes back to its previous value when the user cancels)
+      if (hides && this._ruleDraftDirty()) this._showConfirm(this._t("rule_unsaved_confirm"), apply, this._t("discard"));
+      else apply();
       return;
     }
 

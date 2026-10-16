@@ -132,6 +132,34 @@ class TestStorageDefaults:
         assert storage.scenario_profile("autumn") == "a"
 
 
+    @pytest.mark.asyncio
+    async def test_scenario_profile_matches_lists(self, storage, mock_store) -> None:  # noqa: F811
+        """scenario_profile() gives the same answer as the profile lists."""
+        await _loaded(storage, mock_store)
+
+        def from_lists(sid):
+            if sid in storage.profile_b_scenarios:
+                return "b"
+            return "a" if sid in storage.profile_a_scenarios else None
+
+        cases = [
+            (None, None),  # legacy: every scenario in A
+            (None, ["summer"]),
+            (["everyday"], ["summer"]),
+            ([], ["winter"]),
+            (["summer", "ghost"], ["summer"]),  # B wins, unknown ids ignored
+        ]
+        for a, b in cases:
+            storage._data.pop("profile_a_scenarios", None)
+            storage._data.pop("profile_b_scenarios", None)
+            if a is not None:
+                storage._data["profile_a_scenarios"] = a
+            if b is not None:
+                storage._data["profile_b_scenarios"] = b
+            for sid in ("everyday", "summer", "winter", "ghost"):
+                assert storage.scenario_profile(sid) == from_lists(sid), (a, b, sid)
+
+
 class TestMigration:
     @pytest.mark.asyncio
     async def test_legacy_install_converted(self, storage, mock_store) -> None:  # noqa: F811
@@ -396,7 +424,8 @@ class TestNumbers:
         assert entity.native_value == 24.0
         with patch.object(storage, "async_save", AsyncMock()) as save:
             await entity.async_set_native_value(25.5)
-        save.assert_awaited_once()
+        save.assert_not_awaited()
+        mock_store.async_delay_save.assert_called()
         assert storage.comfort_temp_max_b == 25.5
         entity.coordinator.async_request_refresh.assert_awaited_once()
 
@@ -450,3 +479,40 @@ class TestScenarioLog:
         coordinator._log_scenario_change()  # unchanged: nothing new
         coordinator._log.assert_not_called()
 
+
+
+# ---------------------------------------------------------------------------
+# Facades: today's sun times in the live data
+# ---------------------------------------------------------------------------
+
+class TestFacadeSunTimes:
+    def _coordinator(self):
+        from custom_components.cover_automatic.coordinator import CoverAutomaticCoordinator
+
+        coordinator = CoverAutomaticCoordinator.__new__(CoverAutomaticCoordinator)
+        coordinator.hass = MagicMock()
+        return coordinator
+
+    def test_times_in_live_data(self) -> None:
+        from custom_components.cover_automatic import coordinator as coord_mod
+        from custom_components.cover_automatic.models import Facade
+
+        facade = Facade(id="south", name="South", azimuth_start=120, azimuth_end=240)
+        with (
+            patch.object(coord_mod, "get_facade_sun_times", return_value=("08:41", "17:12")),
+            patch.object(coord_mod, "is_sun_on_facade", return_value=True),
+        ):
+            live = self._coordinator()._facade_live("south", facade)
+        assert live == {"sun_on_facade": True, "sun_entry": "08:41", "sun_exit": "17:12"}
+
+    def test_failure_leaves_times_empty(self) -> None:
+        from custom_components.cover_automatic import coordinator as coord_mod
+        from custom_components.cover_automatic.models import Facade
+
+        facade = Facade(id="north", name="North", azimuth_start=315, azimuth_end=45)
+        with (
+            patch.object(coord_mod, "get_facade_sun_times", side_effect=ValueError("no location")),
+            patch.object(coord_mod, "is_sun_on_facade", return_value=False),
+        ):
+            live = self._coordinator()._facade_live("north", facade)
+        assert live == {"sun_on_facade": False, "sun_entry": None, "sun_exit": None}

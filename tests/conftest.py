@@ -1,6 +1,8 @@
 """Pytest fixtures for CoverAutomatic tests."""
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from custom_components.cover_automatic.models import (
@@ -11,6 +13,18 @@ from custom_components.cover_automatic.models import (
     Rule,
     Scenario,
 )
+from custom_components.cover_automatic.storage import CoverAutomaticStorage
+
+
+def bind_profile_settings(storage: Any) -> Any:
+    """Give a mock storage the real per-profile accessors.
+
+    comfort_settings() / sun_settings() only read attributes: bound to the
+    mock, they return the values the test set (comfort_temp_min_b, ...).
+    """
+    storage.comfort_settings = lambda p: CoverAutomaticStorage.comfort_settings(storage, p)
+    storage.sun_settings = lambda p: CoverAutomaticStorage.sun_settings(storage, p)
+    return storage
 
 
 @pytest.fixture

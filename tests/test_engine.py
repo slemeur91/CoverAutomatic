@@ -20,6 +20,7 @@ from custom_components.cover_automatic.models import (
     Rule,
     Scenario,
 )
+from tests.conftest import bind_profile_settings
 
 
 class MockState:
@@ -59,7 +60,7 @@ def mock_storage():
     storage.sun_heating_ignore = True
     storage.sun_neutral_ignore = True
     storage.preemptive_shading = True
-    return storage
+    return bind_profile_settings(storage)
 
 
 @pytest.fixture

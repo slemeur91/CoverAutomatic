@@ -93,6 +93,9 @@ def coordinator(mock_hass, mock_storage):
         coord._wind_protected = False
         coord._hysteresis_info = {}
         coord._last_matching_rules = {}
+        coord._last_scenario = None
+        coord.config_entry = None
+        coord.version = "0"
         coord._last_move_rule = {}
         coord._last_sent_target = {}
         coord._move_start = {}

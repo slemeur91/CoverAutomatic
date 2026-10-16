@@ -29,11 +29,6 @@ from .models import (
 )
 from .storage import SETTING_VALIDATORS, settings_cross_error
 
-# Integration version shown in the panel. Set once by async_setup_api() from
-# the cached integration manifest -- reading manifest.json here would be a
-# blocking file read inside the event loop, which Home Assistant flags.
-_VERSION = "0"
-
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
@@ -167,8 +162,9 @@ def _build_config_response(
     coordinator: CoverAutomaticCoordinator | None = None,
 ) -> dict[str, Any]:
     """Build full config response dict from storage."""
+    version = getattr(coordinator, "version", None)
     result: dict[str, Any] = {
-        "version": _VERSION,
+        "version": version if isinstance(version, str) else "0",
         "enabled": storage.enabled,
         "covers": {k: v.to_dict() for k, v in storage.covers.items()},
         "facades": {k: v.to_dict() for k, v in storage.facades.items()},
@@ -1162,8 +1158,7 @@ def async_setup_api(
     version comes from the integration manifest, resolved by the caller so no
     file is read inside the event loop.
     """
-    global _VERSION
-    _VERSION = version
+    coordinator.version = version
 
     # Command definitions: (command_type, handler, extra_schema)
     commands: list[tuple[str, Any, dict[str, Any]]] = [

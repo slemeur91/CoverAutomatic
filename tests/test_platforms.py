@@ -515,3 +515,14 @@ class TestFacadeSunTimeSensorExceptions:
         sensor.hass = mock_hass
 
         assert sensor.native_value is None
+
+
+def test_sensor_rule_state_truncated() -> None:
+    from custom_components.cover_automatic.sensor import CoverRuleSensor
+
+    coord = MagicMock()
+    coord.storage.covers = {"cover.a": CoverConfig(entity_id="cover.a", name="A")}
+    coord.get_cover_live.return_value = {"rule_name": "n" * 400}
+    ent = CoverRuleSensor(coord, "cover.a", "A")
+    ent.hass = MagicMock()
+    assert len(ent.native_value) == 255

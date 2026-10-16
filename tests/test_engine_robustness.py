@@ -17,6 +17,7 @@ from custom_components.cover_automatic.models import (
     Rule,
 )
 from custom_components.cover_automatic.sun import _azimuth_in_facade, is_sun_on_facade
+from tests.conftest import bind_profile_settings
 from tests.test_engine import MockState, engine, mock_hass, mock_storage  # noqa: F401
 from tests.test_ha_condition import hass  # noqa: F401
 from tests.test_sun import MockState as SunState
@@ -303,7 +304,7 @@ class TestTemplateEntitiesRefresh:
             "value_template": "{{ states(states('input_text.target')) | float(0) > 1 }}",
         }
         cond = Condition(type=ConditionType.HA_CONDITION, params={"config": config})
-        storage = MagicMock()
+        storage = bind_profile_settings(MagicMock())
         storage.rules = {"r": Rule(id="r", name="R", conditions=[cond])}
         eng = engine_mod.RuleEngine(hass, storage)
         await eng.async_prepare_ha_conditions()

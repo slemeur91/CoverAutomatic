@@ -1877,26 +1877,22 @@ class TestVersionHandling:
     """
 
     def test_setup_stores_version_for_config_response(self) -> None:
-        from custom_components.cover_automatic import api as api_mod
+        hass = _make_hass()
+        storage = _make_storage()
+        coordinator = _make_coordinator()
 
-        previous = api_mod._VERSION
-        try:
-            hass = _make_hass()
-            storage = _make_storage()
-            coordinator = _make_coordinator()
+        from homeassistant.components import websocket_api as real_ws
 
-            from homeassistant.components import websocket_api as real_ws
+        with patch(
+            "custom_components.cover_automatic.api.websocket_api"
+        ) as mock_ws:
+            mock_ws.BASE_COMMAND_MESSAGE_SCHEMA = real_ws.BASE_COMMAND_MESSAGE_SCHEMA
+            async_setup_api(hass, storage, coordinator, version="9.9.9")
 
-            with patch(
-                "custom_components.cover_automatic.api.websocket_api"
-            ) as mock_ws:
-                mock_ws.BASE_COMMAND_MESSAGE_SCHEMA = real_ws.BASE_COMMAND_MESSAGE_SCHEMA
-                async_setup_api(hass, storage, coordinator, version="9.9.9")
-
-            result = _build_config_response(storage)
-            assert result["version"] == "9.9.9"
-        finally:
-            api_mod._VERSION = previous
+        result = _build_config_response(storage, hass, coordinator)
+        assert result["version"] == "9.9.9"
+        # Kept per entry, not in a module global
+        assert _build_config_response(storage)["version"] == "0"
 
     def test_module_does_no_file_io(self) -> None:
         """No blocking file read may remain in the module.

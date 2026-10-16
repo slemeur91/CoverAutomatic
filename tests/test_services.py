@@ -1005,3 +1005,52 @@ class TestAdminRequirement:
         ):
             # Should not raise -- internal/automation calls pass through
             await handlers["export_config"](call)
+
+
+class TestServicesExecutor:
+    @pytest.mark.asyncio
+    async def test_import_checks_run_in_executor(self) -> None:
+        from custom_components.cover_automatic.services import async_setup_services
+
+        hass = MagicMock()
+        hass.services.has_service = MagicMock(return_value=False)
+        handlers: dict = {}
+        hass.services.async_register = lambda d, s, h, **kw: handlers.__setitem__(s, h)
+        hass.config.config_dir = "/config"
+        jobs: list = []
+
+        async def executor(fn):
+            jobs.append(fn)  # not run: nothing may touch the filesystem inline
+            return {"rules": {}}
+
+        hass.async_add_executor_job = executor
+        entry = MagicMock()
+        entry.runtime_data.storage.async_import_data = AsyncMock()
+        entry.runtime_data.coordinator.async_request_refresh = AsyncMock()
+        hass.config_entries.async_entries = MagicMock(return_value=[entry])
+        await async_setup_services(hass)
+
+        call = MagicMock()
+        call.data = {"path": "/config/x.yaml"}
+        call.context.user_id = None
+        path = MagicMock()
+        path.exists.return_value = True
+        path.stat.return_value.st_size = 10
+        with patch(
+            "custom_components.cover_automatic.services._validate_config_path",
+            return_value=path,
+        ) as validate:
+            await handlers["import_config"](call)
+            # resolve/exists/stat did not run on the event loop
+            validate.assert_not_called()
+            path.exists.assert_not_called()
+            path.stat.assert_not_called()
+            entry.runtime_data.storage.async_import_data.assert_awaited_once()
+            # ... they run inside the executor job
+            with patch("builtins.open", MagicMock()), patch(
+                "custom_components.cover_automatic.services.yaml.safe_load", return_value={}
+            ):
+                jobs[0]()
+            validate.assert_called_once()
+            path.exists.assert_called_once()
+            path.stat.assert_called_once()
