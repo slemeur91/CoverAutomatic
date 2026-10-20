@@ -134,3 +134,39 @@ def test_names_are_escaped(mount) -> None:
     assert m.js("window.__el.shadowRoot.querySelectorAll('img[src=x]').length") == 0
     assert m.js("window.__xss") is None
     assert m.errors() == []
+
+
+def test_cover_commands(mount) -> None:
+    """Open / stop / close in the covers table call the cover services only."""
+    m = mount()
+    m.tab("covers")
+    btn = f'[data-action="cover-command"][data-id="{SALON}"]'
+    # Living room cover is closed (0 %): open and stop enabled, close disabled
+    assert m.root(f'{btn}[data-cmd="open_cover"]').is_enabled()
+    assert m.root(f'{btn}[data-cmd="stop_cover"]').is_enabled()
+    assert m.root(f'{btn}[data-cmd="close_cover"]').is_disabled()
+    m.click(f'{btn}[data-cmd="open_cover"]')
+    m.page.wait_for_timeout(200)
+    assert m.js("window.__services") == [
+        {"domain": "cover", "service": "open_cover", "data": {"entity_id": SALON}}
+    ]
+    # The click does not open the cover sheet
+    assert m.root(".slide-panel.open").count() == 0
+    assert m.errors() == []
+
+
+def test_cover_commands_follow_live_state(mount) -> None:
+    m = mount()
+    m.tab("covers")
+    m.js(f"""(() => {{
+      // Home Assistant hands a new hass object on every state change
+      const hass = window.__hass;
+      const st = hass.states["{SALON}"];
+      const states = {{ ...hass.states, "{SALON}": {{ ...st, state: "opening", attributes: {{ ...st.attributes, current_position: 40 }} }} }};
+      window.__el.hass = {{ ...hass, states }};
+    }})()""")
+    m.page.wait_for_timeout(300)
+    btn = f'[data-action="cover-command"][data-id="{SALON}"]'
+    assert m.root(f'{btn}[data-cmd="open_cover"]').is_disabled()
+    assert m.root(f'{btn}[data-cmd="close_cover"]').is_enabled()
+    assert m.errors() == []

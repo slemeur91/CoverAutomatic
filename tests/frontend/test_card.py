@@ -31,3 +31,38 @@ def test_card_without_covers(mount) -> None:
     m = mount("en", mode="card", init_script="window.__entities = {};")
     assert "No CoverAutomatic cover found" in m.js("window.__el.shadowRoot.textContent")
     assert m.errors() == []
+
+
+def test_card_commands_call_cover_services(mount) -> None:
+    m = mount("fr", mode="card", init_script=WITH_STATUS)
+    # Living room cover is closed: close is disabled
+    assert m.root('.cmd[data-cmd="close_cover"]').is_disabled()
+    m.root('.cmd[data-cmd="open_cover"]').click()
+    m.page.wait_for_timeout(100)
+    assert m.js("window.__services") == [
+        {"domain": "cover", "service": "open_cover", "data": {"entity_id": SALON}}
+    ]
+    assert m.errors() == []
+
+
+def test_card_commands_can_be_hidden(mount) -> None:
+    m = mount("fr", mode="card", init_script=WITH_STATUS + "window.__cardConfig = { show_commands: false };")
+    assert m.root(".cmd").count() == 0
+    assert m.errors() == []
+
+
+PAUSED = WITH_STATUS.replace('state: "auto"', 'state: "paused"').replace(
+    "position: 0 }}", "position: 0, pause_until: new Date(Date.now() + 42 * 60000).toISOString() }}"
+)
+
+
+def test_card_resume_next_to_pause_time(mount) -> None:
+    m = mount("fr", mode="card", init_script=PAUSED)
+    assert m.root(".status .pause .resume").count() == 1
+    assert m.root(".controls .resume").count() == 0
+    m.js("window.__el.shadowRoot.querySelector('.pause .resume').click()")
+    m.page.wait_for_timeout(100)
+    assert m.js("window.__services")[-1] == {
+        "domain": "cover_automatic", "service": "resume", "data": {"entity_id": SALON}
+    }
+    assert m.errors() == []

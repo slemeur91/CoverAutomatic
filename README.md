@@ -105,6 +105,8 @@ La V2 regroupe toutes les évolutions apportées depuis la version d'origine 1.6
   et les priorités (clavier et tactile).
 
 ### Volets
+- **Commandes manuelles** : boutons Ouvrir / Arrêter / Fermer sur chaque volet, dans l'onglet Volets du panneau et sur la
+  carte. Ils commandent le volet directement ; comme toute commande manuelle, ils mettent le volet en pause.
 - **Garder la position quand la fenêtre s'ouvre** : nouveau choix en plus de la position de verrouillage. À l'ouverture de la
   fenêtre, le volet peut soit aller à sa position de verrouillage (comportement d'origine), soit rester où il est ; dans les
   deux cas, l'automatisation est bloquée tant que la fenêtre reste ouverte.
@@ -129,7 +131,7 @@ La V2 regroupe toutes les évolutions apportées depuis la version d'origine 1.6
 ### Entités et tableau de bord
 - **Carte de tableau de bord** `custom:cover-automatic-card` (nouvelle carte, en plus du panneau, qui ne change rien
   au fonctionnement existant) : une ligne par volet (position, règle active, statut, temps de
-  pause restant, bouton de reprise, interrupteur d'automatisation) et un en-tête global (scénario, interrupteur général, vent,
+  pause restant, bouton de reprise, boutons Ouvrir / Arrêter / Fermer, interrupteur d'automatisation) et un en-tête global (scénario, interrupteur général, vent,
   nombre de volets en pause / manuels / verrouillés, bouton « Tout reprendre »).
 - **Capteurs par volet** (nouveaux, en plus de l'interrupteur et du statut existants) : règle active, position cible, position,
   mode confort, fin de pause (voir [Entités créées](#entités-créées)).
@@ -455,7 +457,7 @@ Remarque : l'intégration pilote directement vos entités `cover` d'origine ; el
 
 La carte `custom:cover-automatic-card` est chargée automatiquement et proposée dans le sélecteur de cartes, avec un éditeur visuel.
 Options : `title`, `covers` (tous par défaut), `show_rule`, `show_auto`, `show_temp` (température de la pièce,
-avec les couleurs choisies dans les Paramètres), `show_header`.
+avec les couleurs choisies dans les Paramètres), `show_commands` (boutons Ouvrir / Arrêter / Fermer), `show_header`.
 
 ```yaml
 type: custom:cover-automatic-card
@@ -573,13 +575,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.1.3
+2.1.4
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.1.3 (2026-10-19), basée sur la version d'origine
+Dernière version : v2.1.4 (2026-10-20), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
 
 ## Licence

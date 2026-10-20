@@ -129,6 +129,7 @@ export const EventsMixin = (Base) => class extends Base {
       case "cover-add-cancel": this._addingCover = false; this._render(); break;
       case "cover-add": this._onCoverAdd(); break;
       case "cover-resume": this._onCoverResume(actionEl.dataset.id); break;
+      case "cover-command": this._onCoverCommand(actionEl.dataset.id, actionEl.dataset.cmd); break;
       case "cover-delete": this._onCoverDelete(actionEl.dataset.id); break;
       case "select-cover":
         this._selectedCover = actionEl.dataset.id;

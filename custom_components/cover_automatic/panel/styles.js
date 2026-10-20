@@ -272,6 +272,16 @@ export const PANEL_STYLES = `
     color: var(--ca-secondary-text);
     white-space: nowrap;
   }
+  .data-table th.last-change-head { width: 1%; white-space: nowrap; }
+  .data-table td.rule-cell { min-width: 200px; }
+  /* Open / stop / close buttons of the covers table */
+  .cmd-group { display: inline-flex; gap: 4px; vertical-align: middle; }
+  .cmd-btn { width: 32px; height: 32px; padding: 0; border-radius: 8px; border: 1px solid var(--ca-border);
+    background: var(--secondary-background-color, rgba(127, 127, 127, .10)); color: var(--primary-text-color);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .cmd-btn:hover:not(:disabled) { border-color: var(--primary-color); color: var(--primary-color); }
+  .cmd-btn:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 1px; }
+  .cmd-btn:disabled { opacity: .35; cursor: default; }
   /* Inline rule link inside cover table -- jumps to Rules tab and highlights the rule */
   .data-table .rule-link {
     color: var(--ca-action);

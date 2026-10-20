@@ -17,6 +17,14 @@
   "events": [],
   "state": []
  },
+ "cover-add|cover-command|click": {
+  "calls": [
+   "_onCoverCommand"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
  "cover-add|cover-resume|click": {
   "calls": [
    "_onCoverResume"
@@ -98,6 +106,14 @@
   "state": [
    "_addingCover"
   ]
+ },
+ "cover-sheet|cover-command|click": {
+  "calls": [
+   "_onCoverCommand"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
  },
  "cover-sheet|cover-delete|click": {
   "calls": [
@@ -346,6 +362,14 @@
   "state": [
    "_addingCover"
   ]
+ },
+ "covers|cover-command|click": {
+  "calls": [
+   "_onCoverCommand"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
  },
  "covers|cover-resume|click": {
   "calls": [

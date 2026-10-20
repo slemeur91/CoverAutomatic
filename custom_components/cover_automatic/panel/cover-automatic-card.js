@@ -8,6 +8,7 @@
  *   show_rule: true          # optional
  *   show_auto: true          # optional (automation switch + resume button)
  *   show_temp: true          # optional (room temperature after the active rule)
+ *   show_commands: true      # optional (open / stop / close buttons)
  *
  * Everything comes from the per-cover "Status" sensors of the integration
  * (their attributes carry the rule, target, pause end and the automation
@@ -39,6 +40,10 @@
       ed_show_rule: "Show the active rule",
       ed_show_auto: "Show the automation switch and the resume button",
       ed_show_temp: "Show the room temperature",
+      ed_show_commands: "Show the open / stop / close buttons",
+      cmd_open: "Open",
+      cmd_stop: "Stop",
+      cmd_close: "Close",
       desc: "Covers managed by CoverAutomatic: position, active rule and status.",
       scenario: "Scenario",
       master: "Automation",
@@ -72,6 +77,10 @@
       ed_show_rule: "Aktive Regel anzeigen",
       ed_show_auto: "Automatik-Schalter und Fortsetzen-Knopf anzeigen",
       ed_show_temp: "Raumtemperatur anzeigen",
+      ed_show_commands: "Tasten Öffnen / Stopp / Schließen anzeigen",
+      cmd_open: "Öffnen",
+      cmd_stop: "Stopp",
+      cmd_close: "Schließen",
       desc: "Von CoverAutomatic gesteuerte Rollläden: Position, aktive Regel und Status.",
       scenario: "Szenario",
       master: "Automatik",
@@ -105,6 +114,10 @@
       ed_show_rule: "Afficher la règle active",
       ed_show_auto: "Afficher l'interrupteur d'automatisation et le bouton de reprise",
       ed_show_temp: "Afficher la température de la pièce",
+      ed_show_commands: "Afficher les boutons Ouvrir / Arrêter / Fermer",
+      cmd_open: "Ouvrir",
+      cmd_stop: "Arrêter",
+      cmd_close: "Fermer",
       desc: "Volets gérés par CoverAutomatic : position, règle active et statut.",
       scenario: "Scénario",
       master: "Automatisation",
@@ -200,6 +213,33 @@
 
   const num = (v) => (v == null || v === "" || isNaN(Number(v)) ? null : Math.round(Number(v)));
 
+  // Open / stop / close of a cover entity, like the Home Assistant tile: only
+  // the commands the cover supports (supported_features bits), open disabled
+  // when fully open or opening, close when fully closed or closing. They act
+  // on the device itself (an inverted cover's displayed position is ignored).
+  const COVER_COMMANDS = [
+    { service: "open_cover", feature: 1, icon: "mdi:arrow-up", label: "cmd_open" },
+    { service: "stop_cover", feature: 8, icon: "mdi:stop", label: "cmd_stop" },
+    { service: "close_cover", feature: 2, icon: "mdi:arrow-down", label: "cmd_close" },
+  ];
+  function coverCommands(cover) {
+    const attrs = (cover && cover.attributes) || {};
+    const state = cover ? cover.state : "unavailable";
+    const off = state === "unavailable";
+    const features = attrs.supported_features;
+    const pos = num(attrs.current_position);
+    const fullyOpen = pos != null ? pos >= 100 : state === "open";
+    const fullyClosed = pos != null ? pos <= 0 : state === "closed";
+    const disabled = {
+      open_cover: off || fullyOpen || state === "opening",
+      stop_cover: off,
+      close_cover: off || fullyClosed || state === "closing",
+    };
+    return COVER_COMMANDS
+      .filter((c) => features == null || (Number(features) & c.feature))
+      .map((c) => ({ ...c, disabled: disabled[c.service] }));
+  }
+
   class CoverAutomaticCard extends HTMLElement {
     constructor() {
       super();
@@ -218,7 +258,7 @@
     }
 
     static getStubConfig() {
-      return { show_header: true, show_rule: true, show_auto: true, show_temp: true };
+      return { show_header: true, show_rule: true, show_auto: true, show_temp: true, show_commands: true };
     }
 
     // Never throws on a questionable option (a thrown error shows a red
@@ -226,7 +266,7 @@
     setConfig(config) {
       const c = config && typeof config === "object" ? { ...config } : {};
       if (c.covers != null && !Array.isArray(c.covers)) c.covers = typeof c.covers === "string" ? [c.covers] : undefined;
-      this._config = { show_header: true, show_rule: true, show_auto: true, show_temp: true, ...c };
+      this._config = { show_header: true, show_rule: true, show_auto: true, show_temp: true, show_commands: true, ...c };
       this._skeleton = "";
       this._render();
     }
@@ -550,10 +590,17 @@
       const stateLabel = hass.formatEntityState ? hass.formatEntityState(r.status) : state;
       const color = STATUS_COLORS[state] || STATUS_COLORS.manual;
       const unavailable = !r.cover || r.cover.state === "unavailable";
+      // Screen readers: say which cover the buttons/switch belong to
+      const name = this._name(r.id, r.status);
       let pause = "";
-      if (state === "paused" && a.pause_until) {
-        const mins = Math.max(0, Math.ceil((new Date(a.pause_until).getTime() - Date.now()) / 60000));
-        pause = `<span class="pause">${esc(t(hass, "remaining").replace("{m}", mins))}</span>`;
+      if (state === "paused") {
+        const mins = a.pause_until ? Math.max(0, Math.ceil((new Date(a.pause_until).getTime() - Date.now()) / 60000)) : null;
+        const left = mins != null ? esc(t(hass, "remaining").replace("{m}", mins)) : "";
+        // Resume button right after the remaining pause time
+        const resume = this._config.show_auto
+          ? `<button class="resume" data-resume="${esc(r.id)}" title="${esc(t(hass, "resume"))}" aria-label="${esc(`${t(hass, "resume")} – ${name}`)}"><ha-icon icon="mdi:play-circle-outline"></ha-icon></button>`
+          : "";
+        if (left || resume) pause = `<span class="pause">${left}${resume}</span>`;
       }
       const invTip = a.inverted && raw != null ? ` title="${esc(t(hass, "inverted").replace("{raw}", raw))}"` : "";
       const rule = this._config.show_rule
@@ -563,24 +610,32 @@
       let controls = "";
       if (this._config.show_auto) {
         const sw = a.auto_switch ? hass.states[a.auto_switch] : null;
-        // Screen readers: say which cover the button/switch belongs to
-        const name = this._name(r.id, r.status);
-        const resumeLbl = `${t(hass, "resume")} – ${name}`;
         const autoLbl = `${t(hass, "auto")} – ${name}`;
         controls = `<div class="controls">
-          ${state === "paused" ? `<button class="resume" data-resume="${esc(r.id)}" title="${esc(t(hass, "resume"))}" aria-label="${esc(resumeLbl)}"><ha-icon icon="mdi:play-circle-outline"></ha-icon></button>` : ""}
           ${sw ? `<label class="switch" title="${esc(t(hass, "auto"))}"><input type="checkbox" data-auto="${esc(a.auto_switch)}" ${sw.state === "on" ? "checked" : ""} aria-label="${esc(autoLbl)}"><span class="slider"></span></label>` : ""}
         </div>`;
       }
-      return `<div class="row${unavailable ? " unavailable" : ""}${this._config.show_auto ? "" : " no-auto"}">
+      const cmds = this._config.show_commands ? this._commands(r, name) : "";
+      return `<div class="row${unavailable ? " unavailable" : ""}${this._config.show_auto ? "" : " no-auto"}${cmds ? " has-cmds" : ""}">
         <div class="main">
           <div class="name-line"><button class="name" data-more="${esc(r.id)}">${esc(this._name(r.id, r.status))}</button>${a.sun_on_facade ? `<ha-icon class="sun" icon="mdi:white-balance-sunny" title="${esc(t(hass, "sun"))}"></ha-icon>` : ""}</div>
           ${rule || temp ? `<div class="sub-line">${rule}${temp}</div>` : ""}
         </div>
         <div class="pos"${invTip}>${unavailable ? '<span class="dash">–</span>' : this._bar(pos, a.target_position)}${a.inverted ? '<span class="inv">⇅</span>' : ""}</div>
         <div class="status"><span class="pill" style="--pill:${color}">${esc(stateLabel)}</span>${pause}</div>
+        ${cmds}
         ${controls}
       </div>`;
+    }
+
+    // Open / stop / close buttons of a cover (see coverCommands)
+    _commands(r, name) {
+      const hass = this._hass;
+      const buttons = coverCommands(r.cover).map((c) => {
+        const label = t(hass, c.label);
+        return `<button class="cmd" data-cmd="${c.service}" data-id="${esc(r.id)}" title="${esc(label)}" aria-label="${esc(`${label} – ${name}`)}"${c.disabled ? " disabled" : ""}><ha-icon icon="${c.icon}"></ha-icon></button>`;
+      }).join("");
+      return buttons ? `<div class="cmds">${buttons}</div>` : "";
     }
 
     // Room temperature of a cover, read from its indoor sensor; same colours
@@ -607,6 +662,12 @@
       }
       if (e.target.closest("[data-resume-all]") && this._hass) {
         Promise.resolve(this._hass.callService("cover_automatic", "resume_all", {}))
+          .catch((err) => console.error("cover-automatic-card:", err));
+        return;
+      }
+      const cmd = e.target.closest("[data-cmd]");
+      if (cmd && this._hass) {
+        Promise.resolve(this._hass.callService("cover", cmd.dataset.cmd, { entity_id: cmd.dataset.id }))
           .catch((err) => console.error("cover-automatic-card:", err));
         return;
       }
@@ -677,10 +738,12 @@
     .g-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 14px; border: 1px solid var(--primary-color); background: transparent; color: var(--primary-color); cursor: pointer; }
     .g-btn ha-icon { --mdc-icon-size: 16px; }
     .g-btn:disabled { opacity: .4; cursor: default; }
-    .row.no-auto { grid-template-columns: minmax(0, 1.5fr) minmax(110px, 1.4fr) 100px; }
+    .row.no-auto { grid-template-columns: minmax(0, 1.5fr) minmax(110px, 1.4fr) minmax(100px, auto); }
+    .row.has-cmds { grid-template-columns: minmax(0, 1.6fr) minmax(90px, 1fr) minmax(100px, auto) auto 64px; }
+    .row.has-cmds.no-auto { grid-template-columns: minmax(0, 1.6fr) minmax(90px, 1fr) minmax(100px, auto) auto; }
     .rows.no-title { padding-top: 12px; }
     .globals[hidden] { display: none; }
-    .row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(110px, 1.4fr) 100px 64px; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--divider-color, rgba(0,0,0,.12)); }
+    .row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(110px, 1.4fr) minmax(100px, auto) 64px; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--divider-color, rgba(0,0,0,.12)); }
     .rows > div:last-child > .row { border-bottom: 0; }
     .row.unavailable { opacity: .5; }
     .main { min-width: 0; }
@@ -710,7 +773,13 @@
     .dash { color: var(--secondary-text-color); }
     .status { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
     .pill { font-size: 12px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; color: var(--pill); background: color-mix(in srgb, var(--pill) 14%, transparent); }
-    .pause { font-size: 11px; color: var(--secondary-text-color); white-space: nowrap; }
+    .pause { font-size: 11px; color: var(--secondary-text-color); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+    .cmds { display: inline-flex; gap: 3px; }
+    .cmd { width: 30px; height: 30px; border-radius: 8px; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      background: var(--secondary-background-color, rgba(127,127,127,.15)); color: var(--primary-text-color); }
+    .cmd ha-icon { --mdc-icon-size: 16px; }
+    .cmd:disabled { opacity: .35; cursor: default; }
+    .cmd:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 1px; }
     .controls { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
     .resume { all: unset; cursor: pointer; color: var(--primary-color); display: flex; }
     .resume:focus-visible { outline: 2px solid var(--primary-color); border-radius: 50%; }
@@ -727,7 +796,10 @@
       .g-info { flex-wrap: wrap; }
       .row, .row.no-auto { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "main status" "pos controls"; row-gap: 6px; }
       .row.no-auto { grid-template-areas: "main status" "pos pos"; }
-      .main { grid-area: main; } .status { grid-area: status; } .pos { grid-area: pos; } .controls { grid-area: controls; }
+      .row.has-cmds { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "main status status" "pos cmds controls"; }
+      .row.has-cmds.no-auto { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "main status" "pos cmds"; }
+      .main { grid-area: main; } .status { grid-area: status; } .pos { grid-area: pos; } .controls { grid-area: controls; } .cmds { grid-area: cmds; }
+      .cmd { width: 34px; height: 34px; border-radius: 10px; }
     }
   `;
 
@@ -754,6 +826,7 @@
         { name: "show_rule", selector: { boolean: {} } },
         { name: "show_auto", selector: { boolean: {} } },
         { name: "show_temp", selector: { boolean: {} } },
+        { name: "show_commands", selector: { boolean: {} } },
       ];
       if (!this._form) {
         this._form = document.createElement("ha-form");
@@ -768,10 +841,10 @@
         });
         this.appendChild(this._form);
       }
-      const labels = { title: "ed_title", covers: "ed_covers", show_header: "ed_show_header", show_rule: "ed_show_rule", show_auto: "ed_show_auto", show_temp: "ed_show_temp" };
+      const labels = { title: "ed_title", covers: "ed_covers", show_header: "ed_show_header", show_rule: "ed_show_rule", show_auto: "ed_show_auto", show_temp: "ed_show_temp", show_commands: "ed_show_commands" };
       this._form.hass = this._hass;
       this._form.schema = schema;
-      this._form.data = { show_header: true, show_rule: true, show_auto: true, show_temp: true, ...this._config };
+      this._form.data = { show_header: true, show_rule: true, show_auto: true, show_temp: true, show_commands: true, ...this._config };
       this._form.computeLabel = (s) => t(this._hass, labels[s.name] || s.name);
     }
   }

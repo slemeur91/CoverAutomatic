@@ -5,7 +5,18 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [2.1.3] - Unreleased
+## [2.1.4] - 2026-10-20
+
+### Added
+
+- Manual commands: Open / Stop / Close buttons on every cover, in a new "Commands" column of the panel's Covers tab and on the dashboard card (option `show_commands`, on by default, in the card editor). They call `cover.open_cover` / `stop_cover` / `close_cover` on the cover entity itself (an inverted cover's displayed position is ignored), show only the commands the cover supports, and are disabled when the cover is already fully open or opening (open), fully closed or closing (close), or unavailable. Like any manual command, they pause the cover.
+
+### Changed
+
+- Dashboard card: the resume button of a paused cover is shown right after the remaining pause time.
+- Covers tab: wider "Rule" column; the last change column header fits on one line ("Since change", "Changé il y a", "Seit Änderung") and its cells show short durations ("2 h 5 min").
+
+## [2.1.3] - 2026-10-20
 
 ### Changed
 

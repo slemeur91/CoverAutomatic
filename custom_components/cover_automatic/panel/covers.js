@@ -191,8 +191,9 @@ export const CoversMixin = (Base) => class extends Base {
     html += sth("status", this._t("cover_status"));
     html += sth("temp", this._t("cover_temp"));
     html += `<th>${this._t("cover_position")}</th>`;
+    html += `<th>${this._t("cover_commands")}</th>`;
     html += `<th>${this._t("cover_rule")}</th>`;
-    html += `<th>${this._t("cover_last_change")}</th>`;
+    html += `<th class="last-change-head">${this._t("cover_changed_ago")}</th>`;
     html += '<th class="row-chevron-head" aria-hidden="true"></th>';
     html += '</tr></thead><tbody>';
 
@@ -252,7 +253,8 @@ export const CoversMixin = (Base) => class extends Base {
       const tp = this._tempCellParts(cm, tempVal);
       html += `<td class="nowrap${tp.color ? ' temp-mode' : ''}" data-live-temp="${this._esc(c.entity_id)}"${tp.color ? ' style="color:' + tp.color + '"' : ''}${tp.title ? ' title="' + this._esc(tp.title) + '"' : ''}>${tp.html}</td>`;
       html += `<td class="pos-cell" data-live-position="${this._esc(c.entity_id)}">${this._posCellHtml(c, haState, targetPos)}${infoIcon}</td>`;
-      html += `<td data-live-rule="${this._esc(c.entity_id)}">${ruleCellHtml}</td>`;
+      html += `<td class="nowrap" data-live-cmds="${this._esc(c.entity_id)}">${this._coverCmdButtons(c.entity_id, haState)}</td>`;
+      html += `<td class="rule-cell" data-live-rule="${this._esc(c.entity_id)}">${ruleCellHtml}</td>`;
       html += `<td class="last-change" data-live-lastchange="${this._esc(c.entity_id)}">${lastChange}</td>`;
       html += '<td class="row-chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></td>';
       html += '</tr>';
@@ -404,10 +406,53 @@ export const CoversMixin = (Base) => class extends Base {
         tempCell.classList.toggle("temp-mode", !!tp.color);
         tempCell.title = tp.title;
       }
+      // Open / stop / close: enabled according to the cover's live state
+      const cmdCell = root.querySelector('[data-live-cmds="' + CSS.escape(eid) + '"]');
+      if (cmdCell) {
+        const cmdHtml = this._coverCmdButtons(eid, haState);
+        if (cmdCell.innerHTML !== cmdHtml) cmdCell.innerHTML = cmdHtml;
+      }
       // Last change
       const lcCell = root.querySelector('[data-live-lastchange="' + CSS.escape(eid) + '"]');
       if (lcCell) lcCell.textContent = live.last_change ? this._formatTimeAgo(live.last_change) : "";
     }
+  }
+
+  // Open / stop / close buttons of the covers table, like the Home Assistant
+  // tile: only the supported commands, open disabled when fully open or
+  // opening, close when fully closed or closing. They act on the device itself.
+  _coverCmdButtons(entityId, haState) {
+    const attrs = (haState && haState.attributes) || {};
+    const state = haState ? haState.state : "unavailable";
+    const off = state === "unavailable";
+    const features = attrs.supported_features;
+    const raw = attrs.current_position;
+    const pos = raw == null || raw === "" || isNaN(Number(raw)) ? null : Number(raw);
+    const fullyOpen = pos != null ? pos >= 100 : state === "open";
+    const fullyClosed = pos != null ? pos <= 0 : state === "closed";
+    const commands = [
+      { cmd: "open_cover", feature: 1, label: "cover_cmd_open", disabled: off || fullyOpen || state === "opening",
+        icon: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>' },
+      { cmd: "stop_cover", feature: 8, label: "cover_cmd_stop", disabled: off,
+        icon: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>' },
+      { cmd: "close_cover", feature: 2, label: "cover_cmd_close", disabled: off || fullyClosed || state === "closing",
+        icon: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>' },
+    ].filter((c) => features == null || (Number(features) & c.feature));
+    if (!commands.length) return "";
+    const name = this._getCoverName(entityId);
+    return '<span class="cmd-group">' + commands.map((c) => {
+      const label = this._t(c.label);
+      return `<button type="button" class="cmd-btn" data-action="cover-command" data-id="${this._esc(entityId)}" data-cmd="${c.cmd}"`
+        + ` title="${this._esc(label)}" aria-label="${this._esc(label + " – " + name)}"${c.disabled ? " disabled" : ""}>`
+        + `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${c.icon}</svg></button>`;
+    }).join("") + "</span>";
+  }
+
+  async _onCoverCommand(entityId, service) {
+    if (!this._hass || !entityId || !service) return;
+    try {
+      await this._hass.callService("cover", service, { entity_id: entityId });
+    } catch (e) { console.error(e); this._showError(e); }
   }
 
   _formatTimeAgo(ts) {

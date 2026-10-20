@@ -104,6 +104,8 @@ V2 gathers all changes made since the original version 1.61.1.
   and priorities (keyboard and touch).
 
 ### Covers
+- **Manual commands**: Open / Stop / Close buttons on every cover, in the panel's Covers tab and on the card. They
+  command the cover directly; like any manual command, they pause the cover.
 - **Keep the position when the window opens**: a new choice in addition to the lock position. When the window
   opens, the cover can either move to its lock position (original behaviour) or stay where it is; in both
   cases automation is blocked while the window stays open.
@@ -128,7 +130,7 @@ V2 gathers all changes made since the original version 1.61.1.
 ### Entities and dashboard
 - **Dashboard card** `custom:cover-automatic-card` (a new card, in addition to the panel, which changes nothing
   in the existing behaviour): one line per cover (position, active rule, status, remaining pause
-  time, resume button, automation switch) and a global header (scenario, master switch, wind,
+  time, resume button, Open / Stop / Close buttons, automation switch) and a global header (scenario, master switch, wind,
   number of covers paused / manual / locked, "Resume all" button).
 - **Sensors per cover** (new, in addition to the existing switch and status): active rule, target position, position,
   comfort mode, pause end (see [Created entities](#created-entities)).
@@ -453,7 +455,7 @@ Note: the integration controls your original `cover` entities directly; it does 
 
 The `custom:cover-automatic-card` card is loaded automatically and offered in the card picker, with a visual editor.
 Options: `title`, `covers` (all by default), `show_rule`, `show_auto`, `show_temp` (room temperature,
-with the colours chosen in the Settings), `show_header`.
+with the colours chosen in the Settings), `show_commands` (Open / Stop / Close buttons), `show_header`.
 
 ```yaml
 type: custom:cover-automatic-card
@@ -570,13 +572,13 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.1.3
+2.1.4
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.1.3 (2026-10-19), based on the original version
+Latest version: v2.1.4 (2026-10-20), based on the original version
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler.
 
 ## License
