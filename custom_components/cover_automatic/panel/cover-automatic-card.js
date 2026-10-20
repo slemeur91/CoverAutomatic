@@ -796,9 +796,15 @@
       .g-info { flex-wrap: wrap; }
       .row, .row.no-auto { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "main status" "pos controls"; row-gap: 6px; }
       .row.no-auto { grid-template-areas: "main status" "pos pos"; }
-      .row.has-cmds { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "main status status" "pos cmds controls"; }
+      .main { grid-area: main; } .status { grid-area: status; } .pos { grid-area: pos; } .controls { grid-area: controls; }
+    }
+    /* With the command buttons a single line needs about 680 px: below that,
+       two lines per cover so the name and the rule keep their room */
+    @container (max-width: 680px) {
+      .row.has-cmds { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "main status status" "pos cmds controls"; row-gap: 6px; }
       .row.has-cmds.no-auto { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "main status" "pos cmds"; }
-      .main { grid-area: main; } .status { grid-area: status; } .pos { grid-area: pos; } .controls { grid-area: controls; } .cmds { grid-area: cmds; }
+      .row.has-cmds .main { grid-area: main; } .row.has-cmds .status { grid-area: status; } .row.has-cmds .pos { grid-area: pos; }
+      .row.has-cmds .controls { grid-area: controls; } .row.has-cmds .cmds { grid-area: cmds; }
       .cmd { width: 34px; height: 34px; border-radius: 10px; }
     }
   `;

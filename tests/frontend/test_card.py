@@ -66,3 +66,18 @@ def test_card_resume_next_to_pause_time(mount) -> None:
         "domain": "cover_automatic", "service": "resume", "data": {"entity_id": SALON}
     }
     assert m.errors() == []
+
+
+@pytest.mark.parametrize("width", [475, 620])
+def test_card_commands_leave_room_for_name_and_rule(mount, width) -> None:
+    """With the buttons, a medium card uses two lines: name and rule are not cut."""
+    long_rule = WITH_STATUS.replace('rule: "Fermer la Nuit"', 'rule: "Ouvrir en Hiver bas si Présent"')
+    m = mount("fr", mode="card", init_script=long_rule)
+    m.js(f"window.__el.style.display = 'block'; window.__el.style.width = '{width}px'")
+    m.page.wait_for_timeout(200)
+    cut = m.js("""(() => {
+      const r = window.__el.shadowRoot;
+      return [".name", ".rule-text"].filter((css) => { const el = r.querySelector(css); return el.scrollWidth > el.clientWidth; });
+    })()""")
+    assert cut == []
+    assert m.errors() == []
