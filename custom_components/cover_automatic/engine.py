@@ -427,7 +427,7 @@ class RuleEngine:
             case _:
                 return True
 
-    def _input_available(self, condition: Condition, cover: CoverConfig | None) -> bool:
+    def _input_available(self, condition: Condition, cover: CoverConfig | None) -> bool:  # noqa: C901 -- complexity 20, to reduce (see CHANGELOG 2.1.3)
         """Whether the value a condition reads is currently known."""
         params = condition.params
         match condition.type:
@@ -581,7 +581,7 @@ class RuleEngine:
             self._log_condition_error(condition, err)
             return False
 
-    def _dispatch_condition(
+    def _dispatch_condition(  # noqa: C901 -- complexity 24, to reduce (see CHANGELOG 2.1.3)
         self, condition: Condition, cover: CoverConfig, *, update_state: bool = True
     ) -> bool:
         """Run the evaluator of a condition type (may raise)."""

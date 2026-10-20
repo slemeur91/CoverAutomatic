@@ -136,7 +136,7 @@ class StatusMixin:
             if self.data is not None:
                 self.async_set_updated_data(self.data)
 
-    def _sync_cover_statuses(self) -> None:
+    def _sync_cover_statuses(self) -> None:  # noqa: C901 -- complexity 18, to reduce (see CHANGELOG 2.1.3)
         """Sync cover statuses from sensor states.
 
         Updates _cover_states and storage for all covers. Called once per
@@ -258,7 +258,7 @@ class StatusMixin:
 
         return live
 
-    def _resume_on_match(self, cover: CoverConfig) -> bool:
+    def _resume_on_match(self, cover: CoverConfig) -> bool:  # noqa: C901 -- complexity 22, to reduce (see CHANGELOG 2.1.3)
         """End a manual pause when the cover is back at its rule's position.
 
         Two cases: the cover was put back by hand where the rule wants it, or

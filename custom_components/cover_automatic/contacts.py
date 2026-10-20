@@ -113,7 +113,7 @@ class ContactsMixin:
             and old_state.state != new_state.state
         )
 
-    def _handle_contact_sensor_change(
+    def _handle_contact_sensor_change(  # noqa: C901 -- complexity 28, to reduce (see CHANGELOG 2.1.3)
         self,
         sensor_id: str,
         lock_covers: list[str],

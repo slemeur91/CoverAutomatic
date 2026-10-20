@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class TrackingMixin:
     """State tracking: which entities are watched and how their changes are routed."""
 
-    def _setup_state_tracking(self, full_refresh: bool = False) -> None:
+    def _setup_state_tracking(self, full_refresh: bool = False) -> None:  # noqa: C901 -- complexity 34, to reduce (see CHANGELOG 2.1.3)
         """Set up state change tracking for relevant entities.
 
         Args:

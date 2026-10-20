@@ -1,0 +1,2651 @@
+{
+ "cover-add|cover-add-cancel|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingCover"
+  ]
+ },
+ "cover-add|cover-add|click": {
+  "calls": [
+   "_onCoverAdd"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "cover-add|cover-resume|click": {
+  "calls": [
+   "_onCoverResume"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "cover-add|cover-sort|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_coverSort"
+  ]
+ },
+ "cover-add|goto-rule|click": {
+  "calls": [
+   "_render",
+   "_setExpandedRule",
+   "_stopLiveRefresh"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeTab",
+   "_liveRefreshTimer"
+  ]
+ },
+ "cover-add|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "cover-add|select-cover|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_selectedCover",
+   "_slideHtml",
+   "_slideOpen"
+  ]
+ },
+ "cover-add|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "cover-sheet|close-slide|click": {
+  "calls": [
+   "_render",
+   "_slideElKey"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_slideClick",
+   "_slideHtml",
+   "_slideOpen"
+  ]
+ },
+ "cover-sheet|cover-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingCover"
+  ]
+ },
+ "cover-sheet|cover-delete|click": {
+  "calls": [
+   "_onCoverDelete",
+   "_slideElKey"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage",
+   "_slideClick"
+  ]
+ },
+ "cover-sheet|cover-input|change": {
+  "calls": [
+   "_debouncedCoverSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_saveTimers"
+  ]
+ },
+ "cover-sheet|cover-input|input": {
+  "calls": [
+   "_debouncedCoverSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_saveTimers"
+  ]
+ },
+ "cover-sheet|cover-occ-add|click": {
+  "calls": [
+   "_onOccupancyStates",
+   "_slideElKey"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_occPending",
+   "_saveTimers",
+   "_slideClick",
+   "_slideHtml"
+  ]
+ },
+ "cover-sheet|cover-occ-reset|click": {
+  "calls": [
+   "_onOccupancyStates",
+   "_slideElKey"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_occPending",
+   "_saveTimers",
+   "_slideClick",
+   "_slideHtml"
+  ]
+ },
+ "cover-sheet|cover-occ-toggle|click": {
+  "calls": [
+   "_onOccupancyStates",
+   "_slideElKey"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_occPending",
+   "_saveTimers",
+   "_slideClick",
+   "_slideHtml"
+  ]
+ },
+ "cover-sheet|cover-resume|click": {
+  "calls": [
+   "_onCoverResume"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "cover-sheet|cover-select|change": {
+  "calls": [
+   "_debouncedCoverSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_saveTimers"
+  ]
+ },
+ "cover-sheet|cover-select|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "cover-sheet|cover-show-log|click": {
+  "calls": [
+   "_confirmLeaveRule",
+   "_slideElKey"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeTab",
+   "_liveRefreshTimer",
+   "_logCover",
+   "_logLoading",
+   "_logLoadingCover",
+   "_logSeq",
+   "_selectedCover",
+   "_slideClick",
+   "_slideHtml",
+   "_slideOpen"
+  ]
+ },
+ "cover-sheet|cover-sort|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_coverSort"
+  ]
+ },
+ "cover-sheet|cover-toggle|click": {
+  "calls": [
+   "_debouncedCoverSave",
+   "_slideElKey"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_saveTimers",
+   "_slideClick"
+  ]
+ },
+ "cover-sheet|cover-travel-reset|click": {
+  "calls": [
+   "_onCoverTravelReset",
+   "_slideElKey"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_slideClick"
+  ]
+ },
+ "cover-sheet|cover-tristate|change": {
+  "calls": [
+   "_debouncedCoverSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_saveTimers"
+  ]
+ },
+ "cover-sheet|cover-tristate|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "cover-sheet|goto-rule|click": {
+  "calls": [
+   "_render",
+   "_setExpandedRule",
+   "_stopLiveRefresh"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeTab",
+   "_liveRefreshTimer",
+   "_selectedCover",
+   "_slideHtml",
+   "_slideOpen"
+  ]
+ },
+ "cover-sheet|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "cover-sheet|sections-toggle-all|click": {
+  "calls": [
+   "_render",
+   "_slideElKey"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_expandedSections",
+   "_slideClick",
+   "_slideHtml"
+  ]
+ },
+ "cover-sheet|select-cover|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_expandedSections",
+   "_selectedCover",
+   "_slideHtml"
+  ]
+ },
+ "cover-sheet|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "cover-sheet|toggle-section|click": {
+  "calls": [
+   "_render",
+   "_slideElKey"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_expandedSections",
+   "_slideClick",
+   "_slideHtml"
+  ]
+ },
+ "covers|cover-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingCover"
+  ]
+ },
+ "covers|cover-resume|click": {
+  "calls": [
+   "_onCoverResume"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "covers|cover-sort|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_coverSort"
+  ]
+ },
+ "covers|goto-rule|click": {
+  "calls": [
+   "_render",
+   "_setExpandedRule",
+   "_stopLiveRefresh"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeTab",
+   "_liveRefreshTimer"
+  ]
+ },
+ "covers|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "covers|select-cover|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_selectedCover",
+   "_slideHtml",
+   "_slideOpen"
+  ]
+ },
+ "covers|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "facade-add|facade-add-cancel|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingFacade"
+  ]
+ },
+ "facade-add|facade-add-save|click": {
+  "calls": [
+   "_onFacadeAddSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "facade-add|facade-cover-toggle|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "facade-add|facade-delete|click": {
+  "calls": [
+   "_onFacadeDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "facade-add|facade-edit|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_editingFacade"
+  ]
+ },
+ "facade-add|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "facade-add|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "facade-edit|facade-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingFacade"
+  ]
+ },
+ "facade-edit|facade-cover-toggle|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "facade-edit|facade-delete|click": {
+  "calls": [
+   "_onFacadeDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "facade-edit|facade-edit-cancel|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_editingFacade"
+  ]
+ },
+ "facade-edit|facade-edit-save|click": {
+  "calls": [
+   "_onFacadeEditSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "facade-edit|facade-edit|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_editingFacade"
+  ]
+ },
+ "facade-edit|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "facade-edit|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "facades|facade-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingFacade"
+  ]
+ },
+ "facades|facade-delete|click": {
+  "calls": [
+   "_onFacadeDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "facades|facade-edit|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_editingFacade"
+  ]
+ },
+ "facades|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "facades|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "log|log-clear|click": {
+  "calls": [
+   "_showConfirm",
+   "_t"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "log|log-cover|change": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_logEntries",
+   "_logLoading",
+   "_logLoadingCover",
+   "_logSeq"
+  ]
+ },
+ "log|log-cover|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "log|log-filter|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "log|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "log|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "rule-add|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-add|rule-add-cancel|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingRule"
+  ]
+ },
+ "rule-add|rule-add-save|click": {
+  "calls": [
+   "_onRuleAddSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-add|rule-delete|click": {
+  "calls": [
+   "_onRuleDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rule-add|rule-drag|dragstart": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_dragRuleId"
+  ]
+ },
+ "rule-add|rule-duplicate|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-add|rule-expand|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_collapsedConds",
+   "_condPreviewTimer",
+   "_expandedRule",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-add|rule-filter|change": {
+  "calls": [
+   "_effectiveRuleFilter",
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-add|rule-filter|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-add|rule-prio-down|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-add|rule-prio-up|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-add|rule-toggle-enabled|click": {
+  "calls": [
+   "_onRuleToggleEnabled"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-add|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "rule-confirm|confirm-cancel|click": {
+  "calls": [
+   "_hideConfirm"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rule-confirm|confirm-ok|click": {
+  "calls": [
+   "_hideConfirm",
+   "_ws"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rule-confirm|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-confirm|rule-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingRule"
+  ]
+ },
+ "rule-confirm|rule-delete|click": {
+  "calls": [
+   "_onRuleDelete"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-confirm|rule-drag|dragstart": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_dragRuleId"
+  ]
+ },
+ "rule-confirm|rule-duplicate|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-confirm|rule-expand|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_collapsedConds",
+   "_condPreviewTimer",
+   "_expandedRule",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-confirm|rule-filter|change": {
+  "calls": [
+   "_effectiveRuleFilter",
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-confirm|rule-filter|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-confirm|rule-prio-down|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-confirm|rule-prio-up|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-confirm|rule-toggle-enabled|click": {
+  "calls": [
+   "_onRuleToggleEnabled"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-confirm|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "rule-editor-sun|cond-param|change": {
+  "calls": [
+   "_updateConditionParam"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|cond-param|input": {
+  "calls": [
+   "_updateConditionParam"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|ha-form|change": {
+  "calls": [
+   "_onHaFormChange"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_haTimers",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-sun|ha-form|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|ha-state-add|click": {
+  "calls": [
+   "_onHaStateAdd"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|ha-state-toggle|click": {
+  "calls": [
+   "_onHaStateToggle"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_haTimers",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-sun|ha-ui|click": {
+  "calls": [
+   "_onHaUi"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|hint-toggle|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_openHints"
+  ]
+ },
+ "rule-editor-sun|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-add-condition-type|change": {
+  "calls": [
+   "_onRuleAddCondition"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-add-condition-type|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingRule"
+  ]
+ },
+ "rule-editor-sun|rule-cond-collapse-all|click": {
+  "calls": [
+   "_onCondCollapseAll"
+  ],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-cond-collapse|click": {
+  "calls": [
+   "_isCondCollapsed",
+   "_setCondCollapsed"
+  ],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-cond-down|click": {
+  "calls": [
+   "_onRuleCondReorder"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-cond-negate|click": {
+  "calls": [
+   "_onRuleCondNegate"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-sun|rule-cond-up|click": {
+  "calls": [
+   "_onRuleCondReorder"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-cover-toggle|click": {
+  "calls": [
+   "_refreshRuleTilt",
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-sun|rule-delete-condition|click": {
+  "calls": [
+   "_onRuleDeleteCondition"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-delete|click": {
+  "calls": [
+   "_onRuleDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rule-editor-sun|rule-drag|dragstart": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_dragRuleId"
+  ]
+ },
+ "rule-editor-sun|rule-duplicate|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-expand|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_condPreviewTimer",
+   "_expandedRule",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-sun|rule-facade-toggle|click": {
+  "calls": [
+   "_refreshRuleTilt",
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-sun|rule-field|change": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-field|input": {
+  "calls": [
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-filter|change": {
+  "calls": [
+   "_effectiveRuleFilter",
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-filter|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-group-add|click": {
+  "calls": [
+   "_onRuleGroupAdd"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-group-op|change": {
+  "calls": [
+   "_edRule",
+   "_refreshCondPreview",
+   "_ruleGroups"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_previewSeq"
+  ]
+ },
+ "rule-editor-sun|rule-group-op|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-prio-down|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-editor-sun|rule-prio-up|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-editor-sun|rule-save|click": {
+  "calls": [
+   "_onRuleSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|rule-scenario-toggle|click": {
+  "calls": [
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-sun|rule-toggle-enabled|click": {
+  "calls": [
+   "_onRuleToggleEnabled"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-sun|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "rule-editor-various|cond-convert|click": {
+  "calls": [
+   "_onCondConvert"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_haTimers",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-various|cond-param|change": {
+  "calls": [
+   "_updateConditionParam"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|cond-param|input": {
+  "calls": [
+   "_updateConditionParam"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|day-toggle|click": {
+  "calls": [
+   "_onDayToggle"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-various|ha-ui|click": {
+  "calls": [
+   "_onHaUi"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|ha-yaml|change": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|ha-yaml|input": {
+  "calls": [
+   "_onHaYamlInput"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_haLive",
+   "_haTimers"
+  ]
+ },
+ "rule-editor-various|hint-toggle|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_openHints"
+  ]
+ },
+ "rule-editor-various|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|multiselect-toggle|click": {
+  "calls": [
+   "_onMultiselectToggle"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-various|rule-add-condition-type|change": {
+  "calls": [
+   "_onRuleAddCondition"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-add-condition-type|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingRule"
+  ]
+ },
+ "rule-editor-various|rule-cond-collapse-all|click": {
+  "calls": [
+   "_onCondCollapseAll"
+  ],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-cond-collapse|click": {
+  "calls": [
+   "_isCondCollapsed",
+   "_setCondCollapsed"
+  ],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-cond-down|click": {
+  "calls": [
+   "_onRuleCondReorder"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-cond-negate|click": {
+  "calls": [
+   "_onRuleCondNegate"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-various|rule-cond-up|click": {
+  "calls": [
+   "_onRuleCondReorder"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-cover-toggle|click": {
+  "calls": [
+   "_refreshRuleTilt",
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-various|rule-delete-condition|click": {
+  "calls": [
+   "_onRuleDeleteCondition"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-delete|click": {
+  "calls": [
+   "_onRuleDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rule-editor-various|rule-drag|dragstart": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_dragRuleId"
+  ]
+ },
+ "rule-editor-various|rule-duplicate|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-expand|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_condPreviewTimer",
+   "_expandedRule",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-various|rule-facade-toggle|click": {
+  "calls": [
+   "_refreshRuleTilt",
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-various|rule-field|change": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-field|input": {
+  "calls": [
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-filter|change": {
+  "calls": [
+   "_effectiveRuleFilter",
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-filter|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-group-add|click": {
+  "calls": [
+   "_onRuleGroupAdd"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-group-op|change": {
+  "calls": [
+   "_edRule",
+   "_refreshCondPreview",
+   "_ruleGroups"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_previewSeq"
+  ]
+ },
+ "rule-editor-various|rule-group-op|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-prio-down|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-editor-various|rule-prio-up|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-editor-various|rule-save|click": {
+  "calls": [
+   "_onRuleSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|rule-scenario-toggle|click": {
+  "calls": [
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor-various|rule-toggle-enabled|click": {
+  "calls": [
+   "_onRuleToggleEnabled"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor-various|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "rule-editor|cond-param|change": {
+  "calls": [
+   "_updateConditionParam"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|cond-param|input": {
+  "calls": [
+   "_updateConditionParam"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|ha-form|change": {
+  "calls": [
+   "_onHaFormChange"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_haTimers",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor|ha-form|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|ha-state-add|click": {
+  "calls": [
+   "_onHaStateAdd"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|ha-state-toggle|click": {
+  "calls": [
+   "_onHaStateToggle"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_haTimers",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor|ha-ui|click": {
+  "calls": [
+   "_onHaUi"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|hint-toggle|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_openHints"
+  ]
+ },
+ "rule-editor|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-add-condition-type|change": {
+  "calls": [
+   "_onRuleAddCondition"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-add-condition-type|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingRule"
+  ]
+ },
+ "rule-editor|rule-cond-collapse-all|click": {
+  "calls": [
+   "_onCondCollapseAll"
+  ],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-cond-collapse|click": {
+  "calls": [
+   "_isCondCollapsed",
+   "_setCondCollapsed"
+  ],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-cond-down|click": {
+  "calls": [
+   "_onRuleCondReorder"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-cond-group|change": {
+  "calls": [
+   "_onRuleCondMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-cond-group|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-cond-negate|click": {
+  "calls": [
+   "_onRuleCondNegate"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor|rule-cond-up|click": {
+  "calls": [
+   "_onRuleCondReorder"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-cover-toggle|click": {
+  "calls": [
+   "_refreshRuleTilt",
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor|rule-delete-condition|click": {
+  "calls": [
+   "_onRuleDeleteCondition"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-delete|click": {
+  "calls": [
+   "_onRuleDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rule-editor|rule-drag|dragstart": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_dragRuleId"
+  ]
+ },
+ "rule-editor|rule-duplicate|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-expand|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_condPreviewTimer",
+   "_expandedRule",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor|rule-facade-toggle|click": {
+  "calls": [
+   "_refreshRuleTilt",
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor|rule-field|change": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-field|input": {
+  "calls": [
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-filter|change": {
+  "calls": [
+   "_effectiveRuleFilter",
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-filter|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-group-add|click": {
+  "calls": [
+   "_onRuleGroupAdd"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-group-delete|click": {
+  "calls": [
+   "_onRuleGroupDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rule-editor|rule-group-down|click": {
+  "calls": [
+   "_onRuleGroupReorder"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-group-op|change": {
+  "calls": [
+   "_edRule",
+   "_refreshCondPreview",
+   "_ruleGroups"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_previewSeq"
+  ]
+ },
+ "rule-editor|rule-group-op|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-group-up|click": {
+  "calls": [
+   "_onRuleGroupReorder"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-prio-down|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-editor|rule-prio-up|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rule-editor|rule-save|click": {
+  "calls": [
+   "_onRuleSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|rule-scenario-toggle|click": {
+  "calls": [
+   "_syncRuleDraftFromDom"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleDraft"
+  ]
+ },
+ "rule-editor|rule-toggle-enabled|click": {
+  "calls": [
+   "_onRuleToggleEnabled"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rule-editor|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "rules-filtered|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules-filtered|rule-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingRule"
+  ]
+ },
+ "rules-filtered|rule-delete|click": {
+  "calls": [
+   "_onRuleDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rules-filtered|rule-duplicate|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules-filtered|rule-expand|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_collapsedConds",
+   "_condPreviewTimer",
+   "_expandedRule",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rules-filtered|rule-filter-clear|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_ruleFilter"
+  ]
+ },
+ "rules-filtered|rule-filter|change": {
+  "calls": [
+   "_effectiveRuleFilter",
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules-filtered|rule-filter|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules-filtered|rule-toggle-enabled|click": {
+  "calls": [
+   "_onRuleToggleEnabled"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules-filtered|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "rules|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules|rule-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingRule"
+  ]
+ },
+ "rules|rule-delete|click": {
+  "calls": [
+   "_onRuleDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "rules|rule-drag|dragstart": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_dragRuleId"
+  ]
+ },
+ "rules|rule-duplicate|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules|rule-expand|click": {
+  "calls": [
+   "_confirmLeaveRule"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_collapsedConds",
+   "_condPreviewTimer",
+   "_expandedRule",
+   "_previewSeq",
+   "_ruleDraft"
+  ]
+ },
+ "rules|rule-filter|change": {
+  "calls": [
+   "_effectiveRuleFilter",
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules|rule-filter|input": {
+  "calls": [],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules|rule-prio-down|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rules|rule-prio-up|click": {
+  "calls": [
+   "_onRuleMove"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_ruleMoving"
+  ]
+ },
+ "rules|rule-toggle-enabled|click": {
+  "calls": [
+   "_onRuleToggleEnabled"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "rules|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "scenario-add|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenario-add|scenario-activate|click": {
+  "calls": [
+   "_onScenarioActivate"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenario-add|scenario-add-cancel|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingScenario"
+  ]
+ },
+ "scenario-add|scenario-add-save|click": {
+  "calls": [
+   "_onScenarioAddSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenario-add|scenario-delete|click": {
+  "calls": [
+   "_onScenarioDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "scenario-add|scenario-edit|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_editingScenario"
+  ]
+ },
+ "scenario-add|scenario-icon-pick|click": {
+  "calls": [
+   "_onScenarioIconPick"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenario-add|scenario-rule-toggle|click": {
+  "calls": [
+   "_onScenarioRuleToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_scRuleQueue",
+   "_scRuleQueueLen"
+  ]
+ },
+ "scenario-add|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "scenario-edit|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenario-edit|scenario-activate|click": {
+  "calls": [
+   "_onScenarioActivate"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenario-edit|scenario-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingScenario"
+  ]
+ },
+ "scenario-edit|scenario-delete|click": {
+  "calls": [
+   "_onScenarioDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "scenario-edit|scenario-edit-cancel|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_editingScenario"
+  ]
+ },
+ "scenario-edit|scenario-edit-save|click": {
+  "calls": [
+   "_onScenarioEditSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenario-edit|scenario-edit|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_editingScenario"
+  ]
+ },
+ "scenario-edit|scenario-icon-pick|click": {
+  "calls": [
+   "_onScenarioIconPick"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenario-edit|scenario-rule-toggle|click": {
+  "calls": [
+   "_onScenarioRuleToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_scRuleQueue",
+   "_scRuleQueueLen"
+  ]
+ },
+ "scenario-edit|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "scenarios|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenarios|scenario-activate|click": {
+  "calls": [
+   "_onScenarioActivate"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "scenarios|scenario-add-start|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_addingScenario"
+  ]
+ },
+ "scenarios|scenario-delete|click": {
+  "calls": [
+   "_onScenarioDelete"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_confirmCallback",
+   "_confirmMessage"
+  ]
+ },
+ "scenarios|scenario-edit|click": {
+  "calls": [
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_editingScenario"
+  ]
+ },
+ "scenarios|scenario-rule-toggle|click": {
+  "calls": [
+   "_onScenarioRuleToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_scRuleQueue",
+   "_scRuleQueueLen"
+  ]
+ },
+ "scenarios|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "settings-automation|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-automation|settings-save|click": {
+  "calls": [
+   "_onSettingsSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_settingsDraft"
+  ]
+ },
+ "settings-automation|settings-section|click": {
+  "calls": [
+   "_captureSettingsDraft",
+   "_centerActiveSettingsPill",
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeSettingsSection",
+   "_settingsDraft"
+  ]
+ },
+ "settings-automation|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "settings-backup|backup-export|click": {
+  "calls": [
+   "_onBackupExportClick"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-backup|backup-file|click": {
+  "calls": [
+   "_onBackupFileSelected"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-backup|backup-import|click": {
+  "calls": [
+   "_onBackupFileSelected"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-backup|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-backup|settings-section|click": {
+  "calls": [
+   "_captureSettingsDraft",
+   "_centerActiveSettingsPill",
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeSettingsSection"
+  ]
+ },
+ "settings-backup|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "settings-comfort|explain-toggle|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_explainOpen"
+  ]
+ },
+ "settings-comfort|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-comfort|settings-save|click": {
+  "calls": [
+   "_onSettingsSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_settingsDraft"
+  ]
+ },
+ "settings-comfort|settings-section|click": {
+  "calls": [
+   "_captureSettingsDraft",
+   "_centerActiveSettingsPill",
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeSettingsSection",
+   "_settingsDraft"
+  ]
+ },
+ "settings-comfort|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "settings-house|house-drag-start|pointerdown": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_houseDragState"
+  ]
+ },
+ "settings-house|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-house|rotate-by|click": {
+  "calls": [
+   "_refreshDeps",
+   "_renderCompassSVG"
+  ],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "settings-house|settings-save|click": {
+  "calls": [
+   "_onSettingsSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-house|settings-section|click": {
+  "calls": [
+   "_captureSettingsDraft",
+   "_centerActiveSettingsPill",
+   "_render"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-house|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "settings-sensors|explain-toggle|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_explainOpen"
+  ]
+ },
+ "settings-sensors|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-sensors|profile-scenario|click": {
+  "calls": [
+   "_onProfileScenario"
+  ],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
+ "settings-sensors|settings-save|click": {
+  "calls": [
+   "_onSettingsSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_settingsDraft"
+  ]
+ },
+ "settings-sensors|settings-section|click": {
+  "calls": [
+   "_captureSettingsDraft",
+   "_centerActiveSettingsPill",
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeSettingsSection",
+   "_settingsDraft"
+  ]
+ },
+ "settings-sensors|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ },
+ "settings-wind|explain-toggle|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_explainOpen"
+  ]
+ },
+ "settings-wind|master-toggle|click": {
+  "calls": [
+   "_onMasterToggle"
+  ],
+  "dom": false,
+  "events": [],
+  "state": []
+ },
+ "settings-wind|settings-save|click": {
+  "calls": [
+   "_onSettingsSave"
+  ],
+  "dom": false,
+  "events": [],
+  "state": [
+   "_settingsDraft"
+  ]
+ },
+ "settings-wind|settings-section|click": {
+  "calls": [
+   "_captureSettingsDraft",
+   "_centerActiveSettingsPill",
+   "_render"
+  ],
+  "dom": true,
+  "events": [],
+  "state": [
+   "_activeSettingsSection",
+   "_settingsDraft"
+  ]
+ },
+ "settings-wind|toggle-menu|click": {
+  "calls": [],
+  "dom": false,
+  "events": [
+   "hass-toggle-menu"
+  ],
+  "state": []
+ }
+}

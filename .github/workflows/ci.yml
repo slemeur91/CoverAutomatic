@@ -34,6 +34,14 @@ jobs:
           source .venv/bin/activate
           ruff check custom_components/cover_automatic/ tests/ --output-format=github
 
+      - name: Complexity cap
+        # ruff.toml keeps new code at 15; the older functions marked
+        # "noqa: C901" may not grow past the current maximum either.
+        run: |
+          source .venv/bin/activate
+          ruff check custom_components/cover_automatic/ tests/ --select C901 \
+            --config "lint.mccabe.max-complexity=35" --ignore-noqa --output-format=github
+
   test:
     needs: lint
     runs-on: ubuntu-latest
@@ -74,6 +82,35 @@ jobs:
         run: |
           source .venv/bin/activate
           python -m pytest tests/ -v --tb=short
+
+  frontend:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          cache-dependency-glob: ".github/workflows/ci.yml"
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Install Playwright and Chromium
+        run: |
+          uv venv
+          uv pip install pytest==9.1.1 playwright==1.55.0
+          source .venv/bin/activate
+          python -m playwright install --with-deps chromium
+
+      - name: Panel and card tests
+        env:
+          # Fail instead of skipping when the browser is missing
+          REQUIRE_BROWSER: "1"
+        run: |
+          source .venv/bin/activate
+          python -m pytest tests/frontend --confcutdir=tests/frontend -v --tb=short
 
   hacs:
     runs-on: ubuntu-latest

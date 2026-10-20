@@ -47,7 +47,7 @@ class MotionMixin:
                 except (ValueError, TypeError):
                     self._last_tilt_positions[entity_id] = None
 
-    def _handle_cover_state_change(
+    def _handle_cover_state_change(  # noqa: C901 -- complexity 20, to reduce (see CHANGELOG 2.1.3)
         self, entity_id: str, old_state: Any, new_state: Any
     ) -> None:
         """Handle cover position changes to detect manual overrides."""

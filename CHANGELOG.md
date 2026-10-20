@@ -5,6 +5,15 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.1.3] - Unreleased
+
+### Changed
+
+- Services: the seven handlers are module-level functions registered from one table (bound to `hass`), instead of closures inside `async_setup_services`; file reading and writing of import/export are separate executor functions. No behaviour change.
+- Code complexity checked by ruff (mccabe): new code stays at 15 or below. The ten older functions above it are marked with their current value, and CI caps them at the current maximum (35) so they cannot grow.
+- Frontend tests: a characterization of the panel's event routing records, for each of the 94 actions reachable on 23 screens, the methods called and the state changed (`tests/frontend/fixtures/action_map.json`). It prepares the replacement of the click/change switches by per-module tables: the routing must stay identical. Every action rendered by the panel must be reached and must do something.
+- Test fixtures: executor mocks of the service tests now pass the job arguments like Home Assistant does.
+
 ## [2.1.2] - 2026-10-16
 
 ### Changed

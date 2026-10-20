@@ -1437,6 +1437,71 @@
     "and"
    ],
    "safety": true
+  },
+  "test_conditions_diverses": {
+   "id": "test_conditions_diverses",
+   "name": "Test conditions diverses",
+   "enabled": true,
+   "priority": 5,
+   "condition_operator": "and",
+   "facade_ids": [],
+   "cover_ids": [
+    "cover.volet_du_salon_nodeid_32_position"
+   ],
+   "conditions": [
+    {
+     "type": "weather_is",
+     "params": {
+      "weather": [
+       "sunny"
+      ]
+     },
+     "group": 0,
+     "negate": false
+    },
+    {
+     "type": "day_of_week",
+     "params": {
+      "days": [
+       "mon",
+       "tue"
+      ]
+     },
+     "group": 0,
+     "negate": false
+    },
+    {
+     "type": "state_is",
+     "params": {
+      "entity_id": "input_select.domicile",
+      "state": "Présent"
+     },
+     "group": 0,
+     "negate": false
+    },
+    {
+     "type": "ha_condition",
+     "params": {
+      "ui": "yaml",
+      "config": {
+       "condition": "template",
+       "value_template": "{{ true }}"
+      },
+      "yaml": "condition: template\nvalue_template: '{{ true }}'\n"
+     },
+     "group": 0,
+     "negate": false
+    }
+   ],
+   "target_position": 50,
+   "target_tilt_position": null,
+   "scenario_ids": [
+    "summer"
+   ],
+   "group_operators": [
+    "and"
+   ],
+   "safety": false
   }
  },
  "scenarios": {
@@ -1716,5 +1781,10 @@
   ]
  },
  "condition_status": {},
- "available_covers": []
+ "available_covers": [
+  {
+   "entity_id": "cover.porte_du_garage",
+   "name": "Porte du garage"
+  }
+ ]
 }

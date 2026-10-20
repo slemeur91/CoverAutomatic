@@ -70,12 +70,22 @@
       window.__el = el;
     } else {
       await import("/custom_components/cover_automatic/panel/cover-automatic-panel.js");
-      const el = document.createElement("cover-automatic-panel");
-      el.hass = hass;
-      el.panel = { config: {} };
-      el.narrow = false;
-      document.body.appendChild(el);
-      window.__el = el;
+      // (Re)mount a fresh panel: tests that need a clean state per step call
+      // it again instead of reloading the page. Resolves once rendered.
+      window.__mount = async () => {
+        if (window.__el) window.__el.remove();
+        const el = document.createElement("cover-automatic-panel");
+        el.hass = hass;
+        el.panel = { config: {} };
+        el.narrow = false;
+        document.body.appendChild(el);
+        window.__el = el;
+        for (let i = 0; i < 200 && !(el._config && el.shadowRoot.querySelector(".panel-container")); i++) {
+          await new Promise((r) => setTimeout(r, 10));
+        }
+        return el;
+      };
+      await window.__mount();
     }
   } catch (err) {
     window.__errors.push("load: " + String(err && err.stack || err));

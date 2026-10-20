@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Awaitable, Callable
+from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 import yaml
@@ -96,213 +98,228 @@ def _validate_config_path(path: str, config_dir: str) -> Path | None:
         return None
 
 
+def _get_entries(hass: HomeAssistant) -> dict:
+    """Get all integration entry runtime data safely."""
+    result = {}
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        runtime_data = getattr(entry, "runtime_data", None)
+        if runtime_data:
+            result[entry.entry_id] = runtime_data
+    return result
+
+
+async def _require_admin(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Verify caller has admin privileges."""
+    if not call.context.user_id:
+        return  # Internal/automation call -- no user context
+    user = await hass.auth.async_get_user(call.context.user_id)
+    if not user or not user.is_admin:
+        raise HomeAssistantError(
+            "Admin access required for this service",
+            translation_domain=DOMAIN,
+            translation_key="admin_required",
+        )
+
+
+async def _handle_pause(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Handle pause service call."""
+    entity_id = call.data.get("entity_id")
+    for entry_data in _get_entries(hass).values():
+        if entity_id in entry_data.coordinator.storage.covers:
+            # Explicit pause: not ended by resume-on-match
+            entry_data.coordinator.pause_cover(
+                entry_data.coordinator.storage.covers[entity_id], manual=False
+            )
+            break
+
+
+async def _handle_resume(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Handle resume service call."""
+    entity_id = call.data.get("entity_id")
+    for entry_data in _get_entries(hass).values():
+        if entity_id in entry_data.coordinator.storage.covers:
+            entry_data.coordinator.resume_cover(entity_id)
+            break
+
+
+async def _handle_pause_all(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Handle pause_all service call."""
+    for entry_data in _get_entries(hass).values():
+        for cover in entry_data.coordinator.storage.covers.values():
+            entry_data.coordinator.pause_cover(cover, manual=False)
+
+
+async def _handle_resume_all(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Handle resume_all service call."""
+    for entry_data in _get_entries(hass).values():
+        for entity_id in entry_data.coordinator.storage.covers:
+            entry_data.coordinator.resume_cover(entity_id)
+
+
+async def _handle_set_scenario(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Handle set_scenario service call."""
+    scenario = call.data.get("scenario")
+    if not scenario:
+        _LOGGER.error("set_scenario: No scenario provided")
+        return
+
+    found = False
+    for entry_data in _get_entries(hass).values():
+        if scenario in entry_data.storage.scenarios:
+            entry_data.storage.active_scenario = scenario
+            await entry_data.storage.async_save()
+            await entry_data.coordinator.async_request_refresh()
+            found = True
+
+    if found:
+        _LOGGER.info("Scenario changed to: %s", scenario)
+    else:
+        # Log error once with available scenarios from first entry
+        for entry_data in _get_entries(hass).values():
+            available = list(entry_data.storage.scenarios.keys())
+            _LOGGER.error(
+                "Unknown scenario '%s'. Available: %s",
+                scenario,
+                ", ".join(available),
+            )
+            break
+
+
+def _write_export_file(path_str: str, config_dir: str, export_data: dict) -> Path | None:
+    """Write the export (executor); None when the path is rejected.
+
+    Path resolution touches the filesystem: validate here, in the executor,
+    and write only inside <config>/cover_automatic/.
+    """
+    validated_path = _validate_export_path(path_str, config_dir)
+    if validated_path is None:
+        return None
+    validated_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(validated_path, "w", encoding="utf-8") as f:
+        yaml.dump(export_data, f, default_flow_style=False, allow_unicode=True)
+    return validated_path
+
+
+async def _handle_export_config(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Handle export_config service call."""
+    await _require_admin(hass, call)
+    path_str = call.data.get("path") or hass.config.path(
+        EXPORT_SUBDIR, "cover_automatic_backup.yaml"
+    )
+
+    config_dir = hass.config.config_dir
+
+    for entry_data in _get_entries(hass).values():
+        data = entry_data.storage.get_export_data()
+        try:
+            written = await hass.async_add_executor_job(
+                _write_export_file, path_str, config_dir, data
+            )
+        except (OSError, yaml.YAMLError) as err:
+            _LOGGER.error("Export failed: %s", err)
+            return
+        if written is None:
+            _LOGGER.error(
+                "Export rejected: path '%s' must be a YAML file inside '%s'",
+                path_str,
+                Path(config_dir) / EXPORT_SUBDIR,
+            )
+            return
+        _LOGGER.info("Configuration exported to %s", written)
+        break
+
+
+def _read_import_file(path_str: str, config_dir: str) -> Any:
+    """Read the YAML file to import (executor).
+
+    All filesystem access (resolve, exists, stat, read) runs here, in the
+    executor, never on the event loop. Raises _ImportRejected with the
+    message to log when the file is refused.
+    """
+    # Validate path to prevent path traversal attacks
+    validated_path = _validate_config_path(path_str, config_dir)
+    if validated_path is None:
+        raise _ImportRejected(
+            f"Import rejected: path '{path_str}' is outside allowed directories"
+        )
+    if not validated_path.exists():
+        raise _ImportRejected(f"Import file not found: {validated_path}")
+    # Check file size before reading
+    try:
+        file_size = validated_path.stat().st_size
+    except OSError as err:
+        raise _ImportRejected(f"Import failed: cannot stat file: {err}") from err
+    if file_size > MAX_IMPORT_FILE_SIZE:
+        raise _ImportRejected(
+            f"Import rejected: file too large ({file_size} bytes, "
+            f"max {MAX_IMPORT_FILE_SIZE})"
+        )
+    with open(validated_path, encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+async def _handle_import_config(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Handle import_config service call."""
+    await _require_admin(hass, call)
+    path_str = call.data.get("path")
+    if not path_str:
+        _LOGGER.error("Import rejected: no path provided")
+        return
+
+    config_dir = hass.config.config_dir
+
+    try:
+        data = await hass.async_add_executor_job(_read_import_file, path_str, config_dir)
+    except _ImportRejected as err:
+        _LOGGER.error("%s", err)
+        return
+    except (OSError, yaml.YAMLError) as err:
+        _LOGGER.error("Import failed: could not read file: %s", err)
+        return
+
+    for entry_data in _get_entries(hass).values():
+        try:
+            await entry_data.storage.async_import_data(data)
+        except (ValueError, TypeError) as err:
+            _LOGGER.error("Import failed: invalid data format: %s", err)
+            return
+        entry_data.coordinator.refresh_state_tracking()
+        # auto_enabled may have changed: leave MANUAL / enter it now
+        entry_data.coordinator.reconcile_after_import()
+        entry_data.coordinator.async_sync_entities()
+        await entry_data.coordinator.async_request_refresh()
+        _LOGGER.info("Configuration imported from %s", path_str)
+        break
+
+
+_SCHEMA_ENTITY = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+_SCHEMA_SCENARIO = vol.Schema({vol.Required("scenario"): cv.string})
+_SCHEMA_PATH_REQUIRED = vol.Schema({vol.Required("path"): cv.string})
+_SCHEMA_PATH_OPTIONAL = vol.Schema({vol.Optional("path"): cv.string})
+_SCHEMA_NONE = vol.Schema({})
+
+# (service, handler, schema): each handler receives hass, then the call
+_SERVICES: tuple[tuple[str, Callable[[HomeAssistant, ServiceCall], Awaitable[None]], vol.Schema], ...] = (
+    ("pause", _handle_pause, _SCHEMA_ENTITY),
+    ("resume", _handle_resume, _SCHEMA_ENTITY),
+    ("pause_all", _handle_pause_all, _SCHEMA_NONE),
+    ("resume_all", _handle_resume_all, _SCHEMA_NONE),
+    ("set_scenario", _handle_set_scenario, _SCHEMA_SCENARIO),
+    ("export_config", _handle_export_config, _SCHEMA_PATH_OPTIONAL),
+    ("import_config", _handle_import_config, _SCHEMA_PATH_REQUIRED),
+)
+
+
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for CoverAutomatic."""
     # Only register services once
     if hass.services.has_service(DOMAIN, "pause"):
         return
-
-    def _get_entries():
-        """Get all integration entry runtime data safely."""
-        result = {}
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            runtime_data = getattr(entry, "runtime_data", None)
-            if runtime_data:
-                result[entry.entry_id] = runtime_data
-        return result
-
-    async def handle_pause(call: ServiceCall) -> None:
-        """Handle pause service call."""
-        entity_id = call.data.get("entity_id")
-        for entry_data in _get_entries().values():
-            if entity_id in entry_data.coordinator.storage.covers:
-                # Explicit pause: not ended by resume-on-match
-                entry_data.coordinator.pause_cover(
-                    entry_data.coordinator.storage.covers[entity_id], manual=False
-                )
-                break
-
-    async def handle_resume(call: ServiceCall) -> None:
-        """Handle resume service call."""
-        entity_id = call.data.get("entity_id")
-        for entry_data in _get_entries().values():
-            if entity_id in entry_data.coordinator.storage.covers:
-                entry_data.coordinator.resume_cover(entity_id)
-                break
-
-    async def handle_pause_all(call: ServiceCall) -> None:
-        """Handle pause_all service call."""
-        for entry_data in _get_entries().values():
-            for cover in entry_data.coordinator.storage.covers.values():
-                entry_data.coordinator.pause_cover(cover, manual=False)
-
-    async def handle_resume_all(call: ServiceCall) -> None:
-        """Handle resume_all service call."""
-        for entry_data in _get_entries().values():
-            for entity_id in entry_data.coordinator.storage.covers:
-                entry_data.coordinator.resume_cover(entity_id)
-
-    async def handle_set_scenario(call: ServiceCall) -> None:
-        """Handle set_scenario service call."""
-        scenario = call.data.get("scenario")
-        if not scenario:
-            _LOGGER.error("set_scenario: No scenario provided")
-            return
-
-        found = False
-        for entry_data in _get_entries().values():
-            if scenario in entry_data.storage.scenarios:
-                entry_data.storage.active_scenario = scenario
-                await entry_data.storage.async_save()
-                await entry_data.coordinator.async_request_refresh()
-                found = True
-
-        if found:
-            _LOGGER.info("Scenario changed to: %s", scenario)
-        else:
-            # Log error once with available scenarios from first entry
-            for entry_data in _get_entries().values():
-                available = list(entry_data.storage.scenarios.keys())
-                _LOGGER.error(
-                    "Unknown scenario '%s'. Available: %s",
-                    scenario,
-                    ", ".join(available),
-                )
-                break
-
-    async def _require_admin(call: ServiceCall) -> None:
-        """Verify caller has admin privileges."""
-        if not call.context.user_id:
-            return  # Internal/automation call -- no user context
-        user = await hass.auth.async_get_user(call.context.user_id)
-        if not user or not user.is_admin:
-            raise HomeAssistantError(
-                "Admin access required for this service",
-                translation_domain=DOMAIN,
-                translation_key="admin_required",
-            )
-
-    async def handle_export_config(call: ServiceCall) -> None:
-        """Handle export_config service call."""
-        await _require_admin(call)
-        path_str = call.data.get("path") or hass.config.path(
-            EXPORT_SUBDIR, "cover_automatic_backup.yaml"
-        )
-
-        config_dir = hass.config.config_dir
-
-        for entry_data in _get_entries().values():
-            data = entry_data.storage.get_export_data()
-
-            def write_yaml(export_data=data) -> Path | None:
-                # Path resolution touches the filesystem: validate here, in
-                # the executor, and write only inside <config>/cover_automatic/
-                validated_path = _validate_export_path(path_str, config_dir)
-                if validated_path is None:
-                    return None
-                validated_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(validated_path, "w", encoding="utf-8") as f:
-                    yaml.dump(export_data, f, default_flow_style=False, allow_unicode=True)
-                return validated_path
-
-            try:
-                written = await hass.async_add_executor_job(write_yaml)
-            except (OSError, yaml.YAMLError) as err:
-                _LOGGER.error("Export failed: %s", err)
-                return
-            if written is None:
-                _LOGGER.error(
-                    "Export rejected: path '%s' must be a YAML file inside '%s'",
-                    path_str,
-                    Path(config_dir) / EXPORT_SUBDIR,
-                )
-                return
-            _LOGGER.info("Configuration exported to %s", written)
-            break
-
-    async def handle_import_config(call: ServiceCall) -> None:
-        """Handle import_config service call."""
-        await _require_admin(call)
-        path_str = call.data.get("path")
-        if not path_str:
-            _LOGGER.error("Import rejected: no path provided")
-            return
-
-        config_dir = hass.config.config_dir
-
-        def read_yaml():
-            # All filesystem access (resolve, exists, stat, read) runs here,
-            # in the executor, never on the event loop.
-            # Validate path to prevent path traversal attacks
-            validated_path = _validate_config_path(path_str, config_dir)
-            if validated_path is None:
-                raise _ImportRejected(
-                    f"Import rejected: path '{path_str}' is outside allowed directories"
-                )
-            if not validated_path.exists():
-                raise _ImportRejected(f"Import file not found: {validated_path}")
-            # Check file size before reading
-            try:
-                file_size = validated_path.stat().st_size
-            except OSError as err:
-                raise _ImportRejected(f"Import failed: cannot stat file: {err}") from err
-            if file_size > MAX_IMPORT_FILE_SIZE:
-                raise _ImportRejected(
-                    f"Import rejected: file too large ({file_size} bytes, "
-                    f"max {MAX_IMPORT_FILE_SIZE})"
-                )
-            with open(validated_path, encoding="utf-8") as f:
-                return yaml.safe_load(f)
-
-        try:
-            data = await hass.async_add_executor_job(read_yaml)
-        except _ImportRejected as err:
-            _LOGGER.error("%s", err)
-            return
-        except (OSError, yaml.YAMLError) as err:
-            _LOGGER.error("Import failed: could not read file: %s", err)
-            return
-
-        for entry_data in _get_entries().values():
-            try:
-                await entry_data.storage.async_import_data(data)
-            except (ValueError, TypeError) as err:
-                _LOGGER.error("Import failed: invalid data format: %s", err)
-                return
-            entry_data.coordinator.refresh_state_tracking()
-            # auto_enabled may have changed: leave MANUAL / enter it now
-            entry_data.coordinator.reconcile_after_import()
-            entry_data.coordinator.async_sync_entities()
-            await entry_data.coordinator.async_request_refresh()
-            _LOGGER.info("Configuration imported from %s", path_str)
-            break
-
-    schema_entity = vol.Schema({vol.Required("entity_id"): cv.entity_id})
-    schema_scenario = vol.Schema({vol.Required("scenario"): cv.string})
-    schema_path_required = vol.Schema({vol.Required("path"): cv.string})
-    schema_path_optional = vol.Schema({vol.Optional("path"): cv.string})
-
-    hass.services.async_register(DOMAIN, "pause", handle_pause, schema=schema_entity)
-    hass.services.async_register(DOMAIN, "resume", handle_resume, schema=schema_entity)
-    hass.services.async_register(DOMAIN, "pause_all", handle_pause_all, schema=vol.Schema({}))
-    hass.services.async_register(DOMAIN, "resume_all", handle_resume_all, schema=vol.Schema({}))
-    hass.services.async_register(
-        DOMAIN, "set_scenario", handle_set_scenario, schema=schema_scenario
-    )
-    hass.services.async_register(
-        DOMAIN, "export_config", handle_export_config, schema=schema_path_optional
-    )
-    hass.services.async_register(
-        DOMAIN, "import_config", handle_import_config, schema=schema_path_required
-    )
+    for service, handler, schema in _SERVICES:
+        hass.services.async_register(DOMAIN, service, partial(handler, hass), schema=schema)
 
 
 async def async_unload_services(hass: HomeAssistant) -> None:
     """Unload services."""
-    hass.services.async_remove(DOMAIN, "pause")
-    hass.services.async_remove(DOMAIN, "resume")
-    hass.services.async_remove(DOMAIN, "pause_all")
-    hass.services.async_remove(DOMAIN, "resume_all")
-    hass.services.async_remove(DOMAIN, "set_scenario")
-    hass.services.async_remove(DOMAIN, "export_config")
-    hass.services.async_remove(DOMAIN, "import_config")
+    for service, _handler, _schema in _SERVICES:
+        hass.services.async_remove(DOMAIN, service)

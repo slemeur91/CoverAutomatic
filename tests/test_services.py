@@ -296,7 +296,7 @@ class TestExportImportServices:
         hass.services = MagicMock()
         hass.services.has_service = MagicMock(return_value=False)
         hass.services.async_register = MagicMock()
-        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args) if not args else fn())
+        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args))
 
         mock_storage = MagicMock()
         mock_storage.get_export_data = MagicMock(
@@ -529,7 +529,7 @@ class TestExportHappyPath:
         hass.services = MagicMock()
         hass.services.has_service = MagicMock(return_value=False)
         hass.services.async_register = MagicMock()
-        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args) if not args else fn())
+        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args))
         hass.config.path = MagicMock(return_value="/config/cover_automatic_backup.yaml")
         hass.config.config_dir = "/config"
 
@@ -667,7 +667,7 @@ class TestExportPathRestrictions:
         call.context.user_id = None
 
         # Run executor jobs for real: validation happens inside the job
-        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn: fn())
+        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args))
         with patch("builtins.open") as mock_open:
             await handler(call)
 
@@ -954,7 +954,7 @@ class TestAdminRequirement:
         mock_user.is_admin = True
         hass.auth = MagicMock()
         hass.auth.async_get_user = AsyncMock(return_value=mock_user)
-        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args) if not args else fn())
+        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args))
 
         handlers = {}
 
@@ -982,7 +982,7 @@ class TestAdminRequirement:
     async def test_export_allows_internal_call(self, mock_hass_with_auth) -> None:
         """Test export_config allows internal calls without user context."""
         hass, storage, coordinator = mock_hass_with_auth
-        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args) if not args else fn())
+        hass.async_add_executor_job = AsyncMock(side_effect=lambda fn, *args: fn(*args))
 
         handlers = {}
 
@@ -1019,8 +1019,8 @@ class TestServicesExecutor:
         hass.config.config_dir = "/config"
         jobs: list = []
 
-        async def executor(fn):
-            jobs.append(fn)  # not run: nothing may touch the filesystem inline
+        async def executor(fn, *args):
+            jobs.append((fn, args))  # not run: nothing may touch the filesystem inline
             return {"rules": {}}
 
         hass.async_add_executor_job = executor
@@ -1050,7 +1050,39 @@ class TestServicesExecutor:
             with patch("builtins.open", MagicMock()), patch(
                 "custom_components.cover_automatic.services.yaml.safe_load", return_value={}
             ):
-                jobs[0]()
+                fn, args = jobs[0]
+                fn(*args)
             validate.assert_called_once()
             path.exists.assert_called_once()
             path.stat.assert_called_once()
+
+
+class TestRegistrationTable:
+    """Handlers live at module level and are bound to hass when registered."""
+
+    @pytest.mark.asyncio
+    async def test_handlers_bound_to_hass_run_as_coroutines(self) -> None:
+        from homeassistant.core import HassJob, HassJobType
+
+        from custom_components.cover_automatic.services import _SERVICES, async_setup_services
+
+        hass = MagicMock()
+        hass.services.has_service = MagicMock(return_value=False)
+        registered: dict = {}
+        hass.services.async_register = lambda d, s, h, **kw: registered.__setitem__(s, h)
+        await async_setup_services(hass)
+
+        assert list(registered) == [name for name, _handler, _schema in _SERVICES]
+        for handler in registered.values():
+            assert handler.args == (hass,)
+            # Home Assistant awaits it like the former nested async handlers
+            assert HassJob(handler).job_type is HassJobType.Coroutinefunction
+
+    @pytest.mark.asyncio
+    async def test_unload_removes_every_service(self) -> None:
+        from custom_components.cover_automatic.services import _SERVICES, async_unload_services
+
+        hass = MagicMock()
+        await async_unload_services(hass)
+        removed = [c.args[1] for c in hass.services.async_remove.call_args_list]
+        assert removed == [name for name, _handler, _schema in _SERVICES]

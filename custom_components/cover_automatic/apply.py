@@ -118,7 +118,7 @@ class ApplyMixin:
         async with self._apply_lock:
             await self._async_apply_positions_locked()
 
-    async def _async_apply_positions_locked(self) -> None:
+    async def _async_apply_positions_locked(self) -> None:  # noqa: C901 -- complexity 28, to reduce (see CHANGELOG 2.1.3)
         """Apply calculated positions (caller holds the apply lock)."""
         if not self.data:
             return

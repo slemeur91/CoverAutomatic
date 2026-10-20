@@ -1415,7 +1415,7 @@ class CoverAutomaticStorage:
         data["migrations"] = list(_ALL_MIGRATIONS)
         return data
 
-    async def async_import_data(self, data: dict[str, Any]) -> None:
+    async def async_import_data(self, data: dict[str, Any]) -> None:  # noqa: C901 -- complexity 35, to reduce (see CHANGELOG 2.1.3)
         """Import data from dict with validation."""
         if not isinstance(data, dict):
             raise ValueError("Import data must be a dictionary")

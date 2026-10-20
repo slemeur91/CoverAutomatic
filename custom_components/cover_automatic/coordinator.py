@@ -463,7 +463,7 @@ class CoverAutomaticCoordinator(
             self.hass, self.async_request_refresh(), f"{DOMAIN}_refresh"
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:  # noqa: C901 -- complexity 16, to reduce (see CHANGELOG 2.1.3)
         """Update data and evaluate rules."""
         # Compile native Home Assistant conditions (async) so the rule
         # evaluation below can run them synchronously; track new entities.
