@@ -335,7 +335,7 @@ The "Show this cover's log" button opens the log filtered on this cover.
 
 | Tab | Content |
 |-----|---------|
-| **House** | House rotation, with compass (south at the top; position of the sun, sunshine sector in the colours of the four house sides, with their azimuths in a legend); choice to rotate the existing facades or not when the rotation changes |
+| **House** | House rotation, with a sky compass (north at the top; house turned by its angle, today's sun path, sun and moon with its phase, one ring per house side, azimuths in a legend); sun and moon information; today's sunshine of each facade on the sun curve; choice to rotate the existing facades or not when the rotation changes |
 | **Sensors** | Global indoor temperature sensor; profiles A and B (scenarios of each profile, cold / hot setpoints and hysteresis), in two columns; outdoor temperature sensor and hysteresis used by the rules; weather; workday |
 | **Sun exposure** | Behaviour of "Sun on the facade" depending on the room temperature, for each profile (two columns); sunshine sensor, strong-sunshine threshold and hysteresis |
 | **Wind protection** | Wind sensor, threshold, hysteresis and **protection position** |
@@ -572,14 +572,15 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.1.5
+2.1.6
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.1.5 (2026-10-20), based on the original version
-[v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler.
+Latest version: v2.1.6 (2026-10-20), based on the original version
+[v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler. It includes the fixes
+of the original version up to [v1.63.7](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.7).
 
 ## License
 

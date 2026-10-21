@@ -5,7 +5,21 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [2.1.5] - Unreleased
+## [2.1.6] - Unreleased
+
+### Added
+
+- Settings › House: sky compass, north at the top (the sky seen from above: horizon on the outer ring, zenith in the centre). The house stays in the middle, turned by its rotation and still draggable (rotation values unchanged). It shows today's sun path with the hours, the current sun (from `sun.sun`), the moon with its phase, the yearly sunshine sector, and one ring per house side, centred on the direction that side faces and spanning the 180° from which the sun can light it (the part the sun never reaches drawn faint).
+- Settings › House: sun information (azimuth, elevation, sunrise and sunset) and moon information (phase, illumination, position) next to the compass.
+- Settings › House: "Facade sunshine today", the sun's elevation curve over the day with the current time and position (the part below the horizon squeezed under 0°), and one strip per facade showing when the sun is on it, with the times. Same test as the "Sun on facade" condition.
+- Sun path, moon and facade strips computed in the panel from Home Assistant's home location and time zone; redrawn when `sun.sun` changes.
+
+### Changed
+
+- Settings › House: the outdoor temperature is no longer repeated under the compass (it stays in the panel's information bar).
+- README: states that this version includes the fixes of the original project up to v1.63.7. The upstream releases 1.63.1 – 1.63.7 were checked one by one: each fix is already present (window lock kept while its sensor is unavailable, rule disabled when its last cover or facade is deleted, import keeping local settings and runtime state, window lock around wind protection and staggered moves, no false pause after a short window opening, rule targets limited to 0–100 %, 120-minute cover pause kept after a restart, non-blocking import and export).
+
+## [2.1.5] - 2026-10-20
 
 ### Fixed
 

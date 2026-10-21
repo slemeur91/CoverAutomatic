@@ -74,8 +74,10 @@ export const SettingsMixin = (Base) => class extends Base {
             </label>
             ${hint(this._esc(this._t("settings_rotate_facades_hint")))}
           </div>
+          <div class="settings-house-sky">${this._renderSkyInfo()}</div>
           <div class="settings-house-compass">${this._renderCompassSVG(rot)}</div>
         </div>
+        <div class="sun-today">${this._renderSunToday()}</div>
       </div>
     </div>`;
     }

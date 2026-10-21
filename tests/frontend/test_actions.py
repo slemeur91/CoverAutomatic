@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from .conftest import FIXED_TIME
+
 HERE = Path(__file__).parent
 PANEL_DIR = HERE.parents[1] / "custom_components" / "cover_automatic" / "panel"
 ACTION_MAP = HERE / "fixtures" / "action_map.json"
@@ -114,6 +116,7 @@ def action_map(browser, base_url):
     ctx = browser.new_context(viewport={"width": 1280, "height": 900})
     ctx.route(lambda url: not url.startswith(base_url), lambda route: route.abort())
     page = ctx.new_page()
+    page.clock.set_fixed_time(FIXED_TIME)
     errors: list[str] = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     page.goto(f"{base_url}/tests/frontend/harness.html?lang=en&mode=panel")

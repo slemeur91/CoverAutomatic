@@ -19,6 +19,9 @@ sync_api = pytest.importorskip("playwright.sync_api")
 
 ROOT = Path(__file__).resolve().parents[2]
 HARNESS = "/tests/frontend/harness.html"
+# Fixed browser clock: the sky drawings (sun path, moon, current time) are the
+# same on every run. Timers keep running.
+FIXED_TIME = "2026-10-21T15:00:00+02:00"
 # Answer of the GitHub API for the panel's update check (no network in tests)
 LATEST_RELEASE = '{"tag_name": "v0.0.0", "html_url": "https://example.invalid"}'
 
@@ -104,6 +107,7 @@ def mount(browser: Any, base_url: str) -> Iterator[Callable[..., Mounted]]:
         ctx.route(lambda url: not url.startswith(base_url) and "api.github.com" not in url,
                   lambda route: route.abort())
         page = ctx.new_page()
+        page.clock.set_fixed_time(FIXED_TIME)
         m = Mounted(page)
         if init_script:
             page.add_init_script(init_script)

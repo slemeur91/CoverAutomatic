@@ -337,7 +337,7 @@ Le bouton « Voir le journal de ce volet » ouvre le journal filtré sur ce vole
 
 | Onglet | Contenu |
 |--------|---------|
-| **Maison** | Rotation de la maison, avec boussole (Sud en haut ; position du soleil, secteur ensoleillé aux couleurs des quatre côtés de la maison, avec leurs azimuts en légende) ; choix de faire pivoter ou non les façades existantes quand la rotation change |
+| **Maison** | Rotation de la maison, avec boussole du ciel (nord en haut ; maison tournée de son angle, course du soleil du jour, soleil et lune avec sa phase, un anneau par côté de la maison, azimuts en légende) ; informations soleil et lune ; ensoleillement de chaque façade aujourd'hui sur la courbe du soleil ; choix de faire pivoter ou non les façades existantes quand la rotation change |
 | **Capteurs** | Capteur de température intérieure global ; profils A et B (scénarios de chaque profil, consignes froide / chaude et hystérésis), en deux colonnes ; capteur de température extérieure et hystérésis utilisée par les règles ; météo ; jour ouvré |
 | **Exposition au soleil** | Comportement de « Soleil sur la façade » selon la température de la pièce, pour chaque profil (deux colonnes) ; capteur d'ensoleillement, seuil de fort ensoleillement et hystérésis |
 | **Protection contre le vent** | Capteur de vent, seuil, hystérésis et **position de protection** |
@@ -575,14 +575,15 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.1.5
+2.1.6
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.1.5 (2026-10-20), basée sur la version d'origine
-[v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler.
+Dernière version : v2.1.6 (2026-10-20), basée sur la version d'origine
+[v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler. Elle inclut les corrections
+de la version d'origine jusqu'à la [v1.63.7](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.7).
 
 ## Licence
 

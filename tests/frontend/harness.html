@@ -42,6 +42,7 @@
 
   const hass = {
     language: lang, locale: { language: lang, number_format: "language" }, states,
+    config: { latitude: 48.548, longitude: 2.276, time_zone: "Europe/Paris" },
     themes: { darkMode: false }, user: { is_admin: true }, entities: window.__entities || undefined,
     async callWS(msg) {
       window.__ws.push(copy(msg));

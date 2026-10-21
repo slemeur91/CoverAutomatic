@@ -1,5 +1,6 @@
 // CoverAutomatic panel -- Facades tab, compass and house orientation.
 // Mixin of CoverAutomaticPanel (see cover-automatic-panel.js).
+import * as sky from "./sky.js";
 import { FACADE_BEARINGS, FACADE_SIDE_COLORS, DIRECTION_ARROWS } from "./constants.js";
 
 export const FacadesMixin = (Base) => class extends Base {
@@ -252,43 +253,65 @@ export const FacadesMixin = (Base) => class extends Base {
     return html;
   }
 
-  _renderCompassSVG(rotation) {
-    const cx = 140, cy = 140, r = 88, hr = 28;
-    // South at the top (the sun side in the northern hemisphere): north is
-    // down, east left, west right. Screen angle of a compass bearing:
-    const rad = (az) => (az + 90) * Math.PI / 180;
-    const sunState = this._hass ? this._hass.states["sun.sun"] : null;
-    const sunAz = sunState ? parseFloat(sunState.attributes.azimuth) : null;
-    const sunEl = sunState ? parseFloat(sunState.attributes.elevation) : null;
-    const belowHorizon = sunEl != null && sunEl < 0;
+  /* ---------- Sky: compass, sun and moon, today's sun (Settings > House) ---------- */
+  // Home Assistant's home location and time zone; null without coordinates
+  _skyLocation() {
+    const c = (this._hass && this._hass.config) || {};
+    const lat = Number(c.latitude), lon = Number(c.longitude);
+    return Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon, tz: c.time_zone || null } : null;
+  }
 
-    // Sunshine arcs: only the bearings the sun can reach over the year, for
-    // the whole house and for each of its sides (north / east / south / west,
-    // house rotation applied). The legend below gives the same bearings: the
-    // part the sun never reaches is not shown.
-    const sector = this._sunSector();
-    const arc = (from, sweep, col, arcR, width) => {
-      if (sweep >= 359.99) return `<circle cx="${cx}" cy="${cy}" r="${arcR}" fill="none" stroke="${col}" stroke-width="${width}" opacity="0.9"/>`;
-      const point = (az) => [cx + arcR * Math.cos(rad(az)), cy + arcR * Math.sin(rad(az))];
-      const [x1, y1] = point(from), [x2, y2] = point(from + sweep);
-      return `<path d="M${x1},${y1} A${arcR},${arcR} 0 ${sweep > 180 ? 1 : 0},1 ${x2},${y2}" fill="none" stroke="${col}" stroke-width="${width}" opacity="0.9"/>`;
-    };
+  // Sun path of the day, current sun (from sun.sun when available) and moon
+  _skyNow() {
+    const loc = this._skyLocation();
+    const now = new Date();
+    const start = sky.dayStartIn(now, loc && loc.tz);
+    const samples = loc ? sky.sunDay(start, loc.lat, loc.lon, 5) : [];
+    const sunState = this._hass && this._hass.states ? this._hass.states["sun.sun"] : null;
+    const az = sunState ? parseFloat(sunState.attributes.azimuth) : NaN;
+    const el = sunState ? parseFloat(sunState.attributes.elevation) : NaN;
+    let sunNow = null;
+    if (Number.isFinite(az) && Number.isFinite(el)) sunNow = { azimuth: az, elevation: el };
+    else if (loc) sunNow = sky.sunPosition(now, loc.lat, loc.lon);
+    const moonNow = loc ? sky.moonPosition(now, loc.lat, loc.lon) : null;
+    return { now, loc, samples, nowMin: (now - start) / 60000, sunNow, moonNow, moon: sky.moonIllumination(now) };
+  }
+
+  _skyNum(v) {
+    const lang = (this._hass && this._hass.language) || "en";
+    return Number(v).toLocaleString(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
+  // Compass (north up, sky seen from above) with the house in the middle,
+  // then the legend of the bearings. Re-rendered when the rotation changes.
+  _renderCompassSVG(rotation) {
     const houseRot = Number.isFinite(Number(rotation)) ? Number(rotation) : 0;
-    // Outer arc: the sunshine sector, in the sun colour. Then two rings for
-    // the house sides, each over the bearings from which the sun can light it
-    // (90° on each side): north + south on one ring, east + west on the
-    // other, so that opposite sides never overlap.
-    const sideRing = { north: r - 12, south: r - 12, east: r - 20, west: r - 20 };
-    let sunArc = arc(sector.from, sector.sweep, "var(--ca-sun)", r - 5, 3);
+    const d = this._skyNow();
+    // Arcs around the horizon: the bearings the sun reaches over the year,
+    // then one ring per side of the house, centred on the direction that side
+    // faces (house rotation applied) and spanning the 180° from which the sun
+    // can light it; the part the sun never reaches is drawn faint.
+    const sector = this._sunSector();
+    const arcs = [{ from: sector.from, sweep: sector.sweep, color: "var(--ca-sun)", ring: 0, width: 3 }];
+    const ringOf = { north: 1, east: 2, south: 3, west: 4 };
+    const letter = { north: "compass_n", east: "compass_e", south: "compass_s", west: "compass_w" };
     for (const [dir, bearing] of Object.entries(FACADE_BEARINGS)) {
+      const ring = ringOf[dir], color = FACADE_SIDE_COLORS[dir];
+      arcs.push({ from: bearing - 90 + houseRot, sweep: 180, color, ring, width: 4, opacity: 0.25 });
       for (const [from, sweep] of this._clipToSector(bearing - 90 + houseRot, 180, sector)) {
-        sunArc += arc(from, sweep, FACADE_SIDE_COLORS[dir], sideRing[dir], 5);
+        arcs.push({ from, sweep, color, ring, width: 4 });
       }
+      arcs.push({ from: bearing - 90 + houseRot, sweep: 180, color, ring, width: 0, opacity: 0, label: this._esc(this._t(letter[dir])) });
     }
+    const svg = sky.renderSkyCompass({
+      samples: d.samples, sunNow: d.sunNow, moonNow: d.moonNow, moonPhase: d.moon.phase, arcs,
+      house: { rotation: houseRot },
+      labels: { n: this._esc(this._t("compass_n")), e: this._esc(this._t("compass_e")), s: this._esc(this._t("compass_s")), w: this._esc(this._t("compass_w")) },
+    });
     const deg = (v) => `${Math.round((((v % 360) + 360) % 360))}°`;
     const range = (from, sweep) => sweep >= 359.99 ? "0°–360°" : `${deg(from)}–${deg(from + sweep)}`;
-    const legendRow = (dot, name, text) => `<div class="compass-legend-row"><span class="compass-legend-dot" style="background:${dot}"></span><span class="compass-legend-name">${name}</span><span class="compass-legend-az">${text}</span></div>`;
-    let legend = legendRow("var(--ca-sun)", this._esc(this._t("compass_sun_range")), range(sector.from, sector.sweep));
+    const row = (dot, name, text) => `<div class="compass-legend-row"><span class="compass-legend-dot" style="background:${dot}"></span><span class="compass-legend-name">${name}</span><span class="compass-legend-az">${text}</span></div>`;
+    let legend = row("var(--ca-sun)", this._esc(this._t("compass_sun_range")), range(sector.from, sector.sweep));
     // One row per house side: the bearings from which the sun can light it
     // (90° on each side of its bearing), cut to the sunshine sector.
     for (const [dir, bearing] of Object.entries(FACADE_BEARINGS)) {
@@ -296,102 +319,68 @@ export const FacadesMixin = (Base) => class extends Base {
       let text = parts.length ? parts.map(([from, sweep]) => range(from, sweep)).join(", ") : "\u2013";
       // Cut in two by the dark sector: whole span first, then its two lit parts
       if (parts.length === 2) text = `${deg(parts[0][0])}–${deg(parts[1][0] + parts[1][1])} (${text})`;
-      legend += legendRow(FACADE_SIDE_COLORS[dir], this._esc(this._t("facade_dir_" + dir)), text);
+      legend += row(FACADE_SIDE_COLORS[dir], this._esc(this._t("facade_dir_" + dir)), text);
     }
+    return `${svg}<div class="compass-legend">${legend}</div>`;
+  }
 
-    // Sun position -- soft radial glow behind the disc, fine rays, and a
-    // light cone rendered as a directional gradient fading toward the house
-    let sunMarker = "";
-    let sunBeams = "";
-    let beamGradient = "";
-    if (sunAz != null && !isNaN(sunAz) && !belowHorizon) {
-      const sunRad = rad(sunAz);
-      const sr = r + 28;
-      const sx = cx + sr * Math.cos(sunRad), sy = cy + sr * Math.sin(sunRad);
-      // Sun symbol rays (radiating outward)
-      const symbolRays = [0,45,90,135,180,225,270,315].map(d => {
-        const rr = d * Math.PI / 180;
-        const x1 = sx + 10.5 * Math.cos(rr), y1 = sy + 10.5 * Math.sin(rr);
-        const x2 = sx + 14.5 * Math.cos(rr), y2 = sy + 14.5 * Math.sin(rr);
-        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--ca-sun)" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>`;
-      }).join("");
-      // Light cone toward house facade (trapezoid: narrow at sun, wide at house)
-      const dx = cx - sx, dy = cy - sy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const ndx = dx / dist, ndy = dy / dist;
-      const perpX = -ndy, perpY = ndx;
-      const sunW = 4;
-      const facadeW = hr + 20;
-      const facadeDist = dist + hr * 0.5 + 20;
-      const fx = sx + ndx * facadeDist, fy = sy + ndy * facadeDist;
-      beamGradient = `<linearGradient id="ca-beam" gradientUnits="userSpaceOnUse" x1="${sx}" y1="${sy}" x2="${fx}" y2="${fy}">
-          <stop offset="0" stop-color="var(--ca-sun)" stop-opacity="0.22"/>
-          <stop offset="1" stop-color="var(--ca-sun)" stop-opacity="0.02"/>
-        </linearGradient>`;
-      sunBeams = `<polygon points="${sx + perpX * sunW},${sy + perpY * sunW} ${sx - perpX * sunW},${sy - perpY * sunW} ${fx - perpX * facadeW},${fy - perpY * facadeW} ${fx + perpX * facadeW},${fy + perpY * facadeW}" fill="url(#ca-beam)"/>`;
-      sunMarker = `<circle cx="${sx}" cy="${sy}" r="20" fill="url(#ca-sun-glow)" pointer-events="none"/>
-        ${symbolRays}<circle cx="${sx}" cy="${sy}" r="7" fill="var(--ca-sun)" stroke="var(--ca-sun-outline)" stroke-width="1"/>
-        <text x="${sx}" y="${sy + 27}" text-anchor="middle" font-size="9" fill="var(--ca-sun)" font-weight="600">\u2220${Math.round(sunEl)}\u00B0</text>`;
+  // Sun and moon information, next to the compass
+  _renderSkyInfo() {
+    const d = this._skyNow();
+    const info = (label, value) => `<div class="sky-info-row"><span class="sky-info-lbl">${this._esc(label)}</span><span>${value}</span></div>`;
+    const head = (color, label) => `<div class="sky-info-head"><span class="compass-legend-dot" style="background:${color}"></span>${this._esc(label)}</div>`;
+    let html = "";
+    if (d.sunNow) {
+      const rise = d.samples.find((p, i) => i && d.samples[i - 1].elevation < 0 && p.elevation >= 0);
+      const set = d.samples.find((p, i) => i && d.samples[i - 1].elevation >= 0 && p.elevation < 0);
+      const hm = (p) => (p ? sky.hhmm(p.min) : "\u2013");
+      html += head("var(--ca-sun)", this._t("sky_sun"));
+      html += info(this._t("sky_azimuth"), `${this._skyNum(d.sunNow.azimuth)}°`);
+      html += info(this._t("sky_elevation"), `${this._skyNum(d.sunNow.elevation)}°`);
+      html += info(this._t("sky_sunrise"), `${hm(rise)} · ${this._esc(this._t("sky_sunset"))} ${hm(set)}`);
     }
-
-    // Outdoor temperature info text at bottom of SVG
-    let infoText = "";
-    const settings = this._config ? this._config.settings || {} : {};
-    const tempEntity = settings.outdoor_temp_sensor;
-    if (tempEntity && this._hass?.states[tempEntity]) {
-      const tempState = this._hass.states[tempEntity];
-      const tempVal = parseFloat(tempState.state);
-      if (!isNaN(tempVal)) {
-        infoText = `${this._t("settings_outdoor_temp_short")} ${tempVal.toFixed(1)}\u00B0C`;
-      }
+    if (d.moonNow) {
+      html += '<div class="compass-legend-sep"></div>';
+      html += head("var(--ca-moon-dark)", this._t("sky_moon"));
+      html += info(this._t("sky_phase"), `${this._esc(this._t("moon_" + sky.moonPhaseKey(d.moon.phase)))} · ${Math.round(d.moon.fraction * 100)} %`);
+      const below = d.moonNow.elevation < 0 ? ` (${this._esc(this._t("sky_below_horizon"))})` : "";
+      html += info(this._t("sky_position"), `${this._skyNum(d.moonNow.azimuth)}° / ${this._skyNum(d.moonNow.elevation)}°${below}`);
     }
+    return html ? `<div class="sky-info">${html}</div>` : "";
+  }
 
-    const svgW = 280, svgH = infoText ? 302 : 288;
-    const infoSvg = infoText ? `<text x="${cx}" y="${svgH - 4}" text-anchor="middle" font-size="11" fill="var(--ca-secondary-text)">${infoText}</text>` : "";
-    return `<svg id="compass-svg" class="compass-svg-root" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">
-      <defs>
-        <filter id="ca-house-shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-color="#000" flood-opacity="0.3"/>
-        </filter>
-        <radialGradient id="ca-sun-glow">
-          <stop offset="0" stop-color="var(--ca-sun)" stop-opacity="0.35"/>
-          <stop offset="1" stop-color="var(--ca-sun)" stop-opacity="0"/>
-        </radialGradient>
-        <linearGradient id="ca-house-sheen" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#fff" stop-opacity="0.09"/>
-          <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-        </linearGradient>
-        ${beamGradient}
-      </defs>
-      <!-- Compass rings: quiet outer ring, fine dotted inner ring -->
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--divider-color)" stroke-width="1"/>
-      <circle cx="${cx}" cy="${cy}" r="${r - 28}" fill="none" stroke="var(--divider-color)" stroke-width="1" stroke-dasharray="0.5 6" stroke-linecap="round" opacity="0.8"/>
-      <!-- Cardinal directions (fixed); N carries the accent as rotation reference -->
-      <text x="${cx}" y="${cy + r + 18}" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1" fill="var(--ca-primary)">${this._esc(this._t("compass_n"))}</text>
-      <text x="${cx}" y="${cy - r - 8}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_s"))}</text>
-      <text x="${cx - r - 11}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_e"))}</text>
-      <text x="${cx + r + 11}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" letter-spacing="1" fill="var(--ca-secondary-text)">${this._esc(this._t("compass_w"))}</text>
-      <!-- North marker (bottom): filled triangle pointing inward from the ring -->
-      <polygon points="${cx - 3.5},${cy + r} ${cx + 3.5},${cy + r} ${cx},${cy + r - 8}" fill="var(--ca-primary)"/>
-      <!-- Tick marks (north replaced by the triangle marker) -->
-      ${[45,90,135,180,225,270,315].map(d => { const rad=(d+90)*Math.PI/180; const i=d%90===0?5:3; return `<line x1="${cx+r*Math.cos(rad)}" y1="${cy+r*Math.sin(rad)}" x2="${cx+(r+i)*Math.cos(rad)}" y2="${cy+(r+i)*Math.sin(rad)}" stroke="var(--primary-text-color)" stroke-width="${d%90===0?1.5:1}" opacity="${d%90===0?0.5:0.25}"/>`; }).join("")}
-      <!-- Sun beams (behind house) -->
-      ${sunBeams}
-      <!-- House (rotated, on top of beams) -->
-      <g id="compass-house" transform="rotate(${rotation}, ${cx}, ${cy})" data-action="house-drag-start" filter="url(#ca-house-shadow)">
-        <rect x="${cx - hr}" y="${cy - hr}" width="${hr * 2}" height="${hr * 2}" rx="4" fill="var(--primary-background-color, #1c1c1c)" stroke="var(--primary-color)" stroke-width="1.5"/>
-        <rect x="${cx - hr + 1.5}" y="${cy - hr + 1.5}" width="${hr * 2 - 3}" height="${hr * 2 - 3}" rx="3" fill="url(#ca-house-sheen)" stroke="none" pointer-events="none"/>
-        <!-- Roof indicator (front = south of house before rotation, at the top) -->
-        <line x1="${cx - hr + 7}" y1="${cy - hr}" x2="${cx + hr - 7}" y2="${cy - hr}" stroke="var(--primary-color)" stroke-width="2.5" stroke-linecap="round" pointer-events="none"/>
-        <text id="compass-degree-label" x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--primary-text-color)" opacity="0.75" pointer-events="none">${rotation}°</text>
-      </g>
-      <!-- Sunshine sector: sun-coloured arc, north-south ring, east-west ring -->
-      ${sunArc}
-      <!-- Sun -->
-      ${sunMarker}
-      <!-- Info -->
-      ${infoSvg}
-    </svg><div class="compass-legend">${legend}</div>`;
+  // Today's sun curve with one strip per facade
+  _renderSunToday() {
+    const d = this._skyNow();
+    if (!d.loc) return "";
+    const facades = Object.values((this._config && this._config.facades) || {})
+      .sort((a, b) => (a.azimuth_start ?? 0) - (b.azimuth_start ?? 0))
+      .map((f, i) => ({ ...f, name: this._esc(f.name), color: sky.FACADE_PALETTE[i % sky.FACADE_PALETTE.length] }));
+    for (const f of facades) f.windows = sky.facadeWindows(f, d.samples);
+    let date = "";
+    try {
+      date = d.now.toLocaleDateString((this._hass && this._hass.language) || "en", { weekday: "long", day: "numeric", month: "long", timeZone: d.loc.tz || undefined });
+    } catch (err) {
+      date = d.now.toLocaleDateString();
+    }
+    return `<div class="sun-today-head"><span>${this._esc(this._t("sun_today_title"))}</span><span>${this._esc(date)}</span></div>
+      ${sky.renderSunToday({ samples: d.samples, nowMin: d.nowMin, sunNow: d.sunNow, facades, labels: { noSun: this._esc(this._t("facade_no_sun_today")) } })}`;
+  }
+
+  // New sun or moon position (sun.sun changed): redraw the sky parts of the
+  // house section in place, without touching its inputs.
+  _refreshSky() {
+    const root = this.shadowRoot;
+    if (!root || this._houseDragState) return;
+    const compass = root.querySelector(".settings-house-compass");
+    if (!compass) return;
+    const input = root.querySelector("#house-rotation-input");
+    const parsed = input ? parseFloat(input.value) : NaN;
+    compass.innerHTML = this._renderCompassSVG(Number.isFinite(parsed) ? parsed : this._num((this._config.settings || {}).house_rotation, 0));
+    const info = root.querySelector(".settings-house-sky");
+    if (info) info.innerHTML = this._renderSkyInfo();
+    const today = root.querySelector(".sun-today");
+    if (today) today.innerHTML = this._renderSunToday();
   }
 
   /* ---------- House compass drag-rotation ---------- */
@@ -404,11 +393,12 @@ export const FacadesMixin = (Base) => class extends Base {
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const vb = (svg.getAttribute("viewBox") || "0 0 280 288").split(" ").map(parseFloat);
-    const compassCxLogical = 140; // matches _renderCompassSVG cx/cy
-    const compassCyLogical = 140;
+    // Compass centre in SVG units (set by sky.renderSkyCompass)
+    const compassCxLogical = parseFloat(svg.dataset.cx) || vb[2] / 2;
+    const compassCyLogical = parseFloat(svg.dataset.cy) || vb[3] / 2;
     const cxPx = rect.left + (compassCxLogical / vb[2]) * rect.width;
     const cyPx = rect.top + (compassCyLogical / vb[3]) * rect.height;
-    this._houseDragState = { cxPx, cyPx };
+    this._houseDragState = { cxPx, cyPx, cx: compassCxLogical, cy: compassCyLogical };
     target.style.cursor = "grabbing";
     this._houseDragMoveBound = (ev) => this._handleHouseDragMove(ev);
     this._houseDragEndBound = (ev) => this._handleHouseDragEnd(ev);
@@ -423,10 +413,11 @@ export const FacadesMixin = (Base) => class extends Base {
     const { cxPx, cyPx } = this._houseDragState;
     const dx = e.clientX - cxPx;
     const dy = e.clientY - cyPx;
-    // SVG rotate(0) keeps the house upright (front at the top = south).
-    // atan2(dy, dx) returns 0 for the +x screen axis, so add 90° to make the
-    // top of the compass the zero; clockwise on screen stays clockwise.
-    let angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+    // SVG rotate(0) keeps the house upright: north up, its front (south
+    // side) at the bottom. atan2(dy, dx) returns 0 for the +x screen axis, so
+    // take 90° off to make the bottom of the compass the zero; clockwise on
+    // screen stays clockwise (same rotation values as before).
+    let angle = Math.atan2(dy, dx) * 180 / Math.PI - 90;
     while (angle > 180) angle -= 360;
     while (angle < -180) angle += 360;
     if (e.shiftKey) {
@@ -437,7 +428,7 @@ export const FacadesMixin = (Base) => class extends Base {
     // Update transform inline (avoid full SVG re-render during drag)
     const houseG = this.shadowRoot.querySelector("#compass-house");
     if (houseG) {
-      houseG.setAttribute("transform", `rotate(${angle}, 140, 140)`);
+      houseG.setAttribute("transform", `rotate(${angle}, ${this._houseDragState.cx}, ${this._houseDragState.cy})`);
     }
     const degLabel = this.shadowRoot.querySelector("#compass-degree-label");
     if (degLabel) degLabel.textContent = `${angle}°`;

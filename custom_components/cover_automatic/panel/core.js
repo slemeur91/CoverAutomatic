@@ -91,6 +91,7 @@ export class PanelCore extends HTMLElement {
       // of the header (master switch, focus) is not rebuilt.
       if (shell) this._patchInfoBar(shell);
       if (this._activeTab === "covers") this._updateLiveCells();
+      if (this._activeTab === "settings" && this._activeSettingsSection === "house") this._refreshSky();
     }
   }
 

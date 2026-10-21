@@ -32,6 +32,10 @@ export const PANEL_STYLES = `
     --ca-danger-bg: #fce4ec;
     --ca-sun: var(--ca-sun-color, #f9a825);
     --ca-sun-outline: var(--ca-sun-outline-color, #F57F17);
+    /* Sky compass: lit and dark parts of the moon, sun elevation curve */
+    --ca-moon: #f3f3f3;
+    --ca-moon-dark: color-mix(in srgb, var(--primary-text-color, #212121) 45%, transparent);
+    --ca-curve: #2d9cdb;
     --ca-radius: 12px;
     --ca-shadow: 0 2px 8px rgba(0,0,0,0.08);
     --ca-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -810,19 +814,31 @@ export const PANEL_STYLES = `
   .settings-unsaved-warning .btn { margin-left: auto; }
 
   /* House card: rotation input + compass side by side */
+  /* House: settings top left, compass and its bearings on the right, sun and
+     moon next to the compass, bottom-aligned with the bearings */
   .settings-house-layout {
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "input compass" "sky compass";
+    column-gap: 24px;
+    align-items: start;
   }
-  .settings-house-input {
-    flex: 1;
-    min-width: 160px;
+  .settings-house-input { grid-area: input; min-width: 160px; }
+  .settings-house-sky { grid-area: sky; align-self: end; justify-self: end; }
+  .settings-house-compass { grid-area: compass; }
+  @media (max-width: 760px) {
+    .settings-house-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "input" "compass" "sky"; row-gap: 16px; }
+    .settings-house-sky { justify-self: stretch; }
   }
-  .settings-house-compass {
-    flex: 0 0 auto;
-  }
+  .sky-compass { max-width: 100%; height: auto; }
+  .sky-info { font-size: 12px; display: grid; gap: 3px; min-width: 230px; }
+  .sky-info-head { display: flex; align-items: center; gap: 6px; font-weight: 600; margin-top: 2px; }
+  .sky-info-row { display: flex; gap: 8px; }
+  .sky-info-lbl { color: var(--ca-secondary-text); min-width: 72px; }
+  .compass-legend-sep { height: 1px; background: var(--divider-color); margin: 4px 0; }
+  .sun-today { margin-top: 18px; border-top: 1px solid var(--divider-color); padding-top: 12px; }
+  .sun-today-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ca-secondary-text); margin-bottom: 6px; }
+  .sun-today svg { display: block; width: 100%; height: auto; }
   .compass-legend { margin-top: 8px; font-size: 12px; color: var(--primary-text-color); display: grid; gap: 3px; }
   .compass-legend-row { display: flex; align-items: center; gap: 6px; }
   .compass-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
