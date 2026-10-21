@@ -581,7 +581,7 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.1.6 (2026-10-20), basée sur la version d'origine
+Dernière version : v2.1.6 (2026-10-21), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler. Elle inclut les corrections
 de la version d'origine jusqu'à la [v1.63.7](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.7).
 
