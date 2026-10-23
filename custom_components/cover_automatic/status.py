@@ -47,7 +47,9 @@ class StatusMixin:
             return CoverStatus.MANUAL
         return status
 
-    def pause_cover(self, cover: CoverConfig, manual: bool = True) -> None:
+    def pause_cover(
+        self, cover: CoverConfig, manual: bool = True, details: dict[str, Any] | None = None
+    ) -> None:
         """Pause automation for a cover.
 
         Protective statuses (wind, window lock) and disabled automation
@@ -58,6 +60,9 @@ class StatusMixin:
         was moved by hand). Explicit pauses (pause / pause_all services) pass
         False: resume-on-match must not end them -- the user asked for a
         pause, not for a one-off position.
+
+        details: why a manual pause was decided (see _override_details),
+        added to the activity log entry and the logbook text.
         """
         prev = self._cover_states.get(cover.entity_id, CoverStatus.AUTO)
         if prev in (CoverStatus.WIND_PROTECTED, CoverStatus.LOCKED, CoverStatus.MANUAL):
@@ -72,7 +77,7 @@ class StatusMixin:
                 self._paused_at = {}
             self._paused_at[cover.entity_id] = common.time_mod.monotonic()
             self._log(LOG_EVENT_STATUS, cover.entity_id, f"{prev.value} -> paused",
-                      {"key": "status_change", "from": prev.value, "to": "paused"})
+                      {"key": "status_change", "from": prev.value, "to": "paused", **(details or {})})
         duration = cover.pause_duration if cover.pause_duration is not None else self.storage.pause_duration
         pause_until = common.dt_util.now().timestamp() + (duration * 60)
         self.storage.update_cover_status(
@@ -80,7 +85,7 @@ class StatusMixin:
         )
         if prev != CoverStatus.PAUSED:
             self._logbook(
-                i18n.text(self.hass, "paused", minutes=duration),
+                i18n.text(self.hass, "paused", minutes=duration) + i18n.pause_details(self.hass, details),
                 cover.entity_id,
             )
         if self.data is not None:

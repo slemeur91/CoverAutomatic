@@ -26,6 +26,8 @@ _TEXTS: dict[str, dict[str, str]] = {
         "locked": "locked at {position}% (window open)",
         "unlocked": "unlocked (window closed)",
         "paused": "paused for {minutes} min (manual override)",
+        "pause_detail": ": expected {expected} %, read {actual} %",
+        "pause_first": "; first report {position} % {after} s after the last command",
         "resumed": "resumed",
         "resumed_venting": "resumed (venting)",
         "resumed_match": "resumed: position matches the rule ({rule})",
@@ -53,6 +55,8 @@ _TEXTS: dict[str, dict[str, str]] = {
         "locked": "gesperrt bei {position}% (Fenster offen)",
         "unlocked": "entsperrt (Fenster geschlossen)",
         "paused": "für {minutes} min pausiert (manuelle Bedienung)",
+        "pause_detail": ": erwartet {expected} %, gelesen {actual} %",
+        "pause_first": "; erste Meldung {position} % {after} s nach dem letzten Befehl",
         "resumed": "fortgesetzt",
         "resumed_venting": "fortgesetzt (Lüften)",
         "resumed_match": "fortgesetzt: Position entspricht der Regel ({rule})",
@@ -78,6 +82,8 @@ _TEXTS: dict[str, dict[str, str]] = {
         "locked": "verrouillé à {position} % (fenêtre ouverte)",
         "unlocked": "déverrouillé (fenêtre fermée)",
         "paused": "en pause pendant {minutes} min (commande manuelle)",
+        "pause_detail": " : attendu {expected} %, lu {actual} %",
+        "pause_first": " ; première position annoncée {position} % {after} s après le dernier ordre",
         "resumed": "reprise de l'automatisation",
         "resumed_venting": "reprise de l'automatisation (aération)",
         "resumed_match": "reprise automatique : position conforme à la règle ({rule})",
@@ -119,6 +125,19 @@ def text(hass: HomeAssistant | None, key: str, **params: Any) -> str:
         return template.format(**params)
     except (KeyError, IndexError, ValueError):
         return template
+
+
+def pause_details(hass: HomeAssistant | None, details: dict[str, Any] | None) -> str:
+    """Logbook suffix explaining a manual pause ("" without details)."""
+    if not details or details.get("actual") is None:
+        return ""
+    out = text(hass, "pause_detail", expected=details.get("expected"), actual=details.get("actual"))
+    if details.get("first_position") is not None:
+        after = f"{details.get('first_after')}"
+        if language(hass) in ("fr", "de"):
+            after = after.replace(".", ",")
+        out += text(hass, "pause_first", position=details["first_position"], after=after)
+    return out
 
 
 def default_scenario_names(scenario_id: str) -> set[str]:

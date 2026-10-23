@@ -82,14 +82,36 @@ class MotionMixin:
         if new_state.state in ("opening", "closing"):
             return
 
-        # Ignore position changes during settle time after our own commands
+        current_position = self._raw_position(new_state)
+
+        # Ignore position changes during settle time after our own commands.
+        # A report closer to our target restarts the settle time: some
+        # gateways (Velux KLF 200) report neither opening/closing nor regular
+        # positions, and queue the commands of several covers -- the move
+        # then lasts longer than the learned travel time, and its last
+        # positions must not be read as a manual override.
         last_cmd = self._last_command_time.get(entity_id, 0)
         if (common.time_mod.monotonic() - last_cmd) < self._settle_time(entity_id):
+            if (
+                current_position is not None
+                and entity_id in self._pending_settle
+                and self._is_progressing_to_target(entity_id, old_state, current_position)
+            ):
+                self._last_command_time[entity_id] = common.time_mod.monotonic()
             return
 
-        current_position = self._raw_position(new_state)
         if current_position is None:
             return
+
+        # Closed -> open or open -> closed without a command from us: the
+        # cover moved, whatever position it reports first (a Velux gateway
+        # may first report 1-2 % while the cover is already opening).
+        state_flip = (
+            old_state is not None
+            and old_state.state in ("open", "closed")
+            and new_state.state in ("open", "closed")
+            and old_state.state != new_state.state
+        )
 
         # Slow covers that do not report opening/closing: while the position
         # keeps moving towards our own target, the cover is still travelling
@@ -110,7 +132,10 @@ class MotionMixin:
             settle_threshold = (
                 self._cover_val(cover_raw, "min_position_change") if cover_raw else MANUAL_OVERRIDE_TOLERANCE
             )
-            if expected_target is not None and abs(current_position - expected_target) > settle_threshold:
+            if expected_target is not None and (
+                abs(current_position - expected_target) > settle_threshold
+                or (state_flip and current_position != expected_target)
+            ):
                 _LOGGER.debug(
                     "[%s] Post-settle: large deviation %d%% vs expected %d%%, checking override",
                     entity_id, current_position, expected_target,
@@ -129,9 +154,9 @@ class MotionMixin:
 
         expected_position = self._last_positions.get(entity_id)
 
-        position_mismatch = (
-            expected_position is not None
-            and abs(current_position - expected_position) > MANUAL_OVERRIDE_TOLERANCE
+        position_mismatch = expected_position is not None and (
+            abs(current_position - expected_position) >= MANUAL_OVERRIDE_TOLERANCE
+            or (state_flip and current_position != expected_position)
         )
 
         # Check tilt mismatch if cover supports tilt
@@ -142,7 +167,7 @@ class MotionMixin:
             if current_tilt_val is not None:
                 try:
                     current_tilt = int(current_tilt_val)
-                    if abs(current_tilt - expected_tilt) > MANUAL_OVERRIDE_TOLERANCE:
+                    if abs(current_tilt - expected_tilt) >= MANUAL_OVERRIDE_TOLERANCE:
                         tilt_mismatch = True
                 except (ValueError, TypeError):
                     pass
@@ -154,14 +179,20 @@ class MotionMixin:
                 _LOGGER.debug("[%s] Position change ignored: safety rule active", entity_id)
                 return
             if cover.auto_enabled and self._cover_states.get(entity_id) in (CoverStatus.AUTO, CoverStatus.VENTING):
+                details = self._override_details(entity_id, expected_position, current_position)
                 _LOGGER.info(
-                    "[%s] Manual override -> PAUSED (expected pos %s, got %s, expected tilt %s)",
+                    "[%s] Manual override -> PAUSED (expected pos %s, got %s, expected tilt %s, "
+                    "state %s -> %s, first report after last command: %s %% after %s s)",
                     entity_id,
                     expected_position,
                     current_position,
                     expected_tilt,
+                    old_state.state if old_state is not None else None,
+                    new_state.state,
+                    details.get("first_position"),
+                    details.get("first_after"),
                 )
-                self.pause_cover(cover)
+                self.pause_cover(cover, details=details)
 
     def _record_motion(self, entity_id: str, old_state: Any, new_state: Any) -> None:
         """Record position/motion changes of a cover (not attribute-only reports).
@@ -180,8 +211,17 @@ class MotionMixin:
         moving = new_state.state in ("opening", "closing")
         old_usable = old_state is not None and old_state.state not in _UNUSABLE_STATES
         old_pos = self._raw_position(old_state) if old_usable else None
-        if moving or not old_usable or old_state.state != new_state.state or old_pos != new_pos:
+        changed = moving or not old_usable or old_state.state != new_state.state or old_pos != new_pos
+        if changed:
             self._runtime_dict("_position_changed_at")[entity_id] = common.time_mod.monotonic()
+            # First position reported after our last command (diagnostics)
+            sent_at = self._runtime_dict("_command_sent_at").get(entity_id)
+            first = self._runtime_dict("_first_report")
+            if sent_at is not None and new_pos is not None and entity_id not in first:
+                first[entity_id] = {
+                    "position": new_pos,
+                    "after": round(common.time_mod.monotonic() - sent_at, 1),
+                }
         move = self._move_start.get(entity_id)
         if move is not None and (
             moving or (new_pos is not None and abs(new_pos - move[1]) > MANUAL_OVERRIDE_TOLERANCE)
@@ -346,6 +386,37 @@ class MotionMixin:
         full = round(full, 1)
         _LOGGER.debug("[%s] Measured travel time: %.1f s", entity_id, full)
         self.storage.update_cover_measured_travel(entity_id, full)
+
+    def _override_details(self, entity_id: str, expected: int | None, actual: int) -> dict[str, Any]:
+        """Why a manual pause was decided, for the activity log and the logbook.
+
+        Expected and read positions (raw, as the cover reports them), and the
+        first position reported after our last command with its delay -- a
+        gateway may announce the target at once (a lost command then looks
+        like a move), or report a cover late.
+        """
+        details: dict[str, Any] = {"expected": expected, "actual": actual}
+        first = self._runtime_dict("_first_report").get(entity_id)
+        if first is not None:
+            details["first_position"] = first["position"]
+            details["first_after"] = first["after"]
+        return details
+
+    def _moving_on_its_own(self, entity_id: str, current: int) -> bool:
+        """Whether the cover moved a moment ago and is not where we left it.
+
+        Its position changed less than its settle time ago and differs from
+        the position we expect: someone else may be moving it (remote,
+        vendor app) while the gateway reports no opening/closing state.
+        """
+        changed_at = self._runtime_dict("_position_changed_at").get(entity_id)
+        expected = self._last_positions.get(entity_id)
+        return (
+            changed_at is not None
+            and expected is not None
+            and current != expected
+            and (common.time_mod.monotonic() - changed_at) < self._settle_time(entity_id)
+        )
 
     def _is_progressing_to_target(
         self, entity_id: str, old_state: Any, current_position: int

@@ -78,6 +78,10 @@ class ApplyMixin:
 
         Open/close-only covers are opened from 50 % up, closed below.
         """
+        # Diagnostics of a later manual pause: time of this command, and the
+        # first position the cover reports after it (see _record_motion)
+        self._runtime_dict("_command_sent_at")[entity_id] = common.time_mod.monotonic()
+        self._runtime_dict("_first_report").pop(entity_id, None)
         if self._supports_set_position(entity_id):
             return self.hass.services.async_call(
                 "cover", "set_cover_position",
@@ -202,6 +206,15 @@ class ApplyMixin:
                 )
                 self._pending_settle.discard(entity_id)
 
+            # A cover that moved a moment ago without reaching where we left
+            # it: wait until it is still before judging or commanding it.
+            # Its next reports either show a manual move (paused by the
+            # state handler) or our own slow move arriving -- commanding it
+            # now could send it back while someone is opening it.
+            if not safety and not own_target_change and self._moving_on_its_own(entity_id, current):
+                _LOGGER.debug("[%s] Cover moved a moment ago: waiting until it is still", entity_id)
+                continue
+
             # Skip covers still settling after our commands (vent/lock moves, rule commands)
             last_cmd_t = self._last_command_time.get(entity_id, 0)
             if entity_id in self._pending_settle:
@@ -231,7 +244,7 @@ class ApplyMixin:
                 not own_target_change
                 and not safety
                 and expected is not None
-                and abs(current - expected) > MANUAL_OVERRIDE_TOLERANCE
+                and abs(current - expected) >= MANUAL_OVERRIDE_TOLERANCE
                 and (common.time_mod.monotonic() - self._last_command_time.get(entity_id, 0))
                 >= self._settle_time(entity_id)
                 and entity_id not in self._pending_settle
@@ -239,11 +252,14 @@ class ApplyMixin:
             ):
                 cover = self.storage.covers.get(entity_id)
                 if cover and cover.auto_enabled:
+                    details = self._override_details(entity_id, expected, current)
                     _LOGGER.info(
-                        "[%s] Manual override detected in apply cycle (expected %d, got %d)",
+                        "[%s] Manual override detected in apply cycle (expected %d, got %d, "
+                        "first report after last command: %s %% after %s s)",
                         entity_id, expected, current,
+                        details.get("first_position"), details.get("first_after"),
                     )
-                    self.pause_cover(cover)
+                    self.pause_cover(cover, details=details)
                     continue
 
             # Window state unknown (lock sensor unavailable, e.g. after a

@@ -1134,7 +1134,8 @@ class TestManualOverrideDetection:
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 coordinator._handle_cover_state_change("cover.test", None, new_state)
-            mock_pause.assert_called_once_with(cover)
+            mock_pause.assert_called_once()
+            assert mock_pause.call_args.args == (cover,)
 
 
 class TestManualOverrideInApplyCycle:
@@ -1182,7 +1183,8 @@ class TestManualOverrideInApplyCycle:
             mock_time.monotonic.return_value = 9999.0
             with patch.object(coordinator, "pause_cover") as mock_pause:
                 await coordinator.async_apply_positions()
-                mock_pause.assert_called_once_with(cover)
+                mock_pause.assert_called_once()
+                assert mock_pause.call_args.args == (cover,)
 
         # Should NOT have sent a position command
         mock_hass.services.async_call.assert_not_called()
@@ -1374,7 +1376,8 @@ class TestPendingSettleSync:
                 coordinator._handle_cover_state_change(
                     "cover.test", None, new_state
                 )
-            mock_pause.assert_called_once_with(cover)
+            mock_pause.assert_called_once()
+            assert mock_pause.call_args.args == (cover,)
 
     @pytest.mark.asyncio
     async def test_apply_cycle_clears_pending_settle(
@@ -1966,7 +1969,8 @@ class TestTiltHandling:
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 coordinator._handle_cover_state_change("cover.test", None, new_state)
-            mock_pause.assert_called_once_with(cover)
+            mock_pause.assert_called_once()
+            assert mock_pause.call_args.args == (cover,)
 
     @pytest.mark.asyncio
     async def test_send_tilt_delayed(self, coordinator, mock_hass) -> None:
@@ -2781,7 +2785,8 @@ class TestManualOverrideDuringVenting:
             ) as mock_time:
                 mock_time.monotonic.return_value = 9999.0
                 coordinator._handle_cover_state_change("cover.test", None, new_state)
-            mock_pause.assert_called_once_with(cover)
+            mock_pause.assert_called_once()
+            assert mock_pause.call_args.args == (cover,)
 
     @pytest.mark.asyncio
     async def test_apply_cycle_override_during_venting(
@@ -2817,7 +2822,8 @@ class TestManualOverrideDuringVenting:
             mock_time.monotonic.return_value = 9999.0
             with patch.object(coordinator, "pause_cover") as mock_pause:
                 await coordinator.async_apply_positions()
-                mock_pause.assert_called_once_with(cover)
+                mock_pause.assert_called_once()
+                assert mock_pause.call_args.args == (cover,)
 
     def test_sync_respects_paused_during_venting(
         self, coordinator, mock_hass, mock_storage
@@ -3139,7 +3145,8 @@ class TestSettleDuringVenting:
             mock_time.monotonic.return_value = 9995.0  # settle passed (35s)
             with patch.object(coordinator, "pause_cover") as mock_pause:
                 await coordinator.async_apply_positions()
-                mock_pause.assert_called_once_with(cover)
+                mock_pause.assert_called_once()
+                assert mock_pause.call_args.args == (cover,)
 
     @pytest.mark.asyncio
     async def test_apply_syncs_small_deviation_after_settle(

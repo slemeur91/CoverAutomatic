@@ -170,3 +170,20 @@ def test_cover_commands_follow_live_state(mount) -> None:
     assert m.root(f'{btn}[data-cmd="open_cover"]').is_disabled()
     assert m.root(f'{btn}[data-cmd="close_cover"]').is_enabled()
     assert m.errors() == []
+
+
+def test_log_pause_details(mount) -> None:
+    """A manual pause shows the expected and read positions and the first report."""
+    entry = ("{ data: { key: 'status_change', from: 'auto', to: 'paused', expected: 100, actual: 0, "
+             "first_position: 100, first_after: 2.5 } }")
+    m = mount("fr")
+    assert m.js(f"window.__el._formatLogMessage({entry})") == (
+        "Auto → En pause : attendu 100 %, lu 0 % ; première position annoncée 100 % 2,5 s après le dernier ordre"
+    )
+    m_en = mount("en")
+    assert m_en.js(f"window.__el._formatLogMessage({entry})") == (
+        "Auto → Paused: expected 100 %, read 0 %; first report 100 % 2.5 s after the last command"
+    )
+    # Older entries and other status changes are unchanged
+    assert m_en.js("window.__el._formatLogMessage({ data: { key: 'status_change', from: 'auto', to: 'paused' } })") == "Auto → Paused"
+    assert m.errors() == [] and m_en.errors() == []

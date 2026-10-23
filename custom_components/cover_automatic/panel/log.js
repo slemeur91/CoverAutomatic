@@ -103,7 +103,18 @@ export const LogMixin = (Base) => class extends Base {
       const rule = this._config?.rules?.[d.rule_id];
       values.rule = rule ? rule.name : (d.rule_name || d.rule_id || "");
     }
-    return template.replace(/\{(\w+)\}/g, (m, name) => (values[name] != null ? String(values[name]) : m));
+    const fill = (tpl, vals) => tpl.replace(/\{(\w+)\}/g, (m, name) => (vals[name] != null ? String(vals[name]) : m));
+    let text = fill(template, values);
+    // Manual pause: expected and read positions, first report after the last command
+    if (key === "status_change" && d.to === "paused" && d.actual != null) {
+      text += this._colon() + fill(this._t("log_pause_detail"), d);
+      if (d.first_position != null) {
+        const lang = (this._hass && this._hass.language) || "en";
+        const after = Number(d.first_after).toLocaleString(lang, { maximumFractionDigits: 1 });
+        text += (lang.startsWith("fr") ? "\u202F; " : "; ") + fill(this._t("log_pause_first"), { position: d.first_position, after });
+      }
+    }
+    return text;
   }
 
   async _loadLog() {

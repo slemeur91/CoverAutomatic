@@ -5,6 +5,19 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.1.7] - Unreleased
+
+### Fixed
+
+- Manual moves through gateways with sparse reports (Velux KLF 200) were sometimes missed: a remote opening first reported as `open` at 2 % did not pause the cover, and the rule sent it back while it was opening. A closed -> open or open -> closed change without a command from the integration is now a manual move whatever the first position, and a 2 % deviation now counts (it had to exceed 2 %).
+- The apply cycle no longer commands a cover that moved a moment ago without reaching where the integration left it: it waits until the cover is still (its settle time), so its next reports tell a manual move from a slow own move. Safety rules do not wait.
+- False manual pauses on slow covers: a reported position closer to the commanded target now restarts the settle time, also during the settle time. A cover moved after others by its gateway (queued commands, longer than its learned travel time) is no longer paused when its last positions arrive after the usual settle time.
+
+### Changed
+
+- Manual pause diagnostics: the activity log entry (panel's Log tab), the logbook text and the Home Assistant log now give the expected and read positions and the first position the cover reported after the last command, with its delay (for example "expected 100 %, read 0 %; first report 100 % 2 s after the last command"), to tell a manual move from a gateway announcing the target before moving.
+- README: states that this version includes the fixes of the original project up to v1.63.8. Upstream 1.63.8 (rules react to their state, numeric state and workday entities right away, also after a rule is added or edited in the panel) was already present: those entities are tracked, and the tracking is refreshed after every rule, scenario and settings change.
+
 ## [2.1.6] - 2026-10-21
 
 ### Added
