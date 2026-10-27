@@ -104,16 +104,7 @@ class ContactsMixin:
         self._log(LOG_EVENT_STATUS, entity_id, f"Lock sensor {sensor} missing, ignored",
                   {"key": "lock_sensor_missing", "sensor": sensor})
 
-    @staticmethod
-    def _is_real_transition(old_state: Any, new_state: Any) -> bool:
-        """Whether a sensor event is a real change between two usable states."""
-        return (
-            old_state is not None
-            and old_state.state not in _UNUSABLE_STATES
-            and old_state.state != new_state.state
-        )
-
-    def _handle_contact_sensor_change(  # noqa: C901 -- complexity 28, to reduce (see CHANGELOG 2.1.3)
+    def _handle_contact_sensor_change(  # noqa: C901 -- complexity 29, to reduce (see CHANGELOG 2.1.3)
         self,
         sensor_id: str,
         lock_covers: list[str],
@@ -125,11 +116,28 @@ class ContactsMixin:
         if new_state is None:
             return
 
+        if old_state is not None and old_state.state not in _UNUSABLE_STATES:
+            self._contact_open[sensor_id] = old_state.state in BINARY_SENSOR_ON_STATES
+
         if new_state.state in ("unavailable", "unknown"):
             _LOGGER.warning("[%s] Sensor unavailable, ignoring state change", sensor_id)
             return
 
         is_open = new_state.state in BINARY_SENSOR_ON_STATES
+        # Compared with the last readable state, also across an unreadable
+        # gap: a reconnect (unavailable -> off) or an attribute-only update
+        # is nothing at the window, a real change while unreadable is one.
+        was_open = self._contact_open.get(sensor_id)
+        self._contact_open[sensor_id] = is_open
+        if was_open == is_open:
+            _LOGGER.debug("[%s] Contact sensor report without change (%s), ignored", sensor_id, new_state.state)
+            return
+        # Without any readable state before (first report after a restart),
+        # the report cannot tell a change: acting on it would e.g. end a
+        # manual pause. The vent side is left to the periodic status sync.
+        if was_open is None and vent_covers:
+            _LOGGER.debug("[%s] Vent sensor first report (%s), left to sync", sensor_id, new_state.state)
+            vent_covers = []
 
         # Cache sensor states to avoid repeated hass.states.get() calls
         sensor_state_cache: dict[str, bool] = {}
@@ -183,18 +191,6 @@ class ContactsMixin:
                     )
                     if self.data is not None:
                         self.async_set_updated_data(self.data)
-
-        # A vent sensor coming back from unavailable/unknown (or an event
-        # without a state change, e.g. an attribute update) is no real
-        # transition: acting on it would e.g. cancel a manual pause. The
-        # periodic sync reconciles the status from the current sensor state.
-        if not self._is_real_transition(old_state, new_state):
-            if vent_covers:
-                _LOGGER.debug(
-                    "[%s] Vent sensor event without transition (%s -> %s), left to sync",
-                    sensor_id, getattr(old_state, "state", None), new_state.state,
-                )
-            vent_covers = []
 
         # Handle vent sensor covers (vent open -> min position, automation continues)
         for cover_id in vent_covers:

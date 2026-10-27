@@ -301,6 +301,58 @@ class TestVentSensorEvents:
         assert coordinator._cover_states["cover.t"] == CoverStatus.VENTING
 
 
+class TestContactAcrossUnreadableGap:
+    """Upstream v1.63.11: the last readable state is kept across an unreadable gap."""
+
+    def _gap(self, coordinator, sensor, lock, vent, before: str, after: str) -> None:
+        coordinator._handle_contact_sensor_change(sensor, lock, vent, MockState(before), MockState("unavailable"))
+        coordinator._handle_contact_sensor_change(sensor, lock, vent, MockState("unavailable"), MockState(after))
+
+    def test_reconnect_without_change_keeps_venting(self, coordinator, mock_hass, mock_storage) -> None:
+        _use_covers(mock_storage, {"cover.t": _raw(vent_sensor="binary_sensor.v")})
+        coordinator._cover_states["cover.t"] = CoverStatus.VENTING
+        mock_hass.states.get.side_effect = _states({
+            "binary_sensor.v": MockState("on"), "cover.t": MockState("open", {"current_position": 30})})
+        with patch.object(coordinator, "_enter_venting") as enter:
+            self._gap(coordinator, "binary_sensor.v", [], ["cover.t"], "on", "on")
+        enter.assert_not_called()
+        assert coordinator._cover_states["cover.t"] == CoverStatus.VENTING
+
+    def test_vent_opened_while_unreadable_is_handled(self, coordinator, mock_hass, mock_storage) -> None:
+        _use_covers(mock_storage, {"cover.t": _raw(vent_sensor="binary_sensor.v")})
+        coordinator._cover_states["cover.t"] = CoverStatus.AUTO
+        mock_hass.states.get.side_effect = _states({
+            "binary_sensor.v": MockState("on"), "cover.t": MockState("closed", {"current_position": 0})})
+        self._gap(coordinator, "binary_sensor.v", [], ["cover.t"], "off", "on")
+        assert coordinator._cover_states["cover.t"] == CoverStatus.VENTING
+
+    def test_window_closed_while_unreadable_unlocks(self, coordinator, mock_hass, mock_storage) -> None:
+        _use_covers(mock_storage, {"cover.t": _raw(lock_sensor="binary_sensor.w")})
+        coordinator._cover_states["cover.t"] = CoverStatus.LOCKED
+        coordinator._pre_lock_states["cover.t"] = CoverStatus.AUTO
+        mock_hass.states.get.side_effect = _states({
+            "binary_sensor.w": MockState("off"), "cover.t": MockState("open", {"current_position": 100})})
+        self._gap(coordinator, "binary_sensor.w", ["cover.t"], [], "on", "off")
+        assert coordinator._cover_states["cover.t"] == CoverStatus.AUTO
+
+    def test_attribute_update_ignored(self, coordinator, mock_hass, mock_storage) -> None:
+        _use_covers(mock_storage, {"cover.t": _raw(lock_sensor="binary_sensor.w")})
+        coordinator._cover_states["cover.t"] = CoverStatus.PAUSED
+        mock_hass.states.get.side_effect = _states({"binary_sensor.w": MockState("on")})
+        with patch.object(coordinator, "_lock_cover") as lock, patch.object(coordinator, "_lock_in_place") as hold:
+            coordinator._handle_contact_sensor_change(
+                "binary_sensor.w", ["cover.t"], [], MockState("off"), MockState("off"))
+        lock.assert_not_called()
+        hold.assert_not_called()
+        assert coordinator._cover_states["cover.t"] == CoverStatus.PAUSED
+
+    def test_untracked_sensor_forgotten(self, coordinator, mock_hass, mock_storage) -> None:
+        _use_covers(mock_storage, {"cover.t": _raw(vent_sensor="binary_sensor.v")})
+        coordinator._contact_open = {"binary_sensor.v": False, "binary_sensor.old": True}
+        coordinator._setup_state_tracking()
+        assert coordinator._contact_open == {"binary_sensor.v": False}
+
+
 # ---------------------------------------------- 5. wind activation guard
 class TestWindActivationUnknownLock:
     def test_locked_unknown_window_stays_locked(self, coordinator, mock_hass, mock_storage) -> None:

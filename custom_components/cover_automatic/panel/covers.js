@@ -38,6 +38,17 @@ export const CoversMixin = (Base) => class extends Base {
     this._saveTimers[key] = { timer, fn };
   }
 
+  // Save at once (number/text fields commit on change: blur or Enter)
+  _saveCoverField(entityId, field, value) {
+    this._debouncedCoverSave(entityId, field, value);
+    const key = `${entityId}.${field}`;
+    const pending = this._saveTimers[key];
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    delete this._saveTimers[key];
+    pending.fn();
+  }
+
   _cancelCoverSave(key) {
     const pending = this._saveTimers[key];
     if (!pending) return;

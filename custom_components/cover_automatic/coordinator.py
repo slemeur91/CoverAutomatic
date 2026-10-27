@@ -105,6 +105,9 @@ class CoverAutomaticCoordinator(
         self._last_command_time: dict[str, float] = {}
         self._pending_settle: set[str] = set()
         self._pre_lock_states: dict[str, CoverStatus] = {}
+        # Last readable state (open?) per lock/vent sensor. A report is only a
+        # change against it: unavailable -> off after a reconnect is none.
+        self._contact_open: dict[str, bool] = {}
         self._wind_protected: bool = False
         self._hysteresis_info: dict[str, str | None] = {}
         self._last_matching_rules: dict[str, str | None] = {}

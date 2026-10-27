@@ -129,6 +129,10 @@ class TrackingMixin:
         except (AttributeError, TypeError):
             pass
 
+        # A sensor no longer tracked may change unseen: forget its last state
+        for sensor_id in set(self._contact_open) - entities_to_track:
+            del self._contact_open[sensor_id]
+
         new_entities = entities_to_track - self._tracked_entities
 
         if new_entities:

@@ -187,3 +187,68 @@ def test_log_pause_details(mount) -> None:
     # Older entries and other status changes are unchanged
     assert m_en.js("window.__el._formatLogMessage({ data: { key: 'status_change', from: 'auto', to: 'paused' } })") == "Auto → Paused"
     assert m.errors() == [] and m_en.errors() == []
+
+
+def _open_room_field(m):
+    m.tab("covers")
+    m.page.locator("tr", has_text="Volet du Salon").first.click()
+    m.page.wait_for_timeout(300)
+    m.click('.slide-panel.open .section-header[data-section="room"]')
+    return m.root(f'.slide-panel.open [data-action="cover-input"][data-id="{SALON}"][data-field="comfort_temp_min_b"]')
+
+
+def _saved(m) -> list:
+    return [c["comfort_temp_min_b"] for c in m.ws("cover_automatic/cover/update") if "comfort_temp_min_b" in c]
+
+
+def test_cover_number_saved_on_commit_only(mount) -> None:
+    """Upstream v1.63.9: a pause while typing stores no partial value."""
+    m = mount()
+    field = _open_room_field(m)
+    field.click()
+    field.press("Control+a")
+    field.press_sequentially("2")
+    m.page.wait_for_timeout(900)
+    assert _saved(m) == []
+    field.press_sequentially("4")
+    field.press("Enter")
+    m.page.wait_for_timeout(300)
+    assert _saved(m) == [24]
+    # Focus and value kept after the save
+    assert m.js("window.__el.shadowRoot.activeElement?.dataset.field") == "comfort_temp_min_b"
+    assert field.input_value() == "24"
+    assert m.errors() == []
+
+
+def test_cover_number_committed_when_sheet_closes(mount) -> None:
+    m = mount()
+    field = _open_room_field(m)
+    field.click()
+    field.press("Control+a")
+    field.press_sequentially("23")
+    m.page.keyboard.press("Escape")
+    m.page.wait_for_timeout(300)
+    assert m.root(".slide-panel.open").count() == 0
+    assert _saved(m) == [23]
+    assert m.errors() == []
+
+
+def test_touch_tap_outside_leaves_field(mount) -> None:
+    """Upstream v1.63.10: on touch screens a tap elsewhere ends the entry."""
+    m = mount()
+    field = _open_room_field(m)
+    field.click()
+    field.press("Control+a")
+    field.press_sequentially("22")
+    tap = """(type) => {
+      const root = window.__el.shadowRoot;
+      const header = root.querySelector('.slide-panel.open .slide-header');
+      header.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, composed: true, pointerType: type }));
+      return root.activeElement?.dataset.field || null;
+    }"""
+    # A mouse pointerup does not blur (the click itself moves the focus)
+    assert m.js(tap, "mouse") == "comfort_temp_min_b"
+    assert m.js(tap, "touch") is None
+    m.page.wait_for_timeout(300)
+    assert _saved(m) == [22]
+    assert m.errors() == []

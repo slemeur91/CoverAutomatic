@@ -290,6 +290,7 @@ class TestCoordinatorTracking:
         coord.engine.ha_condition_entities.return_value = {"person.sylvain"}
         coord._tracked_entities = set()
         coord._unsub_state_change = []
+        coord._contact_open = {}
         from unittest.mock import patch
 
         with patch("custom_components.cover_automatic.tracking.async_track_state_change_event") as track:

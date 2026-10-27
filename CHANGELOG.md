@@ -5,7 +5,19 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [2.1.7] - Unreleased
+## [2.1.8] - Unreleased
+
+### Fixed
+
+- Cover sheet: number and text fields are saved when you leave the field or press Enter, no longer 500 ms after each keystroke. A short pause while typing no longer stores a partial value ("2" while typing "24"). Closing the sheet (close button, Escape, another cover) saves the field being edited first. From upstream 1.63.9.
+- Cover sheet on phones and tablets: tapping outside the field being edited ends the entry, saves the value and hides the keyboard (iOS kept the focus in the field). From upstream 1.63.10.
+- Window and tilt sensors: the last readable state of each sensor is kept while it is unavailable. A report without a real change (Zigbee reconnect, attribute-only update) is ignored for the window lock too, and a window opened or closed while the sensor was unavailable is handled as soon as the sensor reports again, instead of at the next status sync. The first report after a restart still leaves the tilt sensor to the status sync, so it cannot end a manual pause. From upstream 1.63.11.
+
+### Changed
+
+- README: states that this version includes the fixes of the original project up to v1.63.11.
+
+## [2.1.7] - 2026-10-23
 
 ### Fixed
 

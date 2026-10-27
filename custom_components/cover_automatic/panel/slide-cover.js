@@ -7,6 +7,22 @@ export const SlideCoverMixin = (Base) => class extends Base {
     return !!(this._slideOpen && a && a.closest && a.closest(".slide-panel"));
   }
 
+  // Touch tap outside the focused field of the cover sheet leaves it, like a
+  // desktop click does: the value is saved and the keyboard hides. iOS keeps
+  // the focus when a non-focusable element is tapped. Scrolling ends in
+  // pointercancel, not here.
+  _leaveFieldOnTap(e) {
+    if (e.pointerType === "mouse") return;
+    const active = this.shadowRoot.activeElement;
+    if (!active || !active.matches("input, select, textarea") || !active.closest(".slide-panel")) return;
+    const path = e.composedPath();
+    if (path.includes(active)) return;
+    // Another field takes the focus itself: blurring first would flicker the keyboard
+    const target = path[0];
+    if (target instanceof Element && target.closest("input:not([type=checkbox]), select, textarea")) return;
+    active.blur();
+  }
+
   // Re-render everything except the slide-out, then update the texts inside
   // the slide-out that derive from the saved values (focus stays intact).
   _refreshAroundSlideOut() {
@@ -77,7 +93,14 @@ export const SlideCoverMixin = (Base) => class extends Base {
     const oldPanel = el.querySelector(".slide-panel");
     const oldCover = oldPanel && oldPanel.classList.contains("open") ? oldPanel.dataset.cover : null;
     const sameCover = !!(oldCover && this._slideOpen && this._selectedCover === oldCover);
-    if (!sameCover) { el.innerHTML = html; return; }
+    if (!sameCover) {
+      // Closing or switching covers: commit the field being edited first,
+      // removing a focused field fires no change event in every browser
+      const active = this.shadowRoot.activeElement;
+      if (active && el.contains(active)) active.blur();
+      el.innerHTML = html;
+      return;
+    }
     if (prevHtml === html) return; // nothing changed: keep the DOM as is
     if (prevHtml != null && this._slideSig(prevHtml) === this._slideSig(html)) {
       this._patchSlideOut(el, prevHtml, html);

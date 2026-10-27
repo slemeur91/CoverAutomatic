@@ -21,6 +21,7 @@ export const EventsMixin = (Base) => class extends Base {
     root.addEventListener("drop", (e) => this._handleDrop(e));
     root.addEventListener("pointerdown", (e) => this._handleHouseDragStart(e));
     root.addEventListener("focusout", (e) => this._onSlideFocusOut(e));
+    root.addEventListener("pointerup", (e) => this._leaveFieldOnTap(e));
     // Enter/Space activate non-native interactive elements (rows, sort headers)
     root.addEventListener("keydown", (e) => {
       if (e.key !== "Enter" && e.key !== " ") return;
@@ -441,6 +442,20 @@ export const EventsMixin = (Base) => class extends Base {
       return;
     }
 
+    // Cover number/text field committed (left or Enter): saved right away
+    if (el.matches('[data-action="cover-input"]')) {
+      let value = el.value;
+      if (el.type === "number") {
+        const check = this._checkCoverNumber(el);
+        // Invalid value: stays marked, nothing is sent
+        if (!check.ok) return;
+        value = check.value;
+      }
+      if (el.type === "text" && value === "") value = null;
+      this._saveCoverField(el.dataset.id, el.dataset.field, value);
+      return;
+    }
+
     // Rule enabled toggle
     if (el.matches('[data-action="rule-toggle-enabled"]')) {
       this._onRuleToggleEnabled(el.dataset.id, el.checked, el);
@@ -532,20 +547,10 @@ export const EventsMixin = (Base) => class extends Base {
       this._setInputInvalid(el, null);
     }
 
-    // Cover input fields (debounced save)
+    // Cover number/text fields: checked while typing, saved on change
+    // (leaving the field or Enter), never with a half-typed value
     if (el.matches('[data-action="cover-input"]')) {
-      let value = el.value;
-      if (el.type === "number") {
-        const check = this._checkCoverNumber(el);
-        if (!check.ok) {
-          // Invalid or intermediate value: mark it and send nothing
-          this._cancelCoverSave(`${el.dataset.id}.${el.dataset.field}`);
-          return;
-        }
-        value = check.value;
-      }
-      if (el.type === "text" && value === "") value = null;
-      this._debouncedCoverSave(el.dataset.id, el.dataset.field, value);
+      if (el.type === "number") this._checkCoverNumber(el);
       return;
     }
 

@@ -139,14 +139,10 @@
   ]
  },
  "cover-sheet|cover-input|input": {
-  "calls": [
-   "_debouncedCoverSave"
-  ],
+  "calls": [],
   "dom": false,
   "events": [],
-  "state": [
-   "_saveTimers"
-  ]
+  "state": []
  },
  "cover-sheet|cover-occ-add|click": {
   "calls": [
