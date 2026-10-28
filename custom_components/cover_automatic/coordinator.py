@@ -32,6 +32,7 @@ from .coordinator_common import (
 from .engine import RuleEngine
 from .models import CoverConfig, CoverStatus
 from .motion import MotionMixin
+from .reload import ReloadMixin
 from .status import StatusMixin
 from .storage import ActivityLogStorage, CoverAutomaticStorage
 from .sun import get_facade_sun_times, is_sun_on_facade
@@ -46,7 +47,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CoverAutomaticCoordinator(
-    TrackingMixin, WindMixin, ContactsMixin, MotionMixin, ApplyMixin, StatusMixin, DataUpdateCoordinator[dict[str, Any]]
+    TrackingMixin, WindMixin, ContactsMixin, MotionMixin, ReloadMixin, ApplyMixin, StatusMixin,
+    DataUpdateCoordinator[dict[str, Any]],
 ):
     """Coordinate data updates and rule evaluation."""
 

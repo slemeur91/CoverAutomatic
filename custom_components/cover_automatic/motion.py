@@ -47,7 +47,7 @@ class MotionMixin:
                 except (ValueError, TypeError):
                     self._last_tilt_positions[entity_id] = None
 
-    def _handle_cover_state_change(  # noqa: C901 -- complexity 20, to reduce (see CHANGELOG 2.1.3)
+    def _handle_cover_state_change(  # noqa: C901 -- complexity 22, to reduce (see CHANGELOG 2.1.3)
         self, entity_id: str, old_state: Any, new_state: Any
     ) -> None:
         """Handle cover position changes to detect manual overrides."""
@@ -60,6 +60,11 @@ class MotionMixin:
 
         # Ignore unavailable/unknown states (e.g. during HA shutdown)
         if new_state.state in ("unavailable", "unknown"):
+            return
+
+        # A cover waiting for or going through an integration reload still
+        # reports its old position (or its restored state): not a manual move
+        if self._reload_wait_report(entity_id, new_state):
             return
 
         # Motion bookkeeping first: it must also see the reports received
@@ -290,6 +295,10 @@ class MotionMixin:
         if self._lost_command_retries is None:
             self._lost_command_retries = {}
         retries = self._lost_command_retries.get(entity_id, 0)
+        # First ignored command of a cover with the reload option: reload its
+        # integration instead of resending (resent as usual when not possible)
+        if retries == 0 and self._request_reload(entity_id, cover_raw, current):
+            return True
         if retries >= MAX_LOST_COMMAND_RETRIES:
             _LOGGER.warning(
                 "[%s] Cover did not move to %d%% after %d resends (still at %d%%)",

@@ -115,6 +115,8 @@ V2 gathers all changes made since the original version 1.61.1.
   is back at the position requested by its rule (moved back by hand, or the rule changed in the meantime).
 - **Lost commands resent**: a command the cover did not execute (lost radio frame) is sent again,
   never after a manual counter-order.
+- **Integration reload** (per-cover option): for integrations that stop executing commands without reporting an
+  error, the integration is reloaded once for all its covers, then the commands are sent again.
 
 ### Settings
 - Configurable **wind protection position** (instead of always opening fully).
@@ -572,13 +574,13 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.1.8
+2.1.9
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.1.8 (Unreleased), based on the original version
+Latest version: v2.1.9 (2026-10-28), based on the original version
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler. It includes the fixes
 of the original version up to [v1.63.11](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.11).
 

@@ -487,6 +487,9 @@ class CoverConfig:
     pause_resume_on_match: bool | None = None
     # Window open: keep the current position (True) instead of moving to lock_position
     lock_hold_position: bool = False
+    # Cover ignoring a command (no move, no state change): reload its
+    # integration once, then command it again
+    reload_on_no_move: bool = False
     # Room occupancy (condition "room occupied"): entity and the states that
     # mean occupied (comma-separated; None = usual defaults, e.g. on/home/Présent)
     occupancy_sensor: str | None = None
@@ -526,6 +529,7 @@ class CoverConfig:
             "comfort_hysteresis_b": self.comfort_hysteresis_b,
             "pause_resume_on_match": self.pause_resume_on_match,
             "lock_hold_position": self.lock_hold_position,
+            "reload_on_no_move": self.reload_on_no_move,
             "occupancy_sensor": self.occupancy_sensor,
             "occupancy_states": self.occupancy_states,
             "min_position_change": self.min_position_change,
@@ -579,6 +583,7 @@ class CoverConfig:
             comfort_hysteresis_b=_to_float(data.get("comfort_hysteresis_b"), None),
             pause_resume_on_match=_opt_bool(data.get("pause_resume_on_match")),
             lock_hold_position=_to_bool(data.get("lock_hold_position"), False),
+            reload_on_no_move=_to_bool(data.get("reload_on_no_move"), False),
             occupancy_sensor=_entity_id(data.get("occupancy_sensor")),
             occupancy_states=(str(data["occupancy_states"]).strip() or None)
             if data.get("occupancy_states") is not None else None,

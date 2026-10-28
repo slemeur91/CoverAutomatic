@@ -5,7 +5,15 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [2.1.8] - Unreleased
+## [2.1.9] - 2026-10-28
+
+### Added
+
+- Cover option "Reload the integration if the cover does not react" (cover sheet, Automation section, off by default), for integrations that stop executing commands without any error: the cover neither moves nor changes state until the integration is reloaded. On the first command such a cover ignores, the integration is reloaded instead of the command being resent. Covers of the same integration failing within 20 s share one reload; once they are available again (60 s at most), their positions are read again and the apply cycle commands each one again without waiting for the minimum time between changes. An integration is reloaded at most once every 30 minutes; otherwise, or when it cannot be reloaded (YAML), the command is resent as before.
+- While a cover waits for or goes through the reload, it gets no command and no manual override detection (its position did not change, the unavailable states of the reload are ignored). A cover someone moves while waiting leaves the reload request and is handled as a manual move; the reload is dropped when no cover is left.
+- Activity log (Log tab) and logbook: one entry per reload request, and one per reload (integration, number of covers, covers that asked for it) or failed reload.
+
+## [2.1.8] - 2026-10-27
 
 ### Fixed
 

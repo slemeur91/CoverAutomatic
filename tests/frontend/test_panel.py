@@ -252,3 +252,26 @@ def test_touch_tap_outside_leaves_field(mount) -> None:
     m.page.wait_for_timeout(300)
     assert _saved(m) == [22]
     assert m.errors() == []
+
+
+def test_reload_option_and_log(mount) -> None:
+    """Cover option "reload the integration if the cover does not react" and its log entries."""
+    m = mount("fr")
+    m.tab("covers")
+    m.page.locator("tr", has_text="Volet du Salon").first.click()
+    m.page.wait_for_timeout(300)
+    m.click('.slide-panel.open .section-header[data-section="automation"]')
+    toggle = m.root(f'.slide-panel.open [data-action="cover-toggle"][data-id="{SALON}"][data-field="reload_on_no_move"]')
+    assert "Recharger l'intégration si le volet ne réagit pas" in m.js(
+        "window.__el.shadowRoot.querySelector('.slide-panel.open').textContent")
+    assert not toggle.is_checked()
+    toggle.dispatch_event("click")
+    m.page.wait_for_timeout(900)
+    saved = [c for c in m.ws("cover_automatic/cover/update") if "reload_on_no_move" in c]
+    assert saved and saved[-1]["entity_id"] == SALON and saved[-1]["reload_on_no_move"] is True
+    fmt = "window.__el._formatLogMessage({ data: %s })"
+    assert m.js(fmt % "{ key: 'reload_requested', integration: 'Velux' }") == (
+        "Aucun mouvement après la commande : rechargement de l'intégration Velux demandé")
+    assert m.js(fmt % "{ key: 'reload_done', integration: 'Velux', count: 2, covers: 'Cuisine, Salon' }") == (
+        "Intégration Velux rechargée (2 volets : commandes renvoyées) — demandé par Cuisine, Salon")
+    assert m.errors() == []

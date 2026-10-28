@@ -396,6 +396,7 @@ export const SlideCoverMixin = (Base) => class extends Base {
           <div class="ha-help" data-travel-used="${cid}">${this._esc(usedTxt)}</div>
           ${this._hint("cover_travel_time_hint")}
         </div>`;
+        s += this._renderToggle("cover_reload_on_no_move", !!cover.reload_on_no_move, "cover-toggle", cover.entity_id, "reload_on_no_move", "cover_reload_on_no_move_hint");
         return `<div class="sep-list">${s}</div>`;
       }, sum.automation);
 

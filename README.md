@@ -116,6 +116,8 @@ La V2 regroupe toutes les évolutions apportées depuis la version d'origine 1.6
   revient à la position demandée par sa règle (remis en place à la main, ou la règle a changé entre-temps).
 - **Commandes perdues renvoyées** : une commande que le volet n'a pas exécutée (trame radio perdue) est renvoyée,
   jamais après un contre-ordre manuel.
+- **Rechargement de l'intégration** (option par volet) : pour les intégrations qui n'exécutent plus les commandes sans
+  signaler d'erreur, l'intégration est rechargée une seule fois pour tous ses volets, puis les commandes sont renvoyées.
 
 ### Réglages
 - **Position de protection contre le vent** réglable (au lieu de toujours ouvrir complètement).
@@ -575,13 +577,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.1.8
+2.1.9
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.1.8 (Unreleased), basée sur la version d'origine
+Dernière version : v2.1.9 (2026-10-28), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler. Elle inclut les corrections
 de la version d'origine jusqu'à la [v1.63.11](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.11).
 

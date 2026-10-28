@@ -122,7 +122,7 @@ class ApplyMixin:
         async with self._apply_lock:
             await self._async_apply_positions_locked()
 
-    async def _async_apply_positions_locked(self) -> None:  # noqa: C901 -- complexity 28, to reduce (see CHANGELOG 2.1.3)
+    async def _async_apply_positions_locked(self) -> None:  # noqa: C901 -- complexity 30, to reduce (see CHANGELOG 2.1.3)
         """Apply calculated positions (caller holds the apply lock)."""
         if not self.data:
             return
@@ -153,6 +153,9 @@ class ApplyMixin:
 
             cover_raw = self.storage.get_cover_raw(entity_id)
             if cover_raw is None:
+                continue
+            # Integration reload pending or running: commanded again after it
+            if self._reload_held(entity_id):
                 continue
 
             state = self.hass.states.get(entity_id)

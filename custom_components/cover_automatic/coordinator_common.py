@@ -32,6 +32,14 @@ MAX_TRAVEL_GROWTH = 1.5
 # radio/cloud command) before it is treated as a manual override.
 MAX_LOST_COMMAND_RETRIES = 2
 
+# Integration reload when a cover did not react to a command (cover option
+# reload_on_no_move): covers of the same integration failing within the
+# gather delay share one reload; then the covers get up to the timeout to
+# come back, and an integration is reloaded at most once per cooldown.
+RELOAD_GATHER_DELAY = 20
+RELOAD_AVAILABLE_TIMEOUT = 60
+RELOAD_COOLDOWN = 1800
+
 # Keys written by the coordinator into storage._data (runtime state only,
 # never part of the configuration): wind protection and pre-lock statuses,
 # so protections survive a Home Assistant restart.

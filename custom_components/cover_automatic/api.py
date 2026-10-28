@@ -45,7 +45,7 @@ _UPDATABLE_COVER_FIELDS = (
     "inverted_tilt", "indoor_temp_sensor",
     "comfort_temp_min", "comfort_temp_max", "comfort_hysteresis",
     "comfort_temp_min_b", "comfort_temp_max_b", "comfort_hysteresis_b",
-    "lock_hold_position",
+    "lock_hold_position", "reload_on_no_move",
     "min_position_change", "min_time_between_changes",
     "travel_time", "measured_travel_time",
     "occupancy_sensor", "occupancy_states",
@@ -1198,6 +1198,7 @@ def async_setup_api(
                 # Tri-state: None follows the global setting
                 vol.Optional("pause_resume_on_match"): vol.Any(bool, None),
                 vol.Optional("lock_hold_position"): bool,
+                vol.Optional("reload_on_no_move"): bool,
                 vol.Optional("min_position_change"): vol.Any(vol.All(int, vol.Range(min=1, max=50)), None),
                 vol.Optional("min_time_between_changes"): vol.Any(vol.All(int, vol.Range(min=60, max=3600)), None),
                 vol.Optional("travel_time"): vol.Any(vol.All(int, vol.Range(min=1, max=300)), None),
