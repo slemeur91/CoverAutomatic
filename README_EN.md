@@ -574,15 +574,15 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.1.9
+2.1.10
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.1.9 (2026-10-28), based on the original version
+Latest version: v2.1.10 (2026-11-03), based on the original version
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler. It includes the fixes
-of the original version up to [v1.63.11](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.11).
+of the original version up to [v1.63.12](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.12).
 
 ## License
 

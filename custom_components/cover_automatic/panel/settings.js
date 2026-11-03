@@ -1,5 +1,6 @@
 // CoverAutomatic panel -- Settings tab: sections, draft, save, backup.
 // Mixin of CoverAutomaticPanel (see cover-automatic-panel.js).
+import { POSITION_FIELDS, clampPosition } from "./constants.js";
 
 export const SettingsMixin = (Base) => class extends Base {
   /* ============================================================
@@ -528,6 +529,14 @@ export const SettingsMixin = (Base) => class extends Base {
       if (this._draftSame(d)) continue;
       if (d.kind === "checkbox") {
         data[field] = !!d.value;
+      } else if (d.kind === "number" && POSITION_FIELDS.has(field)) {
+        // Brought back within 0-100 (the field shows it); empty: no tilt, or
+        // the stored lock/vent position is kept
+        const pos = clampPosition(d.value);
+        const input = this.shadowRoot.querySelector(`[data-settings-field="${field}"]`);
+        if (pos !== null && input) input.value = String(pos);
+        if (pos !== null) data[field] = pos;
+        else if (NULLABLE.has(field)) data[field] = null;
       } else if (d.kind === "number") {
         const raw = String(d.value ?? "").trim();
         const n = raw === "" ? NaN : parseFloat(raw);

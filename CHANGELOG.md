@@ -5,6 +5,16 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.1.10] - 2026-11-03
+
+### Fixed
+
+- Lock and vent positions and slat positions outside 0 to 100 are brought back to the nearest limit, in the cover sheet and in Settings › Automation, and the field shows the saved value. Before, the cover sheet marked the field as invalid and saved nothing, and in the settings a single such value made Home Assistant reject the whole save. Decimals are rounded; an emptied lock or vent position in the settings still keeps the stored value. From upstream 1.63.12 (its backend part, limiting the per-cover slat positions to 0–100, was already present).
+
+### Changed
+
+- README: states that this version includes the fixes of the original project up to v1.63.12.
+
 ## [2.1.9] - 2026-10-28
 
 ### Added

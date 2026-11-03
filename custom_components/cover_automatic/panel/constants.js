@@ -122,3 +122,15 @@ export const COVER_INT_LIMITS = {
   min_time_between_changes: [60, 3600],
   travel_time: [1, 300],
 };
+
+// Lock/vent position and tilt (cover sheet and settings): a value outside
+// 0-100 is brought back to the nearest limit instead of being refused.
+export const POSITION_FIELDS = new Set(["lock_position", "vent_position", "lock_tilt_position", "vent_tilt_position"]);
+
+// Position typed in a field: whole number within 0-100, null when empty.
+export function clampPosition(raw) {
+  const text = String(raw ?? "").trim();
+  const n = text === "" ? NaN : Number(text);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(100, Math.max(0, Math.round(n)));
+}

@@ -1,6 +1,6 @@
 // CoverAutomatic panel -- Event delegation: clicks, changes, inputs, keyboard, tab switch.
 // Mixin of CoverAutomaticPanel (see cover-automatic-panel.js).
-import { FACADE_BEARINGS } from "./constants.js";
+import { FACADE_BEARINGS, POSITION_FIELDS, clampPosition } from "./constants.js";
 
 export const EventsMixin = (Base) => class extends Base {
   /* ============================================================
@@ -444,6 +444,11 @@ export const EventsMixin = (Base) => class extends Base {
 
     // Cover number/text field committed (left or Enter): saved right away
     if (el.matches('[data-action="cover-input"]')) {
+      // Positions: brought back within 0-100 (the field shows the saved value)
+      if (POSITION_FIELDS.has(el.dataset.field)) {
+        const pos = clampPosition(el.value);
+        el.value = pos === null ? "" : String(pos);
+      }
       let value = el.value;
       if (el.type === "number") {
         const check = this._checkCoverNumber(el);
@@ -550,7 +555,8 @@ export const EventsMixin = (Base) => class extends Base {
     // Cover number/text fields: checked while typing, saved on change
     // (leaving the field or Enter), never with a half-typed value
     if (el.matches('[data-action="cover-input"]')) {
-      if (el.type === "number") this._checkCoverNumber(el);
+      // Positions are corrected on commit, not marked while typing
+      if (el.type === "number" && !POSITION_FIELDS.has(el.dataset.field)) this._checkCoverNumber(el);
       return;
     }
 

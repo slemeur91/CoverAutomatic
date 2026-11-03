@@ -275,3 +275,51 @@ def test_reload_option_and_log(mount) -> None:
     assert m.js(fmt % "{ key: 'reload_done', integration: 'Velux', count: 2, covers: 'Cuisine, Salon' }") == (
         "Intégration Velux rechargée (2 volets : commandes renvoyées) — demandé par Cuisine, Salon")
     assert m.errors() == []
+
+
+def test_cover_positions_clamped(mount) -> None:
+    """Upstream v1.63.12: lock/vent positions outside 0-100 are brought back to the limit."""
+    m = mount()
+    m.tab("covers")
+    m.page.locator("tr", has_text="Volet du Salon").first.click()
+    m.page.wait_for_timeout(300)
+    # Slat and vent fields only exist for covers with tilt and a tilt sensor
+    m.js(f"Object.assign(window.__el._config.covers['{SALON}'], "
+         "{ supports_tilt: true, vent_sensor: 'binary_sensor.do_salon' }); window.__el._render()")
+    m.click('.slide-panel.open [data-action="sections-toggle-all"]')
+    commit = """([field, value]) => {
+      const el = window.__el.shadowRoot.querySelector(
+        `.slide-panel.open [data-action="cover-input"][data-field="${field}"]`);
+      el.value = value;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      const marked = el.classList.contains("input-invalid");
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      return [marked, el.value, el.classList.contains("input-invalid")];
+    }"""
+    assert m.js(commit, ["lock_position", "150"]) == [False, "100", False]
+    assert m.js(commit, ["vent_tilt_position", "-5"]) == [False, "0", False]
+    assert m.js(commit, ["vent_position", "42.6"]) == [False, "43", False]
+    assert m.js(commit, ["lock_tilt_position", ""]) == [False, "", False]
+    m.page.wait_for_timeout(300)
+    saved = {k: v for c in m.ws("cover_automatic/cover/update") for k, v in c.items() if k not in ("entity_id", "type", "id")}
+    assert saved == {"lock_position": 100, "vent_tilt_position": 0, "vent_position": 43, "lock_tilt_position": None}
+    assert m.errors() == []
+
+
+def test_settings_positions_clamped(mount) -> None:
+    m = mount()
+    m.tab("settings")
+    m.click('[data-action="settings-section"][data-section="automation"]')
+    m.js("""(() => {
+      const root = window.__el.shadowRoot;
+      const set = (f, v) => { root.querySelector(`[data-settings-field="${f}"]`).value = v; };
+      set("lock_position", "150"); set("vent_position", ""); set("lock_tilt_position", "-3"); set("vent_tilt_position", "");
+      set("pause_duration", "25");
+    })()""")
+    m.click('[data-action="settings-save"]')
+    m.page.wait_for_timeout(300)
+    sent = m.ws("cover_automatic/settings/update")[-1]
+    # Whole section saved; empty lock/vent position keeps the stored value
+    assert sent["lock_position"] == 100 and sent["lock_tilt_position"] == 0 and sent["pause_duration"] == 25
+    assert "vent_position" not in sent
+    assert m.errors() == []
