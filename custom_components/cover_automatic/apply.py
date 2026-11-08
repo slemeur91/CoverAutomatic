@@ -78,6 +78,9 @@ class ApplyMixin:
 
         Open/close-only covers are opened from 50 % up, closed below.
         """
+        if self._ha_stopping:
+            _LOGGER.debug("[%s] Home Assistant stopping: command to %d%% dropped", entity_id, position)
+            return asyncio.sleep(0)
         # Diagnostics of a later manual pause: time of this command, and the
         # first position the cover reports after it (see _record_motion)
         self._runtime_dict("_command_sent_at")[entity_id] = common.time_mod.monotonic()
@@ -124,7 +127,7 @@ class ApplyMixin:
 
     async def _async_apply_positions_locked(self) -> None:  # noqa: C901 -- complexity 30, to reduce (see CHANGELOG 2.1.3)
         """Apply calculated positions (caller holds the apply lock)."""
-        if not self.data:
+        if not self.data or self._ha_stopping:
             return
 
         now = common.dt_util.now().timestamp()
@@ -443,6 +446,8 @@ class ApplyMixin:
         try:
             if delay > 0:
                 await asyncio.sleep(delay)
+            if self._ha_stopping:
+                return
             self._last_command_time[entity_id] = common.time_mod.monotonic()
             await self.hass.services.async_call(
                 "cover",

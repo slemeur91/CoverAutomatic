@@ -5,6 +5,16 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.1.11] - 2026-11-08
+
+### Fixed
+
+- Home Assistant shutdown: as soon as Home Assistant starts stopping, no cover is commanded any more. During the shutdown the other integrations disconnect and report false states (an Apple TV "off" while it is still playing); a rule that stopped matching for that reason could move a cover in the last seconds before the restart (a cover closed for a film opened). State changes are ignored, no rule is evaluated or applied, pending wind and slat commands are cancelled and no integration reload starts. After the restart the startup grace period applies as before.
+
+### Added
+
+- Activity log: entry "Home Assistant stopping: cover commands suspended until restart" when the shutdown begins.
+
 ## [2.1.10] - 2026-11-03
 
 ### Fixed

@@ -7,7 +7,8 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.logbook import async_log_entry
-from homeassistant.core import callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -78,6 +79,10 @@ class CoverAutomaticCoordinator(
     _wind_restore_pending: bool = False
     # The wind sensor gave a valid numeric value since startup
     _wind_value_seen: bool = False
+    # Home Assistant is shutting down: integrations disconnect and report
+    # false states (a media player "off"), so nothing is evaluated or sent
+    _ha_stopping: bool = False
+    _unsub_ha_stop: Any = None
 
     def __init__(
         self,
@@ -191,6 +196,22 @@ class CoverAutomaticCoordinator(
         self._unsub_update_listener = self.async_add_listener(
             self._fire_update_event
         )
+        self._unsub_ha_stop = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_on_ha_stop
+        )
+
+    @callback
+    def _async_on_ha_stop(self, _event: Event) -> None:
+        """Suspend every cover command until Home Assistant restarts."""
+        self._unsub_ha_stop = None  # fired once: nothing left to remove
+        self._ha_stopping = True
+        self._cancel_wind_tasks()
+        for task in self._tilt_tasks.values():
+            if not task.done():
+                task.cancel()
+        _LOGGER.info("Home Assistant is stopping: cover commands suspended")
+        self._log(LOG_EVENT_STATUS, None, "Home Assistant stopping: cover commands suspended",
+                  {"key": "ha_stopping"})
 
     @callback
     def _fire_update_event(self) -> None:
@@ -468,8 +489,10 @@ class CoverAutomaticCoordinator(
             self.hass, self.async_request_refresh(), f"{DOMAIN}_refresh"
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:  # noqa: C901 -- complexity 16, to reduce (see CHANGELOG 2.1.3)
+    async def _async_update_data(self) -> dict[str, Any]:  # noqa: C901 -- complexity 17, to reduce (see CHANGELOG 2.1.3)
         """Update data and evaluate rules."""
+        if self._ha_stopping:
+            return self.data or {"covers": {}, "facades": {}, "scenario": self.storage.active_scenario}
         # Compile native Home Assistant conditions (async) so the rule
         # evaluation below can run them synchronously; track new entities.
         try:
@@ -705,6 +728,9 @@ class CoverAutomaticCoordinator(
         if self._unsub_update_listener:
             self._unsub_update_listener()
             self._unsub_update_listener = None
+        if self._unsub_ha_stop:
+            self._unsub_ha_stop()
+            self._unsub_ha_stop = None
 
         # Pending staggered wind commands must not run after unload
         self._cancel_wind_tasks()

@@ -122,6 +122,8 @@ class ReloadMixin:
         """Reload one integration once for every cover waiting for it."""
         try:
             await asyncio.sleep(RELOAD_GATHER_DELAY)
+            if self._ha_stopping:
+                return
             waiting = self._runtime_dict("_reload_waiting")
             requested = sorted(e for e, eid in waiting.items() if eid == entry_id)
             for entity_id in requested:

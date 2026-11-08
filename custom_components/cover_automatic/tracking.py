@@ -169,6 +169,8 @@ class TrackingMixin:
     @callback
     def _async_on_state_change(self, event: Event) -> None:
         """Handle state changes of tracked entities."""
+        if self._ha_stopping:
+            return
         entity_id = event.data.get("entity_id")
         old_state = event.data.get("old_state")
         new_state = event.data.get("new_state")
