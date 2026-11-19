@@ -17,6 +17,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - Rule editor: the name has its own line; target position, tilt and "Do nothing" are on the Action line.
 - Internal: the rule log entry and the pending rule are computed in their own methods (`_async_update_data` complexity 17 → 15).
+- Settings › Wind: the introduction says that only the protected covers move, and how to exclude a cover (option of its cover sheet).
+- Screenshots of the README and the wiki updated (cover list, rule editor, wind settings, cover sheet Automation section).
+
+### Fixed
+
+- Panel: after an update, a browser still holding the previous version no longer logs "the name cover-automatic-panel has already been used" (the new version is used after a page reload).
 
 ## [2.1.11] - 2026-11-08
 

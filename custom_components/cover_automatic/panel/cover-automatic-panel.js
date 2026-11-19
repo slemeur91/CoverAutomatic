@@ -21,4 +21,8 @@ import { LogMixin } from "./log.js";
 // methods (names are unique across the modules).
 class CoverAutomaticPanel extends LogMixin(SettingsComfortMixin(SettingsMixin(ScenariosMixin(HaConditionsMixin(ConditionsMixin(RulesMixin(FacadesMixin(SlideCoverMixin(CoversMixin(EventsMixin(PanelCore))))))))))) {}
 
-customElements.define("cover-automatic-panel", CoverAutomaticPanel);
+// After an update the browser may still hold the previous version: defining
+// the name again would throw (the new code runs after a page reload).
+if (!customElements.get("cover-automatic-panel")) {
+  customElements.define("cover-automatic-panel", CoverAutomaticPanel);
+}
