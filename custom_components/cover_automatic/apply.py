@@ -342,7 +342,7 @@ class ApplyMixin:
                     # The status may have changed during the stagger (manual
                     # pause, window opened, wind): don't send a stale command.
                     if (
-                        (not safety and (self._wind_protected or not self.storage.enabled))
+                        (not safety and (self._wind_applies_to(entity_id) or not self.storage.enabled))
                         or self._cover_states.get(entity_id, CoverStatus.AUTO) != status
                     ):
                         _LOGGER.debug(

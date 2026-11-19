@@ -61,7 +61,7 @@ En aucun cas les auteurs ne pourront être tenus responsables de toute réclamat
 - **Fenêtre ouverte** – le volet va à sa position de verrouillage ou garde sa position actuelle ; l'automatisation est
   bloquée tant que la fenêtre est ouverte
 - **Fenêtre entrouverte (oscillo-battant)** – position minimale d'aération, l'automatisation continue au-dessus
-- **Protection contre le vent** – position de repli réglable au-delà d'un seuil de vent
+- **Protection contre le vent** – position de repli réglable au-delà d'un seuil de vent, volet par volet
 - **Heures d'arrivée / de départ du soleil** – pour chaque façade, calculées sur la vraie course du soleil
 - **Hystérésis** – limite l'usure des moteurs (écart minimal de position et délai minimal entre deux mouvements)
 - **Volets inversés** – pris en charge (100 % = fermé)
@@ -101,6 +101,8 @@ La V2 regroupe toutes les évolutions apportées depuis la version d'origine 1.6
 - **Règle de sécurité** : elle agit même si le volet est en pause, en mode manuel, en protection vent ou avec l'automatisation coupée.
   Elle ne passe jamais outre le verrouillage d'une fenêtre ouverte et, entre règles, c'est la priorité qui décide.
   Exemple d'usage : l'alarme incendie.
+- **Ne rien faire** : une règle peut laisser le volet où il est au lieu de lui donner une position. Placée au-dessus
+  des autres, elle bloque les règles de priorité inférieure, ombrage compris.
 - **Dupliquer une règle** : la copie est créée juste sous l'original. Boutons ▲▼ pour ordonner les conditions, les groupes
   et les priorités (clavier et tactile).
 
@@ -118,6 +120,10 @@ La V2 regroupe toutes les évolutions apportées depuis la version d'origine 1.6
   jamais après un contre-ordre manuel.
 - **Rechargement de l'intégration** (option par volet) : pour les intégrations qui n'exécutent plus les commandes sans
   signaler d'erreur, l'intégration est rechargée une seule fois pour tous ses volets, puis les commandes sont renvoyées.
+- **Protection vent par volet** : chaque volet peut être exclu de la protection vent (par exemple, seuls les stores
+  d'une pergola restent protégés).
+- **Règle en attente** : un volet en manuel, en pause, verrouillé ou en protection vent affiche en gris, avec une icône
+  pause, la règle et la position qu'il suivrait de retour en Auto.
 
 ### Réglages
 - **Position de protection contre le vent** réglable (au lieu de toujours ouvrir complètement).
@@ -577,13 +583,13 @@ le formulaire demande tout ce qu'il faut pour vous aider rapidement.
 
 ## Version
 
-2.1.11
+2.2.0
 
 ## Historique des versions
 
 L'historique complet est tenu dans le [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md) (en anglais), au format [Keep a Changelog](https://keepachangelog.com/).
 
-Dernière version : v2.1.11 (2026-11-08), basée sur la version d'origine
+Dernière version : v2.2.0 (2026-11-19), basée sur la version d'origine
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) de @crandler. Elle inclut les corrections
 de la version d'origine jusqu'à la [v1.63.12](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.12).
 

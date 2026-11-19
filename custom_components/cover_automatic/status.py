@@ -97,10 +97,10 @@ class StatusMixin:
         logbook_text replaces the plain "resumed" logbook entry (automatic
         resume, with its reason).
         """
-        # Wind protection cannot be overridden manually
-        if self._wind_protected:
-            return
         cover_raw = self.storage.get_cover_raw(entity_id)
+        # Wind protection cannot be overridden manually
+        if self._wind_applies(cover_raw):
+            return
         if cover_raw:
             # Don't override LOCKED status if lock/vent sensor is still active,
             # nor while the window state is unknown (possibly open window).
@@ -141,7 +141,7 @@ class StatusMixin:
             if self.data is not None:
                 self.async_set_updated_data(self.data)
 
-    def _sync_cover_statuses(self) -> None:  # noqa: C901 -- complexity 18, to reduce (see CHANGELOG 2.1.3)
+    def _sync_cover_statuses(self) -> None:  # noqa: C901 -- complexity 19, to reduce (see CHANGELOG 2.1.3)
         """Sync cover statuses from sensor states.
 
         Updates _cover_states and storage for all covers. Called once per
@@ -159,8 +159,12 @@ class StatusMixin:
             self._track_missing_lock_sensor(entity_id, cover_raw)
 
             # Wind protection: above everything except an open window (lock)
-            if self._wind_protected:
+            if self._wind_applies(cover_raw):
                 self._protect_one_from_wind(entity_id, cover_raw)
+                continue
+            if self._cover_states.get(entity_id) == CoverStatus.WIND_PROTECTED:
+                # Cover excluded from the wind protection while it was active
+                self._release_one_from_wind(entity_id, cover_raw)
                 continue
 
             # An unavailable lock/vent sensor is not "closed": keep the

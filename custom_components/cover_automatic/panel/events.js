@@ -486,6 +486,21 @@ export const EventsMixin = (Base) => class extends Base {
       return;
     }
 
+    // "Do nothing": grey the targets, hide the safety switch
+    if (el.matches('[data-action="rule-field"][data-field="no_action"]')) {
+      this._applyRuleNoAction(el.dataset.id, el.checked);
+      return;
+    }
+    // New rule form: same greying of its targets
+    if (el.matches('[data-action="rule-new-no-action"]')) {
+      const form = el.closest(".inline-form");
+      for (const f of ["target_position", "target_tilt_position"]) {
+        const inp = form && form.querySelector(`[data-rule-new-field="${f}"]`);
+        if (inp) inp.disabled = el.checked;
+      }
+      return;
+    }
+
     // Operator between groups: update the separators live
     if (el.matches('[data-action="rule-field"][data-field="condition_operator"]')) {
       const rule = this._edRule(el.dataset.id);

@@ -61,7 +61,7 @@ In no event shall the authors be liable for any claim, damages or other liabilit
 - **Open window** – the cover moves to its lock position or keeps its current position; automation is
   blocked while the window is open
 - **Tilted window** – minimum venting position, automation continues above it
-- **Wind protection** – configurable fallback position above a wind threshold
+- **Wind protection** – configurable fallback position above a wind threshold, cover by cover
 - **Sun arrival / departure times** – for each facade, computed from the real sun path
 - **Hysteresis** – limits motor wear (minimum position change and minimum delay between two moves)
 - **Inverted covers** – supported (100 % = closed)
@@ -100,6 +100,8 @@ V2 gathers all changes made since the original version 1.61.1.
 - **Safety rule**: it acts even when the cover is paused, in manual mode, wind protected or with automation off.
   It never overrides the lock of an open window and, between rules, priority decides.
   Typical use: the fire alarm.
+- **Do nothing**: a rule can leave the cover where it is instead of giving it a position. Placed above the others,
+  it blocks the lower rules, shading included.
 - **Duplicate a rule**: the copy is created right below the original. ▲▼ buttons to order conditions, groups
   and priorities (keyboard and touch).
 
@@ -117,6 +119,10 @@ V2 gathers all changes made since the original version 1.61.1.
   never after a manual counter-order.
 - **Integration reload** (per-cover option): for integrations that stop executing commands without reporting an
   error, the integration is reloaded once for all its covers, then the commands are sent again.
+- **Wind protection per cover**: each cover can be excluded from the wind protection (e.g. only the awnings of a
+  pergola stay protected).
+- **Pending rule**: a cover in manual mode, paused, window locked or wind protected shows, greyed with a pause
+  icon, the rule and position it would follow back in Auto.
 
 ### Settings
 - Configurable **wind protection position** (instead of always opening fully).
@@ -574,13 +580,13 @@ the form asks for everything needed to help you quickly.
 
 ## Version
 
-2.1.11
+2.2.0
 
 ## Release history
 
 The full history is kept in [CHANGELOG.md](https://github.com/slemeur91/CoverAutomatic/blob/main/CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/) format.
 
-Latest version: v2.1.11 (2026-11-08), based on the original version
+Latest version: v2.2.0 (2026-11-19), based on the original version
 [v1.62.1](https://github.com/crandler/CoverAutomatic/releases/tag/v1.62.1) by @crandler. It includes the fixes
 of the original version up to [v1.63.12](https://github.com/crandler/CoverAutomatic/releases/tag/v1.63.12).
 

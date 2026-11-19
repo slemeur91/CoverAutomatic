@@ -199,7 +199,8 @@ class ComfortMode(StrEnum):
 class CoverTarget:
     """Target position and optional tilt for a cover."""
 
-    position: int
+    # None: the winning rule does nothing (cover left where it is)
+    position: int | None
     tilt_position: int | None = None
     rule_id: str | None = None
     rule_name: str | None = None
@@ -319,6 +320,10 @@ class Rule:
     # Safety rule: also drives covers that are paused, manual, wind protected
     # or with the automation disabled (never window-locked ones).
     safety: bool = False
+    # "Do nothing": when the rule wins, the cover is not commanded and the
+    # lower rules are ignored. The target positions are kept (unchecking
+    # restores them). Never a safety rule.
+    no_action: bool = False
 
     def effective_group_operators(self) -> list[str]:
         """Operators per group, falling back to the single-group form."""
@@ -355,6 +360,7 @@ class Rule:
             "scenario_ids": self.scenario_ids,
             "group_operators": self.effective_group_operators(),
             "safety": self.safety,
+            "no_action": self.no_action,
         }
 
     @classmethod
@@ -406,6 +412,7 @@ class Rule:
         # Missing or not a list (never split a string): every scenario
         raw_scenarios = data.get("scenario_ids")
         scenario_ids = _str_list(raw_scenarios) if isinstance(raw_scenarios, list) else None
+        no_action = _to_bool(data.get("no_action"), False)
         return cls(
             id=data["id"],
             name=data["name"],
@@ -419,7 +426,8 @@ class Rule:
             target_tilt_position=_position(data.get("target_tilt_position"), None),
             scenario_ids=scenario_ids,
             group_operators=group_operators,
-            safety=_to_bool(data.get("safety"), False),
+            safety=_to_bool(data.get("safety"), False) and not no_action,
+            no_action=no_action,
         )
 
 
@@ -490,6 +498,8 @@ class CoverConfig:
     # Cover ignoring a command (no move, no state change): reload its
     # integration once, then command it again
     reload_on_no_move: bool = False
+    # Wind protection applies to this cover (False: it ignores the wind)
+    wind_protection: bool = True
     # Room occupancy (condition "room occupied"): entity and the states that
     # mean occupied (comma-separated; None = usual defaults, e.g. on/home/Présent)
     occupancy_sensor: str | None = None
@@ -530,6 +540,7 @@ class CoverConfig:
             "pause_resume_on_match": self.pause_resume_on_match,
             "lock_hold_position": self.lock_hold_position,
             "reload_on_no_move": self.reload_on_no_move,
+            "wind_protection": self.wind_protection,
             "occupancy_sensor": self.occupancy_sensor,
             "occupancy_states": self.occupancy_states,
             "min_position_change": self.min_position_change,
@@ -584,6 +595,7 @@ class CoverConfig:
             pause_resume_on_match=_opt_bool(data.get("pause_resume_on_match")),
             lock_hold_position=_to_bool(data.get("lock_hold_position"), False),
             reload_on_no_move=_to_bool(data.get("reload_on_no_move"), False),
+            wind_protection=_to_bool(data.get("wind_protection"), True),
             occupancy_sensor=_entity_id(data.get("occupancy_sensor")),
             occupancy_states=(str(data["occupancy_states"]).strip() or None)
             if data.get("occupancy_states") is not None else None,

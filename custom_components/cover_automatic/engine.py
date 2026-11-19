@@ -149,7 +149,9 @@ class RuleEngine:
         while the cover is paused/manual/wind protected.
 
         Returns:
-            CoverTarget with position (and optional tilt) or None if no rule matches.
+            CoverTarget with position (and optional tilt) or None if no rule
+            matches. A winning "do nothing" rule gives a CoverTarget without
+            position: the cover is not commanded, lower rules are ignored.
         """
         # Unknown/empty scenario resolves like the select entity (first one)
         active_scenario = resolve_active_scenario(
@@ -183,10 +185,13 @@ class RuleEngine:
         matching_rules.sort(key=lambda x: (-x[0], x[1]))
         winner = matching_rules[0][2]
         _LOGGER.debug(
-            "[%s] Rule '%s' (P%d%s) -> position %d",
+            "[%s] Rule '%s' (P%d%s) -> %s",
             cover.entity_id, winner.name, winner.priority,
-            ", safety" if winner.safety else "", winner.target_position,
+            ", safety" if winner.safety else "",
+            "no action" if winner.no_action else f"position {winner.target_position}",
         )
+        if winner.no_action:
+            return CoverTarget(position=None, rule_id=winner.id, rule_name=winner.name)
         return CoverTarget(
             position=winner.target_position,
             tilt_position=winner.target_tilt_position,

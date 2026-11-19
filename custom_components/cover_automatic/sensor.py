@@ -241,12 +241,16 @@ class CoverRuleSensor(_CoverSensorBase):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Rule id, its target and whether it is a safety rule."""
+        """Rule id, its target, safety flag and the pending rule."""
         live = self._live
         return {
             "rule_id": live.get("rule_id"),
             "target_position": live.get("target_position"),
             "safety_rule": live.get("safety", False),
+            # Rule the cover would follow back in AUTO (manual, paused,
+            # window locked, wind): display only
+            "pending_rule": live.get("pending_rule_name"),
+            "pending_target_position": live.get("pending_target_position"),
         }
 
 

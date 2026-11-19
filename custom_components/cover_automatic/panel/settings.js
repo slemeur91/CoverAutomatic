@@ -207,6 +207,11 @@ export const SettingsMixin = (Base) => class extends Base {
           <input type="number" step="1" min="0" max="100" value="${this._num(s.wind_position, 100)}" data-settings-field="wind_position">
           ${hint(this._t("settings_wind_position_hint"))}
         </div>
+        ${(() => {
+          const all = Object.values(this._config.covers || {});
+          const n = all.filter(c => c.wind_protection !== false).length;
+          return `<div class="ha-help" data-wind-covers>${this._esc(this._t("settings_wind_covers").replace("{n}", n).replace("{total}", all.length))}</div>`;
+        })()}
         ${this._renderHystExplain("wind")}`,
         })}
       </div>

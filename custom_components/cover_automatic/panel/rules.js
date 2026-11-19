@@ -12,6 +12,36 @@ export const RulesMixin = (Base) => class extends Base {
   }
 
   // Shows the tilt field once a cover able to tilt is targeted (chips toggled)
+  // "Do nothing" checked/unchecked in the open editor: grey and empty the
+  // targets (their values stay in the draft), or put them back; the safety
+  // switch is hidden (a "do nothing" rule is never a safety rule).
+  _applyRuleNoAction(ruleId, none) {
+    const root = this.shadowRoot;
+    const id = CSS.escape(ruleId);
+    const rule = this._edRule(ruleId);
+    const field = (f) => root.querySelector(`[data-action="rule-field"][data-id="${id}"][data-field="${f}"]`);
+    if (rule) rule.no_action = none;
+    for (const [f, empty] of [["target_position", ""], ["target_tilt_position", this._t("none")]]) {
+      const el = field(f);
+      if (!el) continue;
+      el.disabled = none;
+      this._setInputInvalid(el, null);
+      el.placeholder = none ? "—" : (f === "target_tilt_position" ? empty : "");
+      el.value = none ? "" : this._num(rule ? rule[f] : null, f === "target_tilt_position" ? "" : 0);
+    }
+    const help = root.querySelector(`[data-rule-noaction-help="${id}"]`);
+    if (help) help.hidden = !none;
+    const safety = root.querySelector(`[data-rule-safety="${id}"]`);
+    if (safety) safety.hidden = none;
+    const safetyOff = root.querySelector(`[data-rule-safety-off="${id}"]`);
+    if (safetyOff) safetyOff.hidden = !none;
+    if (none) {
+      const s = field("safety");
+      if (s) s.checked = false;
+      if (rule) rule.safety = false;
+    }
+  }
+
   _refreshRuleTilt(ruleId) {
     const root = this.shadowRoot;
     const row = root && root.querySelector(`[data-rule-top="${CSS.escape(ruleId)}"]`);
@@ -127,9 +157,13 @@ export const RulesMixin = (Base) => class extends Base {
       html += rg.n > 1
         ? `<span>${this._t("rule_groups_count").replace("{n}", rg.n)}</span>`
         : `<span>${this._t(rg.ops[0] === "or" ? "rule_op_short_or" : "rule_op_short_and")}</span>`;
-      html += `<span class="rule-target">${this._t("rule_target_pos")}${this._colon()}${this._posBar(r.target_position, "compact")}</span>`;
-      if (r.target_tilt_position != null) {
-        html += `<span class="rule-target">${this._t("rule_target_tilt")}${this._colon()}${this._posBar(r.target_tilt_position, "compact")}</span>`;
+      if (r.no_action) {
+        html += `<span class="rule-target rule-no-action">${this._lucideIcon("hand", 12)}${this._esc(this._t("rule_no_action"))}</span>`;
+      } else {
+        html += `<span class="rule-target">${this._t("rule_target_pos")}${this._colon()}${this._posBar(r.target_position, "compact")}</span>`;
+        if (r.target_tilt_position != null) {
+          html += `<span class="rule-target">${this._t("rule_target_tilt")}${this._colon()}${this._posBar(r.target_tilt_position, "compact")}</span>`;
+        }
       }
       html += '</div>';
       // Condition chips
@@ -214,20 +248,33 @@ export const RulesMixin = (Base) => class extends Base {
     const hasTilt = this._ruleUsesTilt(rule.facade_ids || [], rule.cover_ids || [])
       || rule.target_tilt_position != null;
 
-    // Name, target position and tilt on one line. The tilt only shows when a
-    // cover of the rule can tilt its slats (or a tilt is already set).
-    html += `<div class="form-group rule-top-row${hasTilt ? "" : " no-tilt"}" data-rule-top="${rid}">
+    // Name on its own line
+    html += `<div class="form-group rule-top-row">
       <span class="rule-inline-label">${this._t("name")}</span>
       <input type="text" class="rule-name-input" value="${this._esc(rule.name)}" data-action="rule-field" data-id="${rid}" data-field="name" maxlength="100" aria-label="${this._esc(this._t("name"))}">
+    </div>`;
+
+    // Action: target position and tilt, or "do nothing" (fields emptied and
+    // greyed, their values kept for unchecking). The tilt only shows when a
+    // cover of the rule can tilt its slats (or a tilt is already set).
+    const none = !!rule.no_action;
+    const off = none ? ` disabled placeholder="—"` : "";
+    html += `<div class="form-group rule-top-row rule-action-row${hasTilt ? "" : " no-tilt"}" data-rule-top="${rid}">
+      <span class="rule-inline-label">${this._t("rule_action")}${this._hintToggle(rule.id, "rule_target_pos_hint")}</span>
       <span class="rule-top-field">
-        <span class="rule-top-label">${this._t("rule_target_pos")}${this._hintToggle(rule.id, "rule_target_pos_hint")}</span>
-        <input type="number" min="0" max="100" value="${this._num(rule.target_position)}" data-action="rule-field" data-id="${rid}" data-field="target_position" aria-label="${this._esc(this._t("rule_target_pos"))}">
+        <span class="rule-top-label">${this._t("rule_target_pos")}</span>
+        <input type="number" min="0" max="100" value="${none ? "" : this._num(rule.target_position)}"${off} data-action="rule-field" data-id="${rid}" data-field="target_position" aria-label="${this._esc(this._t("rule_target_pos"))}">
       </span>
       <span class="rule-top-field rule-tilt-group"${hasTilt ? "" : " hidden"}>
         <span class="rule-top-label">${this._t("rule_target_tilt")}</span>
-        <input type="number" min="0" max="100" value="${this._num(rule.target_tilt_position, "")}" placeholder="${this._t("none")}" data-action="rule-field" data-id="${rid}" data-field="target_tilt_position" aria-label="${this._esc(this._t("rule_target_tilt"))}">
+        <input type="number" min="0" max="100" value="${none ? "" : this._num(rule.target_tilt_position, "")}"${none ? off : ` placeholder="${this._t("none")}"`} data-action="rule-field" data-id="${rid}" data-field="target_tilt_position" aria-label="${this._esc(this._t("rule_target_tilt"))}">
       </span>
+      <label class="rule-noaction-inline">
+        <input type="checkbox" ${none ? "checked" : ""} data-action="rule-field" data-id="${rid}" data-field="no_action">
+        <span>${this._t("rule_no_action")}</span>
+      </label>
       ${this._hintPanel(rule.id, "rule_target_pos_hint")}
+      <div class="hint-panel rule-noaction-help" data-rule-noaction-help="${rid}"${none ? "" : " hidden"}>${this._esc(this._t("rule_no_action_hint"))}</div>
     </div>`;
 
     // Scenarios (null = all) and safety switch on one line
@@ -238,13 +285,14 @@ export const RulesMixin = (Base) => class extends Base {
         const member = !Array.isArray(rule.scenario_ids) || rule.scenario_ids.includes(sc.id);
         return `<button class="ms-item${member ? " selected" : ""}" data-action="rule-scenario-toggle" data-rule="${rid}" data-scenario="${this._esc(sc.id)}">${this._esc(sc.name)}</button>`;
       }).join("")}</div>
-      <div class="rule-safety-inline">
+      <div class="rule-safety-inline" data-rule-safety="${rid}"${none ? " hidden" : ""}>
         <span>${this._t("rule_safety")}${this._hintToggle(rule.id, "rule_safety_hint")}</span>
         <label class="toggle">
-          <input type="checkbox" ${rule.safety ? "checked" : ""} data-action="rule-field" data-id="${rid}" data-field="safety">
+          <input type="checkbox" ${rule.safety && !none ? "checked" : ""} data-action="rule-field" data-id="${rid}" data-field="safety">
           <span class="toggle-slider"></span>
         </label>
       </div>
+      <div class="rule-safety-inline rule-safety-off" data-rule-safety-off="${rid}"${none ? "" : " hidden"}>${this._esc(this._t("rule_safety_no_action"))}</div>
       ${this._hintPanel(rule.id, "rule_scenarios_hint")}
       ${this._hintPanel(rule.id, "rule_safety_hint")}
     </div>`;
@@ -297,6 +345,10 @@ export const RulesMixin = (Base) => class extends Base {
           <input type="number" min="0" max="100" value="" placeholder="${this._t("none")}" data-rule-new-field="target_tilt_position">
         </div>
       </div>
+      <label class="rule-noaction-inline rule-noaction-new">
+        <input type="checkbox" data-rule-new-field="no_action" data-action="rule-new-no-action">
+        <span>${this._t("rule_no_action")}</span>
+      </label>
       <div class="form-actions">
         <button class="btn btn-secondary" data-action="rule-add-cancel">${this._t("cancel")}</button>
         <button class="btn btn-primary" data-action="rule-add-save">${this._t("add")}</button>
@@ -541,6 +593,7 @@ export const RulesMixin = (Base) => class extends Base {
     const ttp = form.querySelector('[data-rule-new-field="target_tilt_position"]')?.value;
     try {
       const data = { name: name.trim(), target_position: tp };
+      if (form.querySelector('[data-rule-new-field="no_action"]')?.checked) data.no_action = true;
       if (ttp !== "" && ttp != null) {
         const n = parseInt(ttp, 10);
         if (Number.isFinite(n)) data.target_tilt_position = n;
@@ -625,15 +678,18 @@ export const RulesMixin = (Base) => class extends Base {
     if (!nameEl) return; // editor not rendered
     const r = d.rule;
     r.name = nameEl.value;
+    const noneEl = field("no_action");
+    if (noneEl && !!noneEl.checked !== !!r.no_action) r.no_action = !!noneEl.checked;
     const safetyEl = field("safety");
-    if (safetyEl) r.safety = !!safetyEl.checked;
+    if (safetyEl) r.safety = !!safetyEl.checked && !r.no_action;
+    // Greyed targets ("do nothing") keep the values of the draft
     const tpEl = field("target_position");
-    if (tpEl && tpEl.value !== "") {
+    if (tpEl && !tpEl.disabled && tpEl.value !== "") {
       const n = parseInt(tpEl.value, 10);
       if (Number.isFinite(n)) r.target_position = n;
     }
     const ttpEl = field("target_tilt_position");
-    if (ttpEl) {
+    if (ttpEl && !ttpEl.disabled) {
       if (ttpEl.value === "" && !(ttpEl.validity && ttpEl.validity.badInput)) r.target_tilt_position = null;
       else {
         const n = parseInt(ttpEl.value, 10);
@@ -690,7 +746,8 @@ export const RulesMixin = (Base) => class extends Base {
       scenario_ids: scenarioIds,
       facade_ids: [...(rule.facade_ids || [])],
       cover_ids: [...(rule.cover_ids || [])],
-      safety: !!rule.safety,
+      safety: !!rule.safety && !rule.no_action,
+      no_action: !!rule.no_action,
       conditions: conditions
     };
   }

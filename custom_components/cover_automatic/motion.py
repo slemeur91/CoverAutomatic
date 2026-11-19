@@ -80,7 +80,7 @@ class MotionMixin:
             return
 
         # Ignore manual overrides during wind protection
-        if self._wind_protected:
+        if self._wind_applies_to(entity_id):
             return
 
         # Ignore position changes while cover is moving
@@ -276,7 +276,7 @@ class MotionMixin:
             abs(current - start_pos) > MANUAL_OVERRIDE_TOLERANCE
             or abs(current - target) <= MANUAL_OVERRIDE_TOLERANCE
             or self._last_positions.get(entity_id) != target
-            or self._wind_protected
+            or self._wind_applies_to(entity_id)
         ):
             return False
         # Only moves the apply cycle may still drive: AUTO/VENTING, or a

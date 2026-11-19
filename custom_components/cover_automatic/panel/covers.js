@@ -122,12 +122,35 @@ export const CoversMixin = (Base) => class extends Base {
     + '</span>';
   }
 
-  _renderRuleCell(live) {
+  // Rule column of the cover list. A cover the automation does not drive
+  // (manual, paused, window locked, wind) shows the rule it would follow
+  // back in Auto, greyed with a pause icon and its target on the right.
+  _renderRuleCell(live, status) {
     const ruleId = live && live.rule_id;
     const ruleName = (live && live.rule_name) || this._t("cover_no_rule");
-    if (ruleId && this._config && this._config.rules && this._config.rules[ruleId]) {
+    const rules = (this._config && this._config.rules) || {};
+    if (ruleId && rules[ruleId]) {
+      const noAction = rules[ruleId].no_action
+        ? '<span class="rule-cell-noaction" title="' + this._esc(this._t("rule_no_action")) + '">' + this._lucideIcon("hand", 13) + '</span>' : "";
       return '<a class="rule-link" data-action="goto-rule" data-rule-id="' + this._esc(ruleId) + '" title="' + this._esc(this._t("cover_goto_rule")) + '">' + this._esc(ruleName) + '</a>'
-        + (this._config.rules[ruleId].safety ? this._ruleSafetyIcon() : "");
+        + noAction + (rules[ruleId].safety ? this._ruleSafetyIcon() : "");
+    }
+    const pendingId = live && live.pending_rule_id;
+    if (!ruleId && pendingId) {
+      const name = live.pending_rule_name || pendingId;
+      const pos = live.pending_target_position;
+      const target = pos == null ? this._t("rule_no_action") : pos + " %";
+      // An Auto cover with a pending rule: the global automation is off
+      const statusTxt = !status || status === "auto" || status === "venting"
+        ? this._t("cover_sum_auto_off") : this._t("status_" + status);
+      const tip = this._t("cover_pending_tip").replace("{status}", statusTxt).replace("{rule}", name).replace("{target}", target);
+      const chip = pos == null
+        ? '<span class="rule-pending-pos">' + this._lucideIcon("hand", 11) + '</span>'
+        : '<span class="rule-pending-pos">' + pos + ' %</span>';
+      return '<a class="rule-pending"' + (rules[pendingId] ? ' data-action="goto-rule" data-rule-id="' + this._esc(pendingId) + '"' : "")
+        + ' title="' + this._esc(tip) + '" aria-label="' + this._esc(tip) + '">'
+        + '<span class="rule-pending-icon">' + this._lucideIcon("pause", 10) + '</span>'
+        + '<span class="rule-pending-name">' + this._esc(name) + '</span>' + chip + '</a>';
     }
     return this._esc(ruleName);
   }
@@ -245,7 +268,7 @@ export const CoversMixin = (Base) => class extends Base {
       }
       const cm = live.comfort_mode;
       // Rule name -- if a rule is matching, render as link to Rules tab
-      const ruleCellHtml = this._renderRuleCell(live);
+      const ruleCellHtml = this._renderRuleCell(live, c.status);
       // Sun on facade
       const liveFacade = c.facade_id ? ((this._config.live_facades || {})[c.facade_id] || {}) : {};
       const sunIcon = liveFacade.sun_on_facade ? ' <span class="live-icon-sun" title="' + this._esc(this._t("facade_sun_active")) + '">' + this._sunIconSvg(12) + '</span>' : '';
@@ -382,27 +405,11 @@ export const CoversMixin = (Base) => class extends Base {
           fCell.appendChild(sun);
         }
       }
-      // Rule name -- preserve clickable rule-link markup via DOM API (avoids innerHTML)
+      // Rule name (markup from _renderRuleCell, every value escaped)
       const rCell = root.querySelector('[data-live-rule="' + CSS.escape(eid) + '"]');
       if (rCell) {
-        rCell.textContent = "";
-        const ruleId = live.rule_id;
-        const ruleName = live.rule_name || this._t("cover_no_rule");
-        if (ruleId && this._config && this._config.rules && this._config.rules[ruleId]) {
-          const a = document.createElement("a");
-          a.className = "rule-link";
-          a.dataset.action = "goto-rule";
-          a.dataset.ruleId = ruleId;
-          a.title = this._t("cover_goto_rule");
-          a.textContent = ruleName;
-          rCell.appendChild(a);
-          if (this._config.rules[ruleId].safety) {
-            // Markup from internal _ruleSafetyIcon() - no user input besides the escaped label
-            rCell.insertAdjacentHTML("beforeend", this._ruleSafetyIcon());
-          }
-        } else {
-          rCell.textContent = ruleName;
-        }
+        const html = this._renderRuleCell(live, (covers[eid] || {}).status);
+        if (rCell.innerHTML !== html) rCell.innerHTML = html;
       }
       // Temperature with comfort color
       const tempCell = root.querySelector('[data-live-temp="' + CSS.escape(eid) + '"]');

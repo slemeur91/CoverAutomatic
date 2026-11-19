@@ -45,7 +45,7 @@ _UPDATABLE_COVER_FIELDS = (
     "inverted_tilt", "indoor_temp_sensor",
     "comfort_temp_min", "comfort_temp_max", "comfort_hysteresis",
     "comfort_temp_min_b", "comfort_temp_max_b", "comfort_hysteresis_b",
-    "lock_hold_position", "reload_on_no_move",
+    "lock_hold_position", "reload_on_no_move", "wind_protection",
     "min_position_change", "min_time_between_changes",
     "travel_time", "measured_travel_time",
     "occupancy_sensor", "occupancy_states",
@@ -376,6 +376,7 @@ async def ws_cover_update(
     old_facade_id = raw.get("facade_id")
     # Track auto_enabled change to mirror the switch entity's status transition
     old_auto_enabled = raw.get("auto_enabled", True)
+    old_wind_protection = raw.get("wind_protection", True)
 
     # Update only fields present in the message
     for key in _UPDATABLE_COVER_FIELDS:
@@ -401,9 +402,12 @@ async def ws_cover_update(
     storage._invalidate_cache()
     await storage.async_save()
     coordinator.refresh_state_tracking()
-    if auto_toggled:
+    wind_toggled = "wind_protection" in msg and msg["wind_protection"] != old_wind_protection
+    if auto_toggled or wind_toggled:
         # Evaluate now (like cover/resume): the switch, the status sensor and
-        # the rule attributes show the new state without waiting for a cycle
+        # the rule attributes show the new state without waiting for a cycle.
+        # A cover excluded from / included in the wind protection during a
+        # storm leaves / takes the wind status right away.
         await coordinator.async_request_refresh()
     connection.send_result(msg["id"], _build_config_response(storage, hass, coordinator))
 
@@ -582,7 +586,8 @@ async def ws_rule_add(
         target_position=msg.get("target_position", 0),
         target_tilt_position=msg.get("target_tilt_position"),
         scenario_ids=scenario_ids,
-        safety=bool(msg.get("safety", False)),
+        safety=bool(msg.get("safety", False)) and not msg.get("no_action", False),
+        no_action=bool(msg.get("no_action", False)),
     )
     if "priority" in msg:
         await storage.async_add_rule(rule)
@@ -666,7 +671,9 @@ async def ws_rule_update(
         target_tilt_position=msg.get("target_tilt_position", existing.target_tilt_position),
         scenario_ids=scenario_ids,
         group_operators=group_operators,
-        safety=bool(msg.get("safety", existing.safety)),
+        # A "do nothing" rule is never a safety rule
+        safety=bool(msg.get("safety", existing.safety)) and not msg.get("no_action", existing.no_action),
+        no_action=bool(msg.get("no_action", existing.no_action)),
     )
     await storage.async_add_rule(updated)
     await _async_prepare_ha_conditions(coordinator)
@@ -1199,6 +1206,7 @@ def async_setup_api(
                 vol.Optional("pause_resume_on_match"): vol.Any(bool, None),
                 vol.Optional("lock_hold_position"): bool,
                 vol.Optional("reload_on_no_move"): bool,
+                vol.Optional("wind_protection"): bool,
                 vol.Optional("min_position_change"): vol.Any(vol.All(int, vol.Range(min=1, max=50)), None),
                 vol.Optional("min_time_between_changes"): vol.Any(vol.All(int, vol.Range(min=60, max=3600)), None),
                 vol.Optional("travel_time"): vol.Any(vol.All(int, vol.Range(min=1, max=300)), None),
@@ -1272,6 +1280,7 @@ def async_setup_api(
                 vol.Optional("target_tilt_position"): vol.Any(vol.All(int, vol.Range(min=0, max=100)), None),
                 vol.Optional("scenario_ids"): [str],
                 vol.Optional("safety"): bool,
+                vol.Optional("no_action"): bool,
             },
         ),
         (
@@ -1293,6 +1302,7 @@ def async_setup_api(
                 vol.Optional("target_tilt_position"): vol.Any(vol.All(int, vol.Range(min=0, max=100)), None),
                 vol.Optional("scenario_ids"): [str],
                 vol.Optional("safety"): bool,
+                vol.Optional("no_action"): bool,
             },
         ),
         (

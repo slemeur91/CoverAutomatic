@@ -366,6 +366,7 @@ class CoverAutomaticCoordinator(
                     "pause_until": pause_until,
                     "rule_id": rule_id,
                     "rule_name": rule_name,
+                    **self._pending_live(cover_data),
                     "comfort_mode": comfort.value if comfort else None,
                     "last_change": cover_raw.get("last_position_change") if cover_raw else None,
                 }
@@ -386,6 +387,18 @@ class CoverAutomaticCoordinator(
         """Current position on the rules' scale (inverted covers mirrored)."""
         return self._get_current_position(entity_id)
 
+    def _pending_live(self, cover_data: dict[str, Any]) -> dict[str, Any]:
+        """Rule a cover would follow back in AUTO (see _pending_rule), with its name."""
+        rule_id = cover_data.get("pending_rule_id")
+        if not rule_id:
+            return {"pending_rule_id": None, "pending_rule_name": None, "pending_target_position": None}
+        rule = self.storage.rules.get(rule_id)
+        return {
+            "pending_rule_id": rule_id,
+            "pending_rule_name": rule.name if rule else rule_id,
+            "pending_target_position": cover_data.get("pending_target_position"),
+        }
+
     def get_cover_live(self, entity_id: str) -> dict[str, Any]:
         """Live runtime data of one cover (rule, target, pause, comfort)."""
         cover_data = (self.data or {}).get("covers", {}).get(entity_id, {})
@@ -401,6 +414,7 @@ class CoverAutomaticCoordinator(
             "rule_id": rule_id,
             "rule_name": rule_name,
             "safety": bool(cover_data.get("safety", False)),
+            **self._pending_live(cover_data),
             "pause_until": cover_raw.get("pause_until"),
             "comfort_mode": comfort.value if comfort else None,
             "last_change": cover_raw.get("last_position_change"),
@@ -489,7 +503,7 @@ class CoverAutomaticCoordinator(
             self.hass, self.async_request_refresh(), f"{DOMAIN}_refresh"
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:  # noqa: C901 -- complexity 17, to reduce (see CHANGELOG 2.1.3)
+    async def _async_update_data(self) -> dict[str, Any]:  # noqa: C901 -- complexity 15, to reduce (see CHANGELOG 2.1.3)
         """Update data and evaluate rules."""
         if self._ha_stopping:
             return self.data or {"covers": {}, "facades": {}, "scenario": self.storage.active_scenario}
@@ -546,18 +560,7 @@ class CoverAutomaticCoordinator(
             # Always refresh comfort mode for live display (independent of rules)
             self.engine._get_comfort_mode(cover)
 
-            # Log rule match changes
-            prev_rule = self._last_matching_rules.get(entity_id)
-            if matching_rule_id != prev_rule:
-                self._last_matching_rules[entity_id] = matching_rule_id
-                if matching_rule_id:
-                    rule_name = self.storage.rules.get(matching_rule_id)
-                    rn = rule_name.name if rule_name else matching_rule_id
-                    self._log(
-                        LOG_EVENT_RULE, entity_id, f"{rn} -> {target_position}%",
-                        {"key": "rule", "rule_id": matching_rule_id, "rule_name": rn,
-                         "position": target_position},
-                    )
+            self._log_rule_change(entity_id, matching_rule_id, target_position)
 
             result["covers"][entity_id] = {
                 "status": status.value,
@@ -566,6 +569,7 @@ class CoverAutomaticCoordinator(
                 "facade_id": cover.facade_id,
                 "matching_rule_id": matching_rule_id,
                 "safety": safety,
+                **self._pending_rule(cover, status, engine_result),
             }
 
         result["active_rules"] = active_rules
@@ -603,6 +607,47 @@ class CoverAutomaticCoordinator(
         await self.async_apply_positions()
 
         return result
+
+    def _log_rule_change(
+        self, entity_id: str, rule_id: str | None, target_position: int | None
+    ) -> None:
+        """Write a new winning rule of a cover to the activity log."""
+        if rule_id == self._last_matching_rules.get(entity_id):
+            return
+        self._last_matching_rules[entity_id] = rule_id
+        if not rule_id:
+            return
+        rule = self.storage.rules.get(rule_id)
+        rn = rule.name if rule else rule_id
+        if target_position is None:
+            self._log(LOG_EVENT_RULE, entity_id, f"{rn} -> no action",
+                      {"key": "rule_no_action", "rule_id": rule_id, "rule_name": rn})
+            return
+        self._log(LOG_EVENT_RULE, entity_id, f"{rn} -> {target_position}%",
+                  {"key": "rule", "rule_id": rule_id, "rule_name": rn, "position": target_position})
+
+    def _pending_rule(
+        self, cover: CoverConfig, status: CoverStatus, engine_result: Any
+    ) -> dict[str, Any]:
+        """Rule that would drive a cover the automation does not drive now.
+
+        For display only (panel, active rule sensor attribute): a cover that
+        is manual, paused, window locked, wind protected or with the global
+        automation off shows the rule it would follow back in AUTO. Nothing
+        is commanded or logged. Empty when a rule drives the cover (safety
+        rule) or when no rule would match.
+        """
+        if engine_result is not None or (
+            status in (CoverStatus.AUTO, CoverStatus.VENTING) and self.storage.enabled
+        ):
+            return {}
+        pending = self.engine.evaluate_cover(cover)
+        if pending is None:
+            return {}
+        return {
+            "pending_rule_id": pending.rule_id,
+            "pending_target_position": pending.position,
+        }
 
     def _evaluate_cover_rules(self, cover: CoverConfig, status: CoverStatus) -> Any:
         """Evaluate the rules that may drive a cover in its current status.

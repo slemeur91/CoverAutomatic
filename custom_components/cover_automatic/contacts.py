@@ -172,7 +172,7 @@ class ContactsMixin:
                     self._lock_in_place(cover_id, cover_raw)
                     if self.data is not None:
                         self.async_set_updated_data(self.data)
-            elif self._cover_states.get(cover_id) == CoverStatus.LOCKED and self._wind_protected:
+            elif self._cover_states.get(cover_id) == CoverStatus.LOCKED and self._wind_applies(cover_raw):
                 # Window closed during a storm: back to the wind protection
                 # (this cover only).
                 self._protect_one_from_wind(cover_id, cover_raw)
@@ -202,7 +202,7 @@ class ContactsMixin:
             if is_sensor_open_cached(cover_raw, "lock_sensor"):
                 continue
             # A tilted window does not override the wind protection
-            if self._wind_protected:
+            if self._wind_applies(cover_raw):
                 continue
 
             current_status = self._cover_states.get(cover_id, CoverStatus.AUTO)

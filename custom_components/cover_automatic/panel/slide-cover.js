@@ -396,6 +396,7 @@ export const SlideCoverMixin = (Base) => class extends Base {
           <div class="ha-help" data-travel-used="${cid}">${this._esc(usedTxt)}</div>
           ${this._hint("cover_travel_time_hint")}
         </div>`;
+        s += this._renderToggle("cover_wind_protection", cover.wind_protection !== false, "cover-toggle", cover.entity_id, "wind_protection", "cover_wind_protection_hint");
         s += this._renderToggle("cover_reload_on_no_move", !!cover.reload_on_no_move, "cover-toggle", cover.entity_id, "reload_on_no_move", "cover_reload_on_no_move_hint");
         return `<div class="sep-list">${s}</div>`;
       }, sum.automation);
@@ -525,6 +526,7 @@ export const SlideCoverMixin = (Base) => class extends Base {
     const own = ["pause_duration", "min_position_change", "min_time_between_changes", "travel_time"]
       .filter(k => cover[k] != null).length;
     auto.push(own ? this._t("cover_sum_own").replace("{n}", own) : this._t("cover_sum_all_global"));
+    if (cover.wind_protection === false) auto.push(this._t("cover_sum_no_wind"));
 
     const room = [];
     const indoor = cover.indoor_temp_sensor || s.indoor_temp_sensor;

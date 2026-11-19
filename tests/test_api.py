@@ -405,6 +405,26 @@ class TestWsCoverUpdate:
     """Tests for cover_automatic/cover/update handler."""
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(("stored", "sent", "refreshed"), [
+        (True, False, True), (None, False, True), (False, True, True), (True, True, False),
+    ])
+    async def test_wind_protection_change_refreshes(self, stored, sent, refreshed) -> None:
+        """Excluded from / included in the wind protection: applied right away."""
+        from custom_components.cover_automatic.api import ws_cover_update
+
+        storage = _make_storage()
+        coordinator = _make_coordinator()
+        raw = {"entity_id": "cover.test", "name": "Test", "auto_enabled": True}
+        if stored is not None:
+            raw["wind_protection"] = stored
+        storage.get_cover_raw = MagicMock(return_value=raw)
+        msg = {"id": 1, "type": "cover_automatic/cover/update", "entity_id": "cover.test",
+               "wind_protection": sent}
+        await ws_cover_update(_make_hass(), _make_connection(), msg, storage, coordinator)
+        assert raw["wind_protection"] is sent
+        assert coordinator.async_request_refresh.await_count == (1 if refreshed else 0)
+
+    @pytest.mark.asyncio
     async def test_update_existing_cover(self) -> None:
         from custom_components.cover_automatic.api import ws_cover_update
 

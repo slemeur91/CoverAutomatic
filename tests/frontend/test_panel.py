@@ -323,3 +323,92 @@ def test_settings_positions_clamped(mount) -> None:
     assert sent["lock_position"] == 100 and sent["lock_tilt_position"] == 0 and sent["pause_duration"] == 25
     assert "vent_position" not in sent
     assert m.errors() == []
+
+
+def test_rule_do_nothing(mount) -> None:
+    """Rule action "do nothing": targets greyed and kept, safety hidden, single summary."""
+    m = mount("fr")
+    m.tab("rules")
+    m.click('.rule-info[data-id="fermer_tout"]')
+    sel = lambda f: f'[data-action="rule-field"][data-id="fermer_tout"][data-field="{f}"]'  # noqa: E731
+    pos = m.root(sel("target_position"))
+    before = pos.input_value()
+    assert "Action" in m.js("window.__el.shadowRoot.querySelector('[data-rule-top=\"fermer_tout\"]').textContent")
+    m.root(sel("no_action")).check()
+    m.page.wait_for_timeout(100)
+    assert pos.is_disabled() and pos.input_value() == ""
+    assert m.root('[data-rule-safety="fermer_tout"]').is_hidden()
+    assert m.root('[data-rule-safety-off="fermer_tout"]').is_visible()
+    assert m.root('[data-rule-noaction-help="fermer_tout"]').is_visible()
+    # Unchecking puts the previous position back
+    m.root(sel("no_action")).uncheck()
+    m.page.wait_for_timeout(100)
+    assert not pos.is_disabled() and pos.input_value() == before
+    m.root(sel("no_action")).check()
+    m.click('[data-action="rule-save"][data-id="fermer_tout"]')
+    m.page.wait_for_timeout(300)
+    saved = m.ws("cover_automatic/rule/update")[-1]
+    assert saved["no_action"] is True and saved["safety"] is False
+    assert saved["target_position"] == int(before)
+    # Collapsed row: one "do nothing" instead of the position bars
+    m.js("window.__el._config.rules.fermer_tout.no_action = true; window.__el._expandedRule = null; window.__el._ruleDraft = null; window.__el._render()")
+    row = m.root('.rule-row[data-rule-id="fermer_tout"]')
+    assert row.locator(".rule-no-action").count() == 1
+    assert "Position cible" not in row.inner_text()
+    assert m.errors() == []
+
+
+def test_pending_rule_cell(mount) -> None:
+    """Manual cover: rule it would follow in Auto, greyed, pause icon, target on the right."""
+    m = mount("fr")
+    m.tab("covers")
+    m.js(f"""(() => {{
+      const el = window.__el;
+      el._config.covers['{SALON}'].status = 'manual';
+      Object.assign(el._config.live_covers['{SALON}'], {{
+        rule_id: null, rule_name: null, target_position: null,
+        pending_rule_id: 'fermer_tout', pending_rule_name: 'Fermer tout', pending_target_position: 0 }});
+      el._render();
+    }})()""")
+    cell = m.root(f'[data-live-rule="{SALON}"]')
+    pending = cell.locator(".rule-pending")
+    assert pending.count() == 1
+    assert pending.locator(".rule-pending-icon svg").count() == 1
+    assert pending.locator(".rule-pending-pos").inner_text().strip() == "0 %"
+    assert cell.locator(".rule-link").count() == 0
+    tip = pending.get_attribute("title")
+    assert tip == "Ne s'applique pas (statut : Manuel). En Auto : Fermer tout → 0 %"
+    # One line: the name is shortened, never wrapped
+    assert m.js("getComputedStyle(window.__el.shadowRoot.querySelector('.rule-pending')).whiteSpace") == "nowrap"
+    # Live refresh keeps it
+    m.js("window.__el._updateLiveCells()")
+    assert cell.locator(".rule-pending").count() == 1
+    # Global automation off: the cover stays Auto, the tooltip says why
+    m.js(f"window.__el._config.covers['{SALON}'].status = 'auto'; window.__el._render()")
+    assert m.root(f'[data-live-rule="{SALON}"] .rule-pending').get_attribute("title").startswith(
+        "Ne s'applique pas (statut : Automatisation désactivée)")
+    assert m.errors() == []
+
+
+def test_cover_wind_protection_option(mount) -> None:
+    m = mount("fr")
+    m.tab("covers")
+    m.page.locator("tr", has_text="Volet du Salon").first.click()
+    m.page.wait_for_timeout(300)
+    m.click('.slide-panel.open .section-header[data-section="automation"]')
+    toggle = m.root(f'.slide-panel.open [data-action="cover-toggle"][data-id="{SALON}"][data-field="wind_protection"]')
+    assert toggle.is_checked()
+    toggle.dispatch_event("click")
+    m.page.wait_for_timeout(900)
+    saved = [c for c in m.ws("cover_automatic/cover/update") if "wind_protection" in c]
+    assert saved and saved[-1]["wind_protection"] is False
+    m.js(f"window.__el._config.covers['{SALON}'].wind_protection = false")
+    assert "Sans protection vent" in m.js(f"window.__el._coverSectionSummaries(window.__el._config.covers['{SALON}']).automation")
+    m.page.keyboard.press("Escape")
+    m.page.wait_for_timeout(300)
+    m.tab("settings")
+    m.click('.settings-nav-btn[data-section="wind"]')
+    total = m.js("Object.keys(window.__el._config.covers).length")
+    assert m.root("[data-wind-covers]").inner_text() == (
+        f"Volets protégés du vent : {total - 1} sur {total} (option de la fiche de chaque volet, section Automatisation).")
+    assert m.errors() == []

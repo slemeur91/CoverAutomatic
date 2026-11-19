@@ -35,6 +35,19 @@ class WindMixin:
         self._wind_restore_pending = False
         self._persist_runtime_state()
 
+    @staticmethod
+    def _cover_wind_enabled(cover_raw: dict[str, Any] | None) -> bool:
+        """Whether the wind protection applies to a cover (cover option, on by default)."""
+        return not cover_raw or cover_raw.get("wind_protection", True) is not False
+
+    def _wind_applies(self, cover_raw: dict[str, Any] | None) -> bool:
+        """Wind protection active and applying to this cover."""
+        return self._wind_protected and self._cover_wind_enabled(cover_raw)
+
+    def _wind_applies_to(self, entity_id: str) -> bool:
+        """_wind_applies for a cover given by its entity id."""
+        return self._wind_protected and self._cover_wind_enabled(self.storage.get_cover_raw(entity_id))
+
     def _get_wind_speed(self) -> float | None:
         """Get current wind speed from sensor."""
         sensor_id = self.storage.wind_sensor
@@ -182,7 +195,7 @@ class WindMixin:
             self._send_wind_position(entity_id)
 
     def _activate_wind_protection(self) -> None:
-        """Set all covers to WIND_PROTECTED and move them to the wind position.
+        """Set the protected covers to WIND_PROTECTED and move them to the wind position.
 
         Covers whose window is open are locked instead: the lock (emergency
         exit) has priority over the wind. A LOCKED cover whose window state
@@ -195,7 +208,7 @@ class WindMixin:
         commands: list[tuple[str, int]] = []
         for entity_id in self.storage._data.get("covers", {}):
             cover_raw = self.storage.get_cover_raw(entity_id)
-            if cover_raw is None:
+            if cover_raw is None or not self._cover_wind_enabled(cover_raw):
                 continue
 
             if self._is_sensor_open(cover_raw, "lock_sensor"):
@@ -292,68 +305,70 @@ class WindMixin:
             await self._async_send_position(entity_id, position)
 
     def _deactivate_wind_protection(self) -> None:
-        """Remove WIND_PROTECTED status from all covers, re-derive from sensors.
-
-        Evaluates lock/vent sensors inline so covers with open windows
-        transition directly to LOCKED/VENTING instead of briefly landing in
-        AUTO and waiting for the next scan tick. A cover whose window state
-        is unknown is locked in place (possibly open window).
-        """
+        """Remove WIND_PROTECTED status from all covers (see _release_one_from_wind)."""
         # Wind commands still waiting for their stagger slot are obsolete
         self._cancel_wind_tasks()
         for entity_id in list(self.storage._data.get("covers", {})):
             if self._cover_states.get(entity_id) != CoverStatus.WIND_PROTECTED:
                 continue
-
             cover_raw = self.storage.get_cover_raw(entity_id)
             if cover_raw is None:
                 continue
-
-            pre_wind = self._pre_lock_states.pop(entity_id, None)
-
-            if self._is_sensor_open(cover_raw, "lock_sensor"):
-                lock_pos = self._cover_val(cover_raw, "lock_position")
-                current = self._get_current_position(entity_id)
-                if self._lock_moves(cover_raw, current, lock_pos):
-                    lock_tilt = self._cover_val(cover_raw, "lock_tilt_position")
-                    self._lock_cover(entity_id, lock_pos, lock_tilt=lock_tilt)
-                else:
-                    # Record a pre-lock state (the pre-wind one was just
-                    # dropped) so the window-closed unlock restores AUTO.
-                    self._pre_lock_states[entity_id] = CoverStatus.AUTO
-                    self._lock_in_place(entity_id, cover_raw)
-                continue
-
-            if self._is_sensor_unknown(cover_raw, "lock_sensor"):
-                # Window state unknown (sensor unavailable): treat it as
-                # possibly open. Handing the cover back to AUTO would let the
-                # next rule close it on an open window; it stays where it is
-                # (LOCKED) until the sensor reports again.
-                self._pre_lock_states[entity_id] = self._status_for_automation(
-                    pre_wind if pre_wind in (CoverStatus.AUTO, CoverStatus.MANUAL) else CoverStatus.AUTO,
-                    cover_raw,
-                )
-                self._lock_in_place(entity_id, cover_raw, sensor_unknown=True)
-                continue
-
-            if self._is_sensor_open(cover_raw, "vent_sensor"):
-                self._enter_venting(entity_id, cover_raw, "wind protection ended")
-                continue
-
-            # Automation switched off during the storm: MANUAL right away
-            # (not AUTO until the next sync), whatever the pre-wind status.
-            target = self._status_for_automation(CoverStatus.AUTO, cover_raw)
-            self._cover_states[entity_id] = target
-            self.storage.update_cover_status(entity_id, target.value, None)
-            self._sync_expected_after_protective_exit(entity_id)
-            # Like the lock/vent exits: return to the rule right away instead
-            # of waiting for min_time_between_changes.
-            if target == CoverStatus.AUTO:
-                self._post_protective_exit.add(entity_id)
+            self._release_one_from_wind(entity_id, cover_raw)
 
         self._persist_runtime_state()
         if self.data is not None:
             self.async_set_updated_data(self.data)
+
+    def _release_one_from_wind(self, entity_id: str, cover_raw: dict[str, Any]) -> None:
+        """End the wind protection of one cover (end of the wind, or cover excluded).
+
+        Evaluates lock/vent sensors inline so a cover with an open window
+        transitions directly to LOCKED/VENTING instead of briefly landing in
+        AUTO and waiting for the next scan tick. A cover whose window state
+        is unknown is locked in place (possibly open window).
+        """
+        pre_wind = self._pre_lock_states.pop(entity_id, None)
+
+        if self._is_sensor_open(cover_raw, "lock_sensor"):
+            lock_pos = self._cover_val(cover_raw, "lock_position")
+            current = self._get_current_position(entity_id)
+            if self._lock_moves(cover_raw, current, lock_pos):
+                lock_tilt = self._cover_val(cover_raw, "lock_tilt_position")
+                self._lock_cover(entity_id, lock_pos, lock_tilt=lock_tilt)
+            else:
+                # Record a pre-lock state (the pre-wind one was just
+                # dropped) so the window-closed unlock restores AUTO.
+                self._pre_lock_states[entity_id] = CoverStatus.AUTO
+                self._lock_in_place(entity_id, cover_raw)
+            return
+
+        if self._is_sensor_unknown(cover_raw, "lock_sensor"):
+            # Window state unknown (sensor unavailable): treat it as
+            # possibly open. Handing the cover back to AUTO would let the
+            # next rule close it on an open window; it stays where it is
+            # (LOCKED) until the sensor reports again.
+            self._pre_lock_states[entity_id] = self._status_for_automation(
+                pre_wind if pre_wind in (CoverStatus.AUTO, CoverStatus.MANUAL) else CoverStatus.AUTO,
+                cover_raw,
+            )
+            self._lock_in_place(entity_id, cover_raw, sensor_unknown=True)
+            return
+
+        if self._is_sensor_open(cover_raw, "vent_sensor"):
+            self._enter_venting(entity_id, cover_raw, "wind protection ended")
+            return
+
+        # Automation switched off during the storm: MANUAL right away
+        # (not AUTO until the next sync), whatever the pre-wind status.
+        target = self._status_for_automation(CoverStatus.AUTO, cover_raw)
+        self._cover_states[entity_id] = target
+        self.storage.update_cover_status(entity_id, target.value, None)
+        self._sync_expected_after_protective_exit(entity_id)
+        # Like the lock/vent exits: return to the rule right away instead
+        # of waiting for min_time_between_changes.
+        if target == CoverStatus.AUTO:
+            self._post_protective_exit.add(entity_id)
 
     @callback
     def _handle_wind_sensor_change(self, new_state: Any) -> None:

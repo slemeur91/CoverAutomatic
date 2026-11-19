@@ -5,6 +5,19 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.2.0] - 2026-11-19
+
+### Added
+
+- Wind protection per cover: cover option "Wind protection" (cover sheet, Automation section, on by default). A cover with the option off ignores the wind protection: it keeps following its rules during a storm and a manual move pauses it as usual (e.g. only the awnings of a pergola need protecting). Switching the option off during a storm hands the cover back to its rule right away (an open window still locks it); switching it on protects it at once. Settings › Wind shows how many covers are protected; the cover sheet summary shows "No wind protection". Existing configurations keep every cover protected.
+- Rule action "Do nothing": a checkbox on the new Action line of the rule editor, right of the target position and tilt. When such a rule wins, the cover is not commanded and the lower rules (shading included) are ignored. The position and tilt fields are emptied and greyed while it is checked; their values are kept and come back when it is unchecked. A "do nothing" rule cannot be a safety rule (the switch is hidden). The collapsed rule shows "Do nothing" once instead of the position bars, the cover list shows a hand icon after the rule name and the activity log writes "rule → do nothing". Also available in the add-rule form.
+- Pending rule: a cover in manual mode, paused, window locked or wind protected (or any cover with the global automation off) shows in the Rule column of the cover list the rule it would follow back in Auto, greyed, with a pause icon and its target in a dashed tag on the right, on a single line (a long name is shortened). The tooltip gives the status and the target. Display only: nothing is commanded or logged. The active rule sensor gets the attributes `pending_rule` and `pending_target_position`.
+
+### Changed
+
+- Rule editor: the name has its own line; target position, tilt and "Do nothing" are on the Action line.
+- Internal: the rule log entry and the pending rule are computed in their own methods (`_async_update_data` complexity 17 → 15).
+
 ## [2.1.11] - 2026-11-08
 
 ### Fixed

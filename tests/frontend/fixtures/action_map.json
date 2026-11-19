@@ -741,6 +741,12 @@
   "events": [],
   "state": []
  },
+ "rule-add|rule-new-no-action|click": {
+  "calls": [],
+  "dom": true,
+  "events": [],
+  "state": []
+ },
  "rule-add|rule-prio-down|click": {
   "calls": [
    "_onRuleMove"

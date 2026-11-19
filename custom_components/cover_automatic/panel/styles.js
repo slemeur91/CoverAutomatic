@@ -278,6 +278,17 @@ export const PANEL_STYLES = `
   }
   .data-table th.last-change-head { width: 1%; white-space: nowrap; }
   .data-table td.rule-cell { min-width: 200px; }
+  .rule-cell-noaction { display: inline-flex; vertical-align: middle; margin-left: 4px; color: var(--ca-secondary-text); }
+  /* Rule a manual / paused / locked / wind cover would follow back in Auto */
+  .data-table .rule-pending { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 220px; white-space: nowrap;
+    color: var(--ca-secondary-text); text-decoration: none; cursor: pointer; }
+  .data-table .rule-pending:not([data-action]) { cursor: default; }
+  .rule-pending-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+    border-radius: 50%; border: 1px solid var(--ca-border); }
+  .rule-pending-name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .rule-pending-pos { flex: none; margin-left: auto; display: inline-flex; align-items: center; font-size: 12px;
+    border: 1px dashed var(--ca-border); border-radius: 6px; padding: 0 6px; line-height: 18px; }
+  .data-table .rule-pending:hover .rule-pending-name { color: var(--primary-text-color); }
   /* Open / stop / close buttons of the covers table */
   .cmd-group { display: inline-flex; gap: 4px; vertical-align: middle; }
   .cmd-btn { width: 32px; height: 32px; padding: 0; border-radius: 8px; border: 1px solid var(--ca-border);
@@ -1355,6 +1366,14 @@ export const PANEL_STYLES = `
   .cond-group-add-row { gap: 4px; margin-top: 8px; }
   .cond-group-add-row .cond-group-add { margin: 0; }
   .rule-safety-inline { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 13px; }
+  .rule-safety-inline[hidden] { display: none; }
+  .rule-safety-off { font-size: 12px; font-style: italic; color: var(--ca-secondary-text); }
+  .rule-noaction-inline { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 13px; cursor: pointer; }
+  .rule-noaction-inline input { margin: 0; }
+  .rule-noaction-new { margin: 4px 0 8px; }
+  .rule-action-row input:disabled { opacity: 0.55; cursor: not-allowed; }
+  .rule-top-row > .rule-noaction-help { flex: 0 0 100%; margin: 0; }
+  .rule-no-action { display: inline-flex; align-items: center; gap: 4px; }
   .rule-safety-inline > span { display: inline-flex; align-items: center; }
   .rule-inline-row > .hint-panel { flex: 0 0 100%; margin: 0; }
   .hint-btn { background: none; border: none; padding: 2px 4px; margin-left: 2px; border-radius: 6px; cursor: pointer;
@@ -1370,6 +1389,7 @@ export const PANEL_STYLES = `
     .form-group.rule-top-row .rule-top-field input { width: 100%; }
     .rule-inline-label { flex-basis: 100%; }
     .rule-safety-inline { margin-left: 0; }
+    .rule-noaction-inline { margin-left: 0; }
   }
   .priority-badge {
     display: inline-flex;

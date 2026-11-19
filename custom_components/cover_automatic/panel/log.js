@@ -99,7 +99,7 @@ export const LogMixin = (Base) => class extends Base {
       if (sc[d.from_id]) values.from = sc[d.from_id].name || d.from_id;
       if (sc[d.to_id]) values.to = sc[d.to_id].name || d.to_id;
     }
-    if (key === "rule" || key === "safety_takeover" || key === "safety_release") {
+    if (key === "rule" || key === "rule_no_action" || key === "safety_takeover" || key === "safety_release") {
       const rule = this._config?.rules?.[d.rule_id];
       values.rule = rule ? rule.name : (d.rule_name || d.rule_id || "");
     }
