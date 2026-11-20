@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.2.1] - 2026-11-20
+
+### Changed
+
+- "Do nothing" rule: while such a rule drives a cover, a manual move no longer pauses it. There is no target position to protect: the new position is simply taken as the current one, and the next rule takes over as soon as the "do nothing" rule stops matching. Covers driven by a position rule, or by no rule at all, are paused by a manual move as before.
+
 ## [2.2.0] - 2026-11-19
 
 ### Added

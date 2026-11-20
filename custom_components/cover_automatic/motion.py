@@ -47,7 +47,7 @@ class MotionMixin:
                 except (ValueError, TypeError):
                     self._last_tilt_positions[entity_id] = None
 
-    def _handle_cover_state_change(  # noqa: C901 -- complexity 22, to reduce (see CHANGELOG 2.1.3)
+    def _handle_cover_state_change(  # noqa: C901 -- complexity 23, to reduce (see CHANGELOG 2.1.3)
         self, entity_id: str, old_state: Any, new_state: Any
     ) -> None:
         """Handle cover position changes to detect manual overrides."""
@@ -183,6 +183,14 @@ class MotionMixin:
                 # re-applies the rule's position.
                 _LOGGER.debug("[%s] Position change ignored: safety rule active", entity_id)
                 return
+            if self._no_action_rule_wins(entity_id):
+                # A "do nothing" rule drives the cover: there is no target to
+                # protect, so no pause. The new position becomes the expected
+                # one; the next rule takes over as soon as this one ends.
+                self._last_positions[entity_id] = current_position
+                self._sync_tilt_from_state(entity_id, new_state)
+                _LOGGER.debug("[%s] Position change accepted: \"do nothing\" rule active", entity_id)
+                return
             if cover.auto_enabled and self._cover_states.get(entity_id) in (CoverStatus.AUTO, CoverStatus.VENTING):
                 details = self._override_details(entity_id, expected_position, current_position)
                 _LOGGER.info(
@@ -198,6 +206,15 @@ class MotionMixin:
                     details.get("first_after"),
                 )
                 self.pause_cover(cover, details=details)
+
+    def _no_action_rule_wins(self, entity_id: str) -> bool:
+        """Whether a "do nothing" rule is the winning rule of the cover (last cycle)."""
+        cover_data = ((self.data or {}).get("covers") or {}).get(entity_id) or {}
+        rule_id = cover_data.get("matching_rule_id")
+        if not rule_id or cover_data.get("target_position") is not None:
+            return False
+        rule = self.storage.rules.get(rule_id)
+        return bool(rule is not None and getattr(rule, "no_action", False))
 
     def _record_motion(self, entity_id: str, old_state: Any, new_state: Any) -> None:
         """Record position/motion changes of a cover (not attribute-only reports).
